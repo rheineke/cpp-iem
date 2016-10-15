@@ -1,0 +1,52 @@
+Basic I/O
+TODO: Use same configuration files as pyiem
+
+Operation issues:
+1. https://code.google.com/p/include-what-you-use/
+
+General mechanics:
+1. Replace boost::ptime with c++11 tm, time_t structs
+2. Revisit copy versus move operations
+3. Reduce object construct in html requests/parser
+
+Forward declarations:
+1. Figure out how to use <boost/variant/variant_fwd.hpp>
+2. <boost/log/utility/string_literal.hpp> constant string literal wrapper
+3. <boost/date_time/posix_time/posix_time_types.hpp> no IO, just types
+
+Data analysis:
+1. Incorporate price history
+   a. Print pairwise scatter plot along with pairwise correlation coefficients
+
+Conceptual improvements:
+1. Logistic regression signal
+   a. Quantity can be a function of logistic function output:
+      quantity(logistic_func_value) = floor(2*(max_quantity - 1)*logistic_func_value - max_quantity + 2)
+      quantity(0.5) = floor(1)
+      quantity(1) = floor(max_quantity)
+      quantity(.49999) = floor(.9999) = 0
+   b. In this approach, there are signals that contribute to quantity and there are signals that are binary
+      PrioritySignal: if we have priority, disallow order; says nothing about quantity
+      Position and fair value signals should have impact on quantity (not sure if they are only ones)
+2. How to combine signals as the ConstraintSignal does?
+3. RuleSignal 2.0: RuleSignal(BinaryConstraintMatrix, QuantitySignal(NonBinaryLogisticFunctionSignal))
+   a. BinaryConstraintMatrix is the regular ConstraintMatrix
+   b. NonBinaryLogisticFunction contains quantity independent variables (FV price, position, etc)
+      QuantityFunction(side=buy, price=1 tick, position=0) = max_quantity
+      QuantityFunction(side=sell, price=999 ticks, position={0, infinity}?) = max_quantity
+      QuantityFunction(side=buy, price=(FV-1 tick), position=max_position(?)) = 1
+      QuantityFunction(side=sell, price=(FV+1 tick), position=max_position(?)) = 1
+
+Optimizations:
+1. Algorithmic improvements, especially in rulemanager?
+2. is_inside_of(side, ticks, ticks, ticks_diff) to replace sided thresholds
+   a. Less general (same ticks_diff offset on both sides)
+   b. Comparison function is now potentially stateful (ticks_diff)
+3. Consider std::numeric::valarray
+
+Segmentation fault:
+lldb <binary_file_relative_path>
+target create --core /cores/core.1235
+
+Lint:
+time find . -name '*.[c,h]pp' | xargs python2.7 ~/code/cpplint.py --extensions=cpp,hpp --filter=-build/c++11 &> cpplint.txt
