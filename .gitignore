@@ -27,3 +27,15 @@
 *.exe
 *.out
 *.app
+
+# IDE
+.idea/
+
+# Configuration files
+conf/
+
+# macOS specific files
+.lock-waf_darwin_build
+
+# Build location
+build/

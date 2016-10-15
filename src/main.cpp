@@ -1,6 +1,8 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
 #include <chrono>
 #include <iostream>
+#include <string>
+#include <utility>
 
 #include <fstream>
 
