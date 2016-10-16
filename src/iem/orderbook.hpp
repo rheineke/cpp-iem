@@ -8,8 +8,9 @@
 
 #include "boost/variant/variant_fwd.hpp"
 
-#include "iem/order.hpp"
 #include "iem/executedorder.hpp"
+#include "iem/price.hpp"
+#include "iem/order.hpp"
 
 namespace iem {
 

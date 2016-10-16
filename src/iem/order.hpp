@@ -9,6 +9,7 @@
 
 #include "iem/contract.hpp"
 #include "iem/pricetimelimit.hpp"
+#include "iem/side.hpp"
 
 namespace iem {
 

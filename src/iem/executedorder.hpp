@@ -8,6 +8,7 @@
 
 #include "iem/order.hpp"
 #include "iem/price.hpp"
+#include "iem/side.hpp"
 
 namespace iem {
 

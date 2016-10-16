@@ -5,10 +5,10 @@ the Iowa Electronic Markets exchange <https://iemweb.biz.uiowa.edu/>
 
 ### How do I get set up? ###
 
-Instructions for Mac OS X 10.11 (El Capitan) using HomeBrew
+Instructions for macOS 10.12 (Sierra) using HomeBrew
 * Install [HomeBrew]: /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-* Install brew packages: brew install openssl cmake boost cpp-netlib
-* Download waf: curl "https://waf.io/waf-1.8.20" -o waf-1.8.20 && chmod 755 waf-1.8.20/waf
+* Install brew packages: brew install wget openssl cmake boost cpp-netlib
+* Download waf: wget https://waf.io/waf-1.9.5 && chmod 755 waf-1.9.5 && alias waf=$PWD/waf-1.9.5
 * Download iem: git clone https://github.com/rheineke/iem
 * Build iem: cd iem && waf configure build -p -j 4
 
