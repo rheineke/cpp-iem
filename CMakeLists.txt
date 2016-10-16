@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 project(iem)
 
-set( CMAKE_VERBOSE_MAKEFILE on )
+# set( CMAKE_VERBOSE_MAKEFILE on )
 
 set(OPENSSL_ROOT_DIR /usr/local/opt/openssl/)
 

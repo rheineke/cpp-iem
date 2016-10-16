@@ -1,5 +1,7 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
 #include <numeric>
+#include <string>
+#include <vector>
 
 #include "boost/property_tree/xml_parser.hpp"
 #include "boost/algorithm/string.hpp"
@@ -11,6 +13,8 @@ namespace iem {
 using ptree = boost::property_tree::ptree;
 using StringPair = std::pair<std::string, std::string>;
 using StringPairVector = std::vector<StringPair>;
+
+constexpr auto _VAH = "viewAssetHoldings";
 
 Session::Session(const std::string& username, const std::string& password):
     username_(username), password_(password), cookie_(""), client_() {
@@ -56,11 +60,11 @@ const ClientResponse Session::authenticate(const bool force_login) {
   auto login_request = buildRequest(
       "/iem/trader/TraderLogin.action",
       {
-          {"forceLogin", force_login ? "true" : "false"}, // Required
+          {"forceLogin", force_login ? "true" : "false"},  // Required
           {"username", this->username()},
           {"password", this->password()},
-          {"loginSubmit", "Sign in"}, // Required
-          {"_sourcePage", ""}, // Required
+          {"loginSubmit", "Sign in"},  // Required
+          {"_sourcePage", ""},  // Required
       });
   // POST request
   const auto login_response = client_.post(login_request);
@@ -91,11 +95,21 @@ const ClientResponse Session::logout() {
   return client_.get(logout_request);
 }
 
-Price parsePrice(const std::string& px_str) {
-  std::istringstream iss(px_str);
-  Price p;
-  iss >> p;
-  return p;
+Price _parse_price(const std::string &px_str) {
+  if (px_str.size()) {
+    std::istringstream iss(px_str);
+    Price p;
+    iss >> p;
+    return p;
+  }
+  return nanPrice();
+}
+
+position_t _parse_quantity(const std::string &qty_str) {
+  if (qty_str.size()) {
+    return std::stoi(qty_str);
+  }
+  return 0;
 }
 
 const ptree& empty_ptree() {
@@ -112,7 +126,7 @@ unsigned int num_open_orders(ptree::const_assoc_iterator it) {
     // viewAssetHoldings input
     auto input_its = obo_form.equal_range("input");
     for (auto it = input_its.first; it != input_its.second; it++) {
-      if (it->second.get<std::string>("<xmlattr>.name") == "viewAssetHoldings") {
+      if (it->second.get<std::string>("<xmlattr>.name") == _VAH) {
         value = it->second.get<std::string>("<xmlattr>.value");
       }
     }
@@ -138,28 +152,29 @@ const OrderBook _read_html(ptree::const_assoc_iterator tr_it) {
   for (auto it = td_its.first; it != td_its.second; it++) {
     // XML attribute called class
     const auto& klass = it->second.get<std::string>("<xmlattr>.class", c);
-    if (klass == c) { // Contract name
+    if (klass == c) {  // Contract name
       contract_name = it->second.data();
       boost::trim(contract_name);
-    } else if (klass == "change-cell bestBidPrice") { // Best bid price
+    } else if (klass == "change-cell bestBidPrice") {  // Best bid price
       auto data = it->second.get_child("p").data();
       boost::trim(data);
-      bb = parsePrice(data);
+      bb = _parse_price(data);
       bbp = data.find("*") != std::string::npos;
-    } else if (klass == "change-cell bestAskPrice") { // Best ask price
+    } else if (klass == "change-cell bestAskPrice") {  // Best ask price
       auto data = it->second.get_child("p").data();
       boost::trim(data);
-      ba = parsePrice(data);
+      ba = _parse_price(data);
       bap = data.find("*") != std::string::npos;
-    } else if (klass == "change-cell lastPrice") { // Last trade price
+    } else if (klass == "change-cell lastPrice") {  // Last trade price
       auto data = it->second.get_child("p").data();
       boost::trim(data);
-      lp = parsePrice(data);
-    } else if (klass == "change-cell quantity") { // Position
-      pos = std::stoi(it->second.get<std::string>("<xmlattr>.value"));
-    } else if (klass == "yourBidsCell") { // Number of open bid orders
+      lp = _parse_price(data);
+    } else if (klass == "change-cell quantity") {  // Position
+      auto data = it->second.get<std::string>("<xmlattr>.value");
+      pos = _parse_quantity(data);
+    } else if (klass == "yourBidsCell") {  // Number of open bid orders
       noo = num_open_orders(it);
-    } else if (klass == "yourAsksCell") { // Number of open ask orders
+    } else if (klass == "yourAsksCell") {  // Number of open ask orders
       nao = num_open_orders(it);
     }
   }
@@ -213,9 +228,8 @@ const ClientResponse Session::asset_holdings(const Contract& contract) {
           {"market", "contract.market"},
           {"asset", std::to_string(contract.asset_id())},
           {"activityType", "holdings"},
-          {"viewAssetHoldings", std::to_string(25)} // Number of transactions? Required?
-      }
-  );
+          {_VAH, std::to_string(25)}  // Number of transactions? Required?
+      });
   // Set cookie
   asset_holdings_request << boost::network::header("Cookie", cookie());
   // POST request
@@ -226,7 +240,7 @@ const ClientResponse Session::asset_holdings(const Contract& contract) {
 const ClientResponse Session::place_order(const Order& order) {
   // Construct request
   auto order_request = buildRequest("order/LimitOrder.action");
-  // TODO: Differentiate order types
+  // TODO(rheineke): Differentiate order types
   // Set cookie
   order_request << boost::network::header("Cookie", cookie());
   // POST request
@@ -237,7 +251,7 @@ const ClientResponse Session::place_order(const Order& order) {
 const ClientResponse Session::cancel_order(const Order& order) {
   // Construct request
   auto cancel_order_request = buildRequest("TraderActivity.action");
-  // TODO: Differentiate order types
+  // TODO(rheineke): Differentiate order types
   // Set cookie
   cancel_order_request << boost::network::header("Cookie", cookie());
   // POST request

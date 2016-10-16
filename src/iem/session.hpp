@@ -59,6 +59,10 @@ int snprintf_session(char* const str, const Session& s);
 using UniqueSession = std::unique_ptr<const Session,
                                       void (*)(const Session* const)>;
 
+Price _parse_price(const std::string &px_str);
+
+position_t _parse_quantity(const std::string &qty_str);
+
 }  // namespace iem
 
 #endif
