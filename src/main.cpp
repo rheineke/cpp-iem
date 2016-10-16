@@ -1,15 +1,12 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
 #include <chrono>
 #include <iostream>
-#include <string>
-#include <utility>
 
 #include <fstream>
 
 #include "iem/logger.hpp"
 #include "iem/orderbook.hpp"
 #include "iem/session.hpp"
-#include "json/json.h"
 
 using LoginCreds = std::pair<std::string, std::string>;
 
