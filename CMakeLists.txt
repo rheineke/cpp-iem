@@ -30,9 +30,17 @@ set(Boost_USE_MULTI_THREADED ON)
 
 find_package(Boost 1.62.0 REQUIRED COMPONENTS date_time system)
 
-# TODO: Find CPPNETLIB
 if (APPLE)
+    # /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/cmake/cppnetlib/cppnetlibTargets-release.cmake
+    # adds openssl as part of targets and causes build to fail for some reason
+    # make[2]: *** No rule to make target `/usr/local/Cellar/openssl/1.0.2g/lib/libssl.dylib', needed by `IEM'.  Stop.
+    # I have: /usr/local/Cellar/openssl/1.0.2j/...
     find_package(cppnetlib 0.12.0 REQUIRED)
+    # set(CPPNETLIB_INCLUDE_DIRS /usr/local/Cellar/cpp-netlib/0.12.0_1/include/)
+    # set(CPPNETLIB_LIBRARIES
+    #         /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-client-connections.a
+    #         /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-server-parsers.a
+    #         /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-uri.a)
 endif()
 
 if (IEM_ENABLE_HTTPS)
@@ -69,29 +77,26 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 if (OPENSSL_FOUND)
-    message(WARNING ${OPEN_SSL_INCLUDE_DIR})
     add_definitions(-DBOOST_NETWORK_ENABLE_HTTPS)
     include_directories(${OPENSSL_INCLUDE_DIR})
 endif()
 
-# set(CPPNETLIB_INCLUDE_DIRS /usr/local/Cellar/cpp-netlib/0.12.0_1/include/)
-# set(CPPNETLIB_LIBRARIES
-#         /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-client-connections.a
-#         /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-server-parsers.a
-#         /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-uri.a)
-
-if(Boost_FOUND)
-    MESSAGE(WARNING "Boost includes: ${Boost_INCLUDE_DIRS}")
-    MESSAGE(WARNING "Boost dir: ${Boost_DIR}")
-    MESSAGE(WARNING "Boost link dirs: ${Boost_LINK_DIRS}")
-    MESSAGE(WARNING "Boost libraries: ${Boost_LIBRARIES}")
+if (${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
+    # Use C++1z when using GNU compilers.
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++1z")
+elseif (${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
+    # We want to link in C++1z mode in Clang too, but also set a high enough
+    # template depth for the template metaprogramming.
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ftemplate-depth=256 -std=c++1z")
 endif()
 
-MESSAGE(WARNING "cpp-netlib includes: ${CPPNETLIB_INCLUDE_DIRS}")
-MESSAGE(WARNING "cpp-netlib link dirs: ${CPPNETLIB_LINK_DIRS}")
-MESSAGE(WARNING "cpp-netlib libraries: ${CPPNETLIB_LIBRARIES}")
+if (Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
+if (CPPNETLIB_FOUND)
+    include_directories(${CPPNETLIB_INCLUDE_DIRS})
+endif()
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
 add_subdirectory(src)
@@ -101,11 +106,8 @@ add_executable(IEM ${SOURCE_FILES})
 
 target_link_libraries(IEM iemlib)
 
-target_include_directories(IEM PUBLIC ${OPENSSL_INCLUDE_DIRS})
 target_link_libraries(IEM ${OPENSSL_LIBRARIES})
 
-target_include_directories(IEM PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(IEM ${Boost_LIBRARIES})
 
-target_include_directories(IEM PUBLIC ${CPPNETLIB_INCLUDE_DIRS})
 target_link_libraries(IEM ${CPPNETLIB_LIBRARIES})
