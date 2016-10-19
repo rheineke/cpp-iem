@@ -1,11 +1,15 @@
 #! /usr/bin/env python
 # encoding: utf-8
+import os
+import platform
+import subprocess
 
-APPNAME = 'ciem'
-VERSION = '1.0'
+APPNAME = 'iem'
+VERSION = '0.1.0'
 
 top = '.'
 out = 'build'
+
 
 def options(opt):
     """Add options."""
@@ -17,17 +21,38 @@ def options(opt):
                    action='store_true',
                    help='Compile unit test')
     opt.add_option('-g',
-               dest='debug',
-               default=False,
-               action='store_true',
-               help='Debug information')
+                   dest='debug',
+                   default=False,
+                   action='store_true',
+                   help='Debug information')
+    opt.add_option('--disable-https',  # TODO: Fix this, should read cmdline val
+                   dest='iem_enable_https',
+                   default=True,
+                   action='store_false',
+                   help='Build IEM with support for https if OpenSSL is found.')
+
+OPENSSL_ROOT_DIR = 'OPENSSL_ROOT_DIR'
+
+
+def _root_dir(ctx, package_name):
+    # if ctx.options.iem_enable_https:
+    if platform.system() == 'Darwin':  # Apple system
+        # if 'OpenSSL_DIR' not in os.environ:
+        args = ['which', 'brew']
+        brew_cp = subprocess.run(args=args, stdout=subprocess.PIPE)
+        if not brew_cp.stdout:
+            print("Homebrew not found: not using Homebrew's OpenSSL")
+            if OPENSSL_ROOT_DIR not in os.environ:
+                print("Use -DOPENSSL_ROOT_DIR for non-Apple OpenSSL")
+        else:
+            args = ['brew', '--prefix', package_name]
+            open_ssl_cp = subprocess.run(args, stdout=subprocess.PIPE)
+            return str(open_ssl_cp.stdout, encoding='utf-8').rstrip('\n')
+    return ''
 
 
 def configure(ctx):
     """Configure context."""
-    openssl_ver = '1.0.2g'
-    boost_ver = '1.61.0_1'
-    cpp_netlib_ver = '0.12.0_1'
     ctx.env.CXXFLAGS = [
         '-std=c++1z',
         '-emit-llvm',
@@ -46,6 +71,7 @@ def configure(ctx):
         '-Wtautological-undefined-compare',
         '-Qunused-arguments',
         '-Wno-missing-braces',
+        '-DBOOST_NETWORK_ENABLE_HTTPS',  # TODO: Connect to option
         ]
     if ctx.options.debug:
         ctx.env.DEFINES.append("DEBUG")
@@ -54,12 +80,15 @@ def configure(ctx):
     else:
         ctx.env.CXXFLAGS.append('-O3')
         ctx.env.CXXFLAGS.append('-Oz')
+    openssl_root_dir = _root_dir(ctx, 'openssl')
+    cppnetlib_root_dir = _root_dir(ctx, 'cpp-netlib')
     ctx.env.INCLUDES = [
         '.',
         '/usr/local/include/',
-        '/usr/local/opt/openssl/include',
-        '/usr/local/Cellar/cpp-netlib/{}/include/'.format(cpp_netlib_ver),
+        '{}/include/'.format(openssl_root_dir),
+        '{}/include/'.format(cppnetlib_root_dir),
         ]
+    print(ctx.env.INCLUDES)
     ctx.env.LIB = [
         'boost_date_time-mt',
         'boost_system-mt',
@@ -69,8 +98,8 @@ def configure(ctx):
         ]
     ctx.env.LIBPATH = [
         '/usr/local/lib/',
-        '/usr/local/opt/openssl/lib',
-        '/usr/local/Cellar/cpp-netlib/{}/lib/'.format(cpp_netlib_ver),
+        '{}/lib/'.format(openssl_root_dir),
+        '{}/lib/'.format(cppnetlib_root_dir),
         ]
     ctx.env.STLIB = [
         'cppnetlib-client-connections',
