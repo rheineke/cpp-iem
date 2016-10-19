@@ -2,8 +2,6 @@
 #ifndef IEM_SRC_IEM_SESSION_HPP_
 #define IEM_SRC_IEM_SESSION_HPP_
 
-#define BOOST_NETWORK_ENABLE_HTTPS
-
 #include <memory>
 #include <string>
 

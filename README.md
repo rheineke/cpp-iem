@@ -1,7 +1,7 @@
 # README #
 
 This project implements an algorithmic low latency market making strategy on
-the Iowa Electronic Markets exchange <https://iemweb.biz.uiowa.edu/>
+the Iowa Electronic Markets exchange <https://iem.uiowa.edu/iem/>
 
 ### How do I get set up? ###
 

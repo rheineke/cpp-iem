@@ -30,6 +30,11 @@ set(Boost_USE_MULTI_THREADED ON)
 
 find_package(Boost 1.62.0 REQUIRED COMPONENTS date_time system)
 
+# TODO: Find CPPNETLIB
+if (APPLE)
+    find_package(cppnetlib 0.12.0 REQUIRED)
+endif()
+
 if (IEM_ENABLE_HTTPS)
     if (APPLE)
         # If we're on OSX check for Homebrew's copy of OpenSSL instead of Apple's
@@ -41,24 +46,27 @@ if (IEM_ENABLE_HTTPS)
                     message(WARNING "Use -DOPENSSL_ROOT_DIR for non-Apple OpenSSL")
                 endif()
             else()
-                message(WARNING ${OPENSSL_ROOT_DIR})
                 execute_process(COMMAND brew --prefix openssl
                         OUTPUT_VARIABLE OPENSSL_ROOT_DIR
                         OUTPUT_STRIP_TRAILING_WHITESPACE)
             endif()
         endif()
     endif()
-    message(WARNING ${OPENSSL_ROOT_DIR})
     find_package(OpenSSL 1.0.2 REQUIRED)
-    message(WARNING ${OPENSSL_ROOT_DIR})
+    set(OPENSSL_INCLUDE_DIRS /usr/local/opt/openssl/include/)
+    set(OPENSSL_LIBRARIES /usr/local/opt/openssl/lib/libssl.dylib;/usr/local/opt/openssl/lib/libcrypto.dylib)
 endif()
 
 set(CMAKE_VERBOSE_MAKEFILE on)
 
 set(IEM_VERSION_MAJOR 0) # MUST bump this whenever we make ABI-incompatible changes
 set(IEM_VERSION_MINOR 1)
-set(IEM_VERSION_PATCH 0)
+set(IEM_VERSION_PATCH 1)
 set(IEM_VERSION_STRING ${IEM_VERSION_MAJOR}.${IEM_VERSION_MINOR}.${IEM_VERSION_PATCH})
+
+if (CMAKE_BUILD_TYPE MATCHES Debug)
+    add_definitions(-DBOOST_NETWORK_DEBUG)
+endif()
 
 if (OPENSSL_FOUND)
     message(WARNING ${OPEN_SSL_INCLUDE_DIR})
@@ -66,20 +74,11 @@ if (OPENSSL_FOUND)
     include_directories(${OPENSSL_INCLUDE_DIR})
 endif()
 
-# find_package(OpenSSL 1.0.2 REQUIRED)
-set(CPPNETLIB_INCLUDE_DIRS /usr/local/Cellar/cpp-netlib/0.12.0_1/include/)
-set(CPPNETLIB_LIBRARIES
-        /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-client-connections.a
-        /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-server-parsers.a
-        /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-uri.a)
-
-# if(OPENSSL_FOUND)
-    # Nuclear option
-#     set(OPENSSL_INCLUDE_DIRS /usr/local/opt/openssl/include/)
-MESSAGE(WARNING "OpenSSL include: ${OPENSSL_INCLUDE_DIRS}")
-#     set(OPENSSL_LIBRARIES /usr/local/opt/openssl/lib/libssl.dylib;/usr/local/opt/openssl/lib/libcrypto.dylib)
-MESSAGE(WARNING "OpenSSL libraries: ${OPENSSL_LIBRARIES}")
-# endif()
+# set(CPPNETLIB_INCLUDE_DIRS /usr/local/Cellar/cpp-netlib/0.12.0_1/include/)
+# set(CPPNETLIB_LIBRARIES
+#         /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-client-connections.a
+#         /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-server-parsers.a
+#         /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-uri.a)
 
 if(Boost_FOUND)
     MESSAGE(WARNING "Boost includes: ${Boost_INCLUDE_DIRS}")
