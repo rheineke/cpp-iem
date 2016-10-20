@@ -26,18 +26,21 @@ def options(opt):
                    action='store_true',
                    help='Debug information')
     # http://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
-    opt.add_option('--disable-https',
-                   dest='iem_enable_https',
+    opt.add_option('--build-static-libs',
+                   dest='iem_build_shared_libs',
                    default=True,
                    action='store_false',
-                   help='Build IEM without support for https.')
+                   help='Build IEM with static libraries')
+    opt.add_option('--disable-tests',
+                   dest='iem_build_tests',
+                   default=True,
+                   action='store_false',
+                   help='Build IEM project tests')
 
 OPENSSL_ROOT_DIR = 'OPENSSL_ROOT_DIR'
 
 
-def _root_dir(ctx, package_name):
-    # TODO: Do this next
-    # if ctx.options.iem_enable_https:
+def _root_dir(package_name):
     if platform.system() == 'Darwin':  # Apple system
         # if 'OpenSSL_DIR' not in os.environ:
         args = ['which', 'brew']
@@ -50,7 +53,7 @@ def _root_dir(ctx, package_name):
             args = ['brew', '--prefix', package_name]
             open_ssl_cp = subprocess.run(args, stdout=subprocess.PIPE)
             return str(open_ssl_cp.stdout, encoding='utf-8').rstrip('\n')
-    return ''
+    raise NotImplementedError('Only macOS and Homebrew supported currently')
 
 
 def definitions(ctx):
@@ -59,7 +62,7 @@ def definitions(ctx):
 
 def configure(ctx):
     """Configure context."""
-    openssl_root_dir = _root_dir(ctx, 'openssl')
+    openssl_root_dir = _root_dir('openssl')
     ctx.env.CXXFLAGS = [
         '-std=c++1z',
         '-emit-llvm',
@@ -78,9 +81,9 @@ def configure(ctx):
         '-Wtautological-undefined-compare',
         '-Qunused-arguments',
         '-Wno-missing-braces',
+        '-DBOOST_TEST_DYN_LINK',
+        '-DBOOST_NETWORK_ENABLE_HTTPS',
         ]
-    if openssl_root_dir:
-        ctx.env.CXXFLAGS.append('-DBOOST_NETWORK_ENABLE_HTTPS')
     if ctx.options.debug:
         ctx.env.DEFINES.append("DEBUG")
         ctx.env.CXXFLAGS.append('-g')
@@ -88,7 +91,7 @@ def configure(ctx):
     else:
         ctx.env.CXXFLAGS.append('-O3')
         ctx.env.CXXFLAGS.append('-Oz')
-    cppnetlib_root_dir = _root_dir(ctx, 'cpp-netlib')
+    cppnetlib_root_dir = _root_dir('cpp-netlib')
     ctx.env.INCLUDES = [
         '.',
         '/usr/local/include/',
