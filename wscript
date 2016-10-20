@@ -25,16 +25,18 @@ def options(opt):
                    default=False,
                    action='store_true',
                    help='Debug information')
-    opt.add_option('--disable-https',  # TODO: Fix this, should read cmdline val
+    # http://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+    opt.add_option('--disable-https',
                    dest='iem_enable_https',
                    default=True,
                    action='store_false',
-                   help='Build IEM with support for https if OpenSSL is found.')
+                   help='Build IEM without support for https.')
 
 OPENSSL_ROOT_DIR = 'OPENSSL_ROOT_DIR'
 
 
 def _root_dir(ctx, package_name):
+    # TODO: Do this next
     # if ctx.options.iem_enable_https:
     if platform.system() == 'Darwin':  # Apple system
         # if 'OpenSSL_DIR' not in os.environ:
@@ -51,8 +53,13 @@ def _root_dir(ctx, package_name):
     return ''
 
 
+def definitions(ctx):
+    defs = []
+
+
 def configure(ctx):
     """Configure context."""
+    openssl_root_dir = _root_dir(ctx, 'openssl')
     ctx.env.CXXFLAGS = [
         '-std=c++1z',
         '-emit-llvm',
@@ -71,8 +78,9 @@ def configure(ctx):
         '-Wtautological-undefined-compare',
         '-Qunused-arguments',
         '-Wno-missing-braces',
-        '-DBOOST_NETWORK_ENABLE_HTTPS',  # TODO: Connect to option
         ]
+    if openssl_root_dir:
+        ctx.env.CXXFLAGS.append('-DBOOST_NETWORK_ENABLE_HTTPS')
     if ctx.options.debug:
         ctx.env.DEFINES.append("DEBUG")
         ctx.env.CXXFLAGS.append('-g')
@@ -80,7 +88,6 @@ def configure(ctx):
     else:
         ctx.env.CXXFLAGS.append('-O3')
         ctx.env.CXXFLAGS.append('-Oz')
-    openssl_root_dir = _root_dir(ctx, 'openssl')
     cppnetlib_root_dir = _root_dir(ctx, 'cpp-netlib')
     ctx.env.INCLUDES = [
         '.',

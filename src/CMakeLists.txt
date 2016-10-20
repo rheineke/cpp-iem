@@ -20,6 +20,6 @@ add_library(iemlib
         iem/session.hpp iem/session.cpp
         iem/side.hpp iem/side.cpp)
 
-target_include_directories(iemlib PUBLIC ${OPENSSL_INCLUDE_DIRS})
-target_include_directories(iemlib PUBLIC ${Boost_INCLUDE_DIRS})
-target_include_directories(iemlib PUBLIC ${CPPNETLIB_INCLUDE_DIRS})
+# target_include_directories(iemlib PUBLIC ${OPENSSL_INCLUDE_DIRS})
+# target_include_directories(iemlib PUBLIC ${Boost_INCLUDE_DIRS})
+# target_include_directories(iemlib PUBLIC ${CPPNETLIB_INCLUDE_DIRS})

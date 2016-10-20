@@ -35,12 +35,12 @@ if (APPLE)
     # adds openssl as part of targets and causes build to fail for some reason
     # make[2]: *** No rule to make target `/usr/local/Cellar/openssl/1.0.2g/lib/libssl.dylib', needed by `IEM'.  Stop.
     # I have: /usr/local/Cellar/openssl/1.0.2j/...
-    find_package(cppnetlib 0.12.0 REQUIRED)
-    # set(CPPNETLIB_INCLUDE_DIRS /usr/local/Cellar/cpp-netlib/0.12.0_1/include/)
-    # set(CPPNETLIB_LIBRARIES
-    #         /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-client-connections.a
-    #         /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-server-parsers.a
-    #         /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-uri.a)
+    # find_package(cppnetlib 0.12.0 REQUIRED)
+    set(CPPNETLIB_INCLUDE_DIRS /usr/local/Cellar/cpp-netlib/0.12.0_1/include/)
+    set(CPPNETLIB_LIBRARIES
+            /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-client-connections.a
+            /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-server-parsers.a
+            /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-uri.a)
 endif()
 
 if (IEM_ENABLE_HTTPS)
@@ -92,6 +92,8 @@ endif()
 
 if (Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
+
+    enable_testing()
 endif()
 
 if (CPPNETLIB_FOUND)
@@ -100,6 +102,7 @@ endif()
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
 add_subdirectory(src)
+# add_subdirectory(src/json)
 
 set(SOURCE_FILES src/main.cpp)
 add_executable(IEM ${SOURCE_FILES})
@@ -107,7 +110,10 @@ add_executable(IEM ${SOURCE_FILES})
 target_link_libraries(IEM iemlib)
 
 target_link_libraries(IEM ${OPENSSL_LIBRARIES})
-
 target_link_libraries(IEM ${Boost_LIBRARIES})
-
 target_link_libraries(IEM ${CPPNETLIB_LIBRARIES})
+
+# ###
+# ## Export Targets
+# # (so cpp-netlib can be easily used by other CMake projects)
+# # [see http://www.cmake.org/Wiki/CMake/Tutorials/How_to_create_a_ProjectConfig.cmake_file]
