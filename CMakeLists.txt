@@ -6,7 +6,6 @@ project(IEM)
 
 option( IEM_BUILD_SHARED_LIBS "Build IEM with shared libraries." OFF )
 option( IEM_BUILD_TESTS "Build the IEM project tests." ON)
-option( IEM_ENABLE_HTTPS "Build IEM with support for https if OpenSSL is found." ON)
 
 include(GNUInstallDirs)
 
@@ -43,27 +42,25 @@ if (APPLE)
             /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-uri.a)
 endif()
 
-if (IEM_ENABLE_HTTPS)
-    if (APPLE)
-        # If we're on OSX check for Homebrew's copy of OpenSSL instead of Apple's
-        if (NOT OpenSSL_DIR)
-            find_program(HOMEBREW brew)
-            if (HOMEBREW STREQUAL "HOMEBREW-NOTFOUND")
-                message(WARNING "Homebrew not found: not using Homebrew's OpenSSL")
-                if (NOT OPENSSL_ROOT_DIR)
-                    message(WARNING "Use -DOPENSSL_ROOT_DIR for non-Apple OpenSSL")
-                endif()
-            else()
-                execute_process(COMMAND brew --prefix openssl
-                        OUTPUT_VARIABLE OPENSSL_ROOT_DIR
-                        OUTPUT_STRIP_TRAILING_WHITESPACE)
+if (APPLE)
+    # If we're on OSX check for Homebrew's copy of OpenSSL instead of Apple's
+    if (NOT OpenSSL_DIR)
+        find_program(HOMEBREW brew)
+        if (HOMEBREW STREQUAL "HOMEBREW-NOTFOUND")
+            message(WARNING "Homebrew not found: not using Homebrew's OpenSSL")
+            if (NOT OPENSSL_ROOT_DIR)
+                message(WARNING "Use -DOPENSSL_ROOT_DIR for non-Apple OpenSSL")
             endif()
+        else()
+            execute_process(COMMAND brew --prefix openssl
+                    OUTPUT_VARIABLE OPENSSL_ROOT_DIR
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
         endif()
     endif()
-    find_package(OpenSSL 1.0.2 REQUIRED)
-    set(OPENSSL_INCLUDE_DIRS /usr/local/opt/openssl/include/)
-    set(OPENSSL_LIBRARIES /usr/local/opt/openssl/lib/libssl.dylib;/usr/local/opt/openssl/lib/libcrypto.dylib)
 endif()
+find_package(OpenSSL 1.0.2 REQUIRED)
+set(OPENSSL_INCLUDE_DIRS /usr/local/opt/openssl/include/)
+set(OPENSSL_LIBRARIES /usr/local/opt/openssl/lib/libssl.dylib;/usr/local/opt/openssl/lib/libcrypto.dylib)
 
 set(CMAKE_VERBOSE_MAKEFILE on)
 
@@ -79,6 +76,8 @@ endif()
 if (OPENSSL_FOUND)
     add_definitions(-DBOOST_NETWORK_ENABLE_HTTPS)
     include_directories(${OPENSSL_INCLUDE_DIR})
+else()
+    message(FATAL_ERROR "OpenSSL required for https connection to IEM")
 endif()
 
 if (${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
