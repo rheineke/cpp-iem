@@ -91,12 +91,17 @@ endif()
 
 if (Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
-
-    enable_testing()
 endif()
 
 if (CPPNETLIB_FOUND)
     include_directories(${CPPNETLIB_INCLUDE_DIRS})
+
+    enable_testing()
+
+    if (IEM_BUILD_TESTS)
+        add_subdirectory(deps/googletest)
+        add_subdirectory(test/iem)
+    endif()
 endif()
 
 include_directories("${PROJECT_SOURCE_DIR}/src")

@@ -83,6 +83,7 @@ def configure(ctx):
         '-Wno-missing-braces',
         '-DBOOST_TEST_DYN_LINK',
         '-DBOOST_NETWORK_ENABLE_HTTPS',
+        '-DBOOST_NETWORK_DEBUG',
         ]
     if ctx.options.debug:
         ctx.env.DEFINES.append("DEBUG")
