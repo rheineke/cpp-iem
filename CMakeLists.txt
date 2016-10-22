@@ -2,19 +2,19 @@
 # This project is licensed under the terms of the MIT license.
 
 cmake_minimum_required(VERSION 3.6)
-project(IEM)
+project(CPP-IEM)
 
-option( IEM_BUILD_SHARED_LIBS "Build IEM with shared libraries." OFF )
-option( IEM_BUILD_TESTS "Build the IEM project tests." ON)
+option(CPP-IEM_BUILD_SHARED_LIBS "Build cpp-iem with shared libraries." OFF)
+option(CPP-IEM_BUILD_TESTS "Build the cpp-iem project tests." ON)
 
 include(GNUInstallDirs)
 
-if(IEM_BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
+if(CPP-IEM_BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
     message (STATUS "Linking boost testing libs dynamically...")
-    set(IEM_BUILD_SHARED_LIBS ON)
+    set(CPP-IEM_BUILD_SHARED_LIBS ON)
     set(BUILD_SHARED_LIBS ON)
 else()
-    set(IEM_BUILD_SHARED_LIBS OFF)
+    set(CPP-IEM_BUILD_SHARED_LIBS OFF)
     set(BUILD_SHARED_LIBS OFF)
 endif()
 
@@ -32,9 +32,10 @@ find_package(Boost 1.62.0 REQUIRED COMPONENTS date_time system)
 if (APPLE)
     # /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/cmake/cppnetlib/cppnetlibTargets-release.cmake
     # adds openssl as part of targets and causes build to fail for some reason
-    # make[2]: *** No rule to make target `/usr/local/Cellar/openssl/1.0.2g/lib/libssl.dylib', needed by `IEM'.  Stop.
+    # make[2]: *** No rule to make target `/usr/local/Cellar/openssl/1.0.2g/lib/libssl.dylib', needed by `CPP-IEM'.  Stop.
     # I have: /usr/local/Cellar/openssl/1.0.2j/...
     # find_package(cppnetlib 0.12.0 REQUIRED)
+    set(CPPNETLIB_FOUND ON)
     set(CPPNETLIB_INCLUDE_DIRS /usr/local/Cellar/cpp-netlib/0.12.0_1/include/)
     set(CPPNETLIB_LIBRARIES
             /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-client-connections.a
@@ -64,10 +65,10 @@ set(OPENSSL_LIBRARIES /usr/local/opt/openssl/lib/libssl.dylib;/usr/local/opt/ope
 
 set(CMAKE_VERBOSE_MAKEFILE on)
 
-set(IEM_VERSION_MAJOR 0) # MUST bump this whenever we make ABI-incompatible changes
-set(IEM_VERSION_MINOR 1)
-set(IEM_VERSION_PATCH 1)
-set(IEM_VERSION_STRING ${IEM_VERSION_MAJOR}.${IEM_VERSION_MINOR}.${IEM_VERSION_PATCH})
+set(CPP-IEM_VERSION_MAJOR 0) # MUST bump this whenever we make ABI-incompatible changes
+set(CPP-IEM_VERSION_MINOR 1)
+set(CPP-IEM_VERSION_PATCH 1)
+set(CPP-IEM_VERSION_STRING ${CPP-IEM_VERSION_MAJOR}.${CPP-IEM_VERSION_MINOR}.${CPP-IEM_VERSION_PATCH})
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DBOOST_NETWORK_DEBUG)
@@ -77,7 +78,7 @@ if (OPENSSL_FOUND)
     add_definitions(-DBOOST_NETWORK_ENABLE_HTTPS)
     include_directories(${OPENSSL_INCLUDE_DIR})
 else()
-    message(FATAL_ERROR "OpenSSL required for https connection to IEM")
+    message(FATAL_ERROR "OpenSSL required for https connection to cpp-iem")
 endif()
 
 if (${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
@@ -98,9 +99,9 @@ if (CPPNETLIB_FOUND)
 
     enable_testing()
 
-    if (IEM_BUILD_TESTS)
+    if (CPP-IEM_BUILD_TESTS)
         add_subdirectory(deps/googletest)
-        add_subdirectory(test/iem)
+        add_subdirectory(test)
     endif()
 endif()
 
@@ -109,15 +110,11 @@ add_subdirectory(src)
 # add_subdirectory(src/json)
 
 set(SOURCE_FILES src/main.cpp)
-add_executable(IEM ${SOURCE_FILES})
+add_executable(CPP-IEM ${SOURCE_FILES})
 
-target_link_libraries(IEM iemlib)
-
-target_link_libraries(IEM ${OPENSSL_LIBRARIES})
-target_link_libraries(IEM ${Boost_LIBRARIES})
-target_link_libraries(IEM ${CPPNETLIB_LIBRARIES})
+target_link_libraries(CPP-IEM cppiemlib)
 
 # ###
 # ## Export Targets
-# # (so cpp-netlib can be easily used by other CMake projects)
+# # (so cpp-iem can be easily used by other CMake projects)
 # # [see http://www.cmake.org/Wiki/CMake/Tutorials/How_to_create_a_ProjectConfig.cmake_file]

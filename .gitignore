@@ -3,6 +3,7 @@
 *.lo
 *.o
 *.obj
+*.pyc
 
 # Precompiled Headers
 *.gch
@@ -30,12 +31,19 @@
 
 # IDE
 .idea/
+/.project
 
 # Configuration files
 conf/
+*.cmake
+CMakeCache.txt
+CMakeFiles
+Makefile
 
 # macOS specific files
 .lock-waf_darwin_build
+.DS_Store
 
 # Build location
 build/
+Testing/
