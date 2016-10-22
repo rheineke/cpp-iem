@@ -5,7 +5,7 @@ strategy on the [Iowa Electronic Markets] exchange.
 
 ### How do I get set up? ###
 
-Instructions for macOS 10.12 (Sierra) using HomeBrew
+Instructions for macOS 10.12 (Sierra) using [HomeBrew]:
 * Install [HomeBrew]: /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 * Install brew packages: brew install wget openssl cmake boost cpp-netlib
 * Download cpp-iem: git clone --recursive -j4 https://github.com/rheineke/cpp-iem.git
@@ -17,3 +17,4 @@ Instructions for macOS 10.12 (Sierra) using HomeBrew
 
 [HomeBrew]: http://brew.sh/
 [Iowa Electronic Markets]: https://iem.uiowa.edu/iem/
+[waf]: https://waf.io/
