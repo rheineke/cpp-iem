@@ -1,9 +1,10 @@
 # Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 # This project is licensed under the terms of the MIT license.
 
-include_directories(${CPP-IEM_SOURCE_DIR}/src ${gtest_SOURCE_DIR}/include)
-
-include_directories(${OPENSSL_INCLUDE_DIR})
+include_directories(
+        ${OPENSSL_INCLUDE_DIR}
+        ${CPP-IEM_SOURCE_DIR}/src
+        ${gtest_SOURCE_DIR}/include)
 
 set(TESTS contract_test session_test)
 
