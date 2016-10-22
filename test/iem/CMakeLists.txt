@@ -18,5 +18,7 @@ foreach ( test ${TESTS} )
     endif()
     set_target_properties(cppiem-iem-${test}
             PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CPP-IEM_BINARY_DIR}/tests)
-    add_test(cppiem-iem-${test} ${CPP-IEM_BINARY_DIR}/tests/cppiem-iem-${test})
+    add_test(cppiem-iem-${test}
+            ${CPP-IEM_BINARY_DIR}/tests/cppiem-iem-${test}
+            WORKING_DIRECTORY ${CPP-IEM_BINARY_DIR})
 endforeach (test)
