@@ -13,6 +13,7 @@ std::ostream& operator<<(std::ostream& os, const MonthYear& my) {
 const Json::Value& read_markets_json(char const* filename) {
   // Open file in binary mode
   static Json::Value root;
+  // TODO(rheineke): Check filename for existence
   std::ifstream config_doc(filename, std::ifstream::binary);
   config_doc >> root;
 
