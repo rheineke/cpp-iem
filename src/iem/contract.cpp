@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <regex>
+#include <string>
 
 namespace iem {
 
@@ -14,25 +15,27 @@ const Json::Value& read_markets_json(char const* filename) {
   // Open file in binary mode
   static Json::Value root;
   // TODO(rheineke): Check filename for existence
-  std::ifstream config_doc(filename, std::ifstream::binary);
-  config_doc >> root;
+  if (root.isNull()) {
+    std::ifstream config_doc(filename, std::ifstream::binary);
+    config_doc >> root;
+  }
 
   return root;
 }
 
-const Json::Value& empty_root() {
-  static Json::Value empty_root;
-  return empty_root;
+int _read_market_value(const std::string &name, char const *filename) {
+  const auto id_value = read_markets_json(filename)[name]["id"];
+
+  if (id_value.isNull()) {
+    throw std::invalid_argument("Market name not found");
+  }
+
+  return id_value.asInt();
 }
 
-Market::Market(const std::string& name, char const* filename): name_(name) {
-  auto markets_dict = read_markets_json(filename);
-  auto market_dict = markets_dict.get(name, empty_root());
-  int default_value = 0;
-  value_ = market_dict.get("id", default_value).asInt();
-  if (value_ == default_value) {
-    throw std::invalid_argument("Market id not found");
-  }
+Market::Market(const std::string& name, char const* filename):
+    name_(name), value_(_read_market_value(name, filename)) {
+
 }
 
 std::ostream& operator<<(std::ostream& os, const Market& mkt) {
@@ -40,9 +43,38 @@ std::ostream& operator<<(std::ostream& os, const Market& mkt) {
   return os;
 }
 
+std::string _expiration_string(const MonthYear& expiration) {
+  // Yuck
+  const auto mon_str = std::to_string(expiration.first);
+  const auto mon_pad = std::string(2 - mon_str.length(), '0');
+  const auto yr_str = std::to_string(expiration.second);
+  const auto yr_pad = std::string(2 - yr_str.length(), '0');
+  return mon_pad + mon_str + yr_pad + yr_str;
+}
+
+int _read_bundle_id(const std::string& market_name,
+                    const MonthYear& expiration) {
+  const auto bundles_value = read_markets_json()[market_name]["bundle"];
+
+  Json::Value id_value;
+  if (bundles_value.isObject()) {
+    id_value = bundles_value[_expiration_string(expiration)];
+  } else {
+    id_value = bundles_value;
+  }
+
+  if (id_value == Json::Value::nullSingleton()) {
+    throw std::invalid_argument("Bundle id not found");
+  }
+
+  return id_value.asInt();
+}
+
 ContractBundle::ContractBundle(const std::string& market_name,
                                const MonthYear& expiration):
-    market_(market_name), expiration_(expiration), bundle_id_(-1) {
+    market_(market_name),
+    expiration_(expiration),
+    bundle_id_(_read_bundle_id(market_name, expiration)) {
 
 }
 
@@ -53,8 +85,37 @@ std::ostream& operator<<(std::ostream& os, const ContractBundle& cb) {
   return os;
 }
 
+const std::string _read_market_name(const std::string &contract_name) {
+  const auto mkts_dict = read_markets_json();
+
+  for (const auto& market_name : mkts_dict.getMemberNames()) {
+    const auto& mkt_dict = mkts_dict[market_name];
+    const auto asset_value = mkt_dict["assets"][contract_name];
+    if (!asset_value.isNull()) {
+      return market_name;
+    }
+  }
+
+  throw std::invalid_argument("Contract name not found");
+}
+
+int _read_contract_id(const std::string& contract_name) {
+  const auto mkts_dict = read_markets_json();
+  for (const auto& market_name : mkts_dict.getMemberNames()) {
+    const auto& mkt_dict = mkts_dict[market_name];
+    const auto asset_value = mkt_dict["assets"][contract_name];
+
+    if (!asset_value.isNull()) {
+      return asset_value["id"].asInt();
+    }
+  }
+
+  throw std::invalid_argument("Contract name not found");
+}
+
 Contract::Contract(const std::string& contract_name):
-  market_("TODO"), asset_id_(-1) {
+    market_(_read_market_name(contract_name)),
+    asset_id_(_read_contract_id(contract_name)) {
 
 }
 

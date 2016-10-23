@@ -23,11 +23,13 @@ using MonthYear = std::pair<Month, Year>;
 
 std::ostream& operator<<(std::ostream& os, const MonthYear& month_year);
 
-const Json::Value& read_markets_json(char const* filename="conf/markets.json");
+constexpr auto kDefaultFilename = "conf/markets.json";
+
+const Json::Value& read_markets_json(char const* filename=kDefaultFilename);
 
 class Market final {
  public:
-  Market(const std::string& name, char const* filename="conf/markets.json");
+  Market(const std::string& name, char const* filename=kDefaultFilename);
 
   inline const std::string name() const noexcept { return name_; }
   inline MarketId value() const noexcept { return value_; }
@@ -66,6 +68,8 @@ class Contract final {
 };
 
 std::ostream& operator<<(std::ostream& os, const Contract& c);
+
+const std::string _read_market_name(const std::string &contract_name);
 
 }  // namespace iem
 

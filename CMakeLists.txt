@@ -63,7 +63,7 @@ find_package(OpenSSL 1.0.2 REQUIRED)
 set(OPENSSL_INCLUDE_DIRS /usr/local/opt/openssl/include/)
 set(OPENSSL_LIBRARIES /usr/local/opt/openssl/lib/libssl.dylib;/usr/local/opt/openssl/lib/libcrypto.dylib)
 
-set(CMAKE_VERBOSE_MAKEFILE on)
+# set(CMAKE_VERBOSE_MAKEFILE on)
 
 set(CPP-IEM_VERSION_MAJOR 0) # MUST bump this whenever we make ABI-incompatible changes
 set(CPP-IEM_VERSION_MINOR 1)
