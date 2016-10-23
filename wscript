@@ -14,12 +14,6 @@ out = 'build'
 def options(opt):
     """Add options."""
     opt.load('compiler_cxx')
-    opt.add_option('-t',
-                   '--test',
-                   dest='test',
-                   default=False,
-                   action='store_true',
-                   help='Compile unit test')
     opt.add_option('-g',
                    dest='debug',
                    default=False,
@@ -124,9 +118,10 @@ def configure(ctx):
         ctx.env.LINKFLAGS.append('-g')
     ctx.load('compiler_cxx')
 
+
 def build(ctx):
     """Build project."""
     ctx.recurse('src')
 
-    if ctx.options.test:
+    if ctx.options.iem_build_tests:
         ctx.recurse('test')
