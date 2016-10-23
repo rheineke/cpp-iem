@@ -1,0 +1,23 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+
+def build(bld):
+    gtest_excl = []
+    bld.program(source=bld.path.ant_glob('**/*.cpp', excl=gtest_excl),
+                target='cppiemtest.o',
+                use=['cppiemlib'],
+                includes=[
+                    '../src/',
+                    '../deps/googletest/googletest/include/',
+                ],
+                lib=[
+                    'boost_filesystem-mt',
+                    'gtest',
+                    'gtest_main',
+                ],
+                libpath=[
+                    # TODO(rheineke): Build gtest libs, requires replicating
+                    # googletest CMakeLists.txt
+                    '../deps/googletest/googletest/include/',
+                ])
