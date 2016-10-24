@@ -21,8 +21,6 @@ TEST(ContractTest, BadMarketNameException) {
   // TODO(rheineke): Test throw "string" with struct implementing what()
 }
 
-// TODO(rheineke): Test contract and contract bundle in similar ways
-
 const MonthYear expiration_monthyear(const std::string& expiration_str) {
   const auto mon_int = std::stoi(expiration_str.substr(0, 2));
   const auto mon = boost::date_time::months_of_year(mon_int);
@@ -66,6 +64,7 @@ TEST(ContractTest, Contract) {
     const auto& assets_value = mkt_dict["assets"];
     for (const auto& contract_name : assets_value.getMemberNames()) {
       Contract c(contract_name);
+      EXPECT_EQ(c.market().value(), mkt_dict["id"].asInt());
       EXPECT_EQ(c.asset_id(), assets_value[contract_name]["id"].asInt());
     }
   }

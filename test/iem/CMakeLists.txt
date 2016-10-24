@@ -6,7 +6,7 @@ include_directories(
         ${CPP-IEM_SOURCE_DIR}/src
         ${gtest_SOURCE_DIR}/include)
 
-set(TESTS contract_test session_test)
+set(TESTS contract_test price_test session_test)
 
 foreach ( test ${TESTS} )
     add_executable(cppiem-iem-${test} ${test}.cpp)
