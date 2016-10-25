@@ -1,6 +1,6 @@
 // Copyright 2015 Reece Heineke<reece.heineke@gmail.com>
-#ifndef iem_src_iem_pricetimelimit_HPP_
-#define iem_src_iem_pricetimelimit_HPP_
+#ifndef CPPIEM_SRC_IEM_PRICETIMELIMIT_HPP_
+#define CPPIEM_SRC_IEM_PRICETIMELIMIT_HPP_
 
 #include "boost/date_time/posix_time/posix_time.hpp"
 

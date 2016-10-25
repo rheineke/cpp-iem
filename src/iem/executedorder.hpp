@@ -1,6 +1,6 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
-#ifndef iem_src_iem_executedorder_HPP_
-#define iem_src_iem_executedorder_HPP_
+#ifndef CPPIEM_SRC_IEM_EXECUTED_ORDER_HPP_
+#define CPPIEM_SRC_IEM_EXECUTED_ORDER_HPP_
 
 #include <algorithm>
 #include <utility>

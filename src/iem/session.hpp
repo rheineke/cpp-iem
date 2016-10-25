@@ -1,6 +1,6 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
-#ifndef IEM_SRC_IEM_SESSION_HPP_
-#define IEM_SRC_IEM_SESSION_HPP_
+#ifndef CPPIEM_SRC_IEM_SESSION_HPP_
+#define CPPIEM_SRC_IEM_SESSION_HPP_
 
 #include <memory>
 #include <string>

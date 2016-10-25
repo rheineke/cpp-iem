@@ -1,6 +1,6 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
-#ifndef iem_src_iem_orderbook_HPP_
-#define iem_src_iem_orderbook_HPP_
+#ifndef CPPIEM_SRC_IEM_ORDERBOOK_HPP_
+#define CPPIEM_SRC_IEM_ORDERBOOK_HPP_
 
 #include <map>
 #include <unordered_map>
