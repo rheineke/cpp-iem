@@ -8,6 +8,10 @@
 
 namespace iem {
 
+constexpr char sideChar(const Side& side) noexcept {
+  return (side == Side::buy) ? 'B' : 'A';
+}
+
 std::ostream& operator<<(std::ostream& os,
                          const ExecutedOrder& executed_order) {
   return os << "ExecutedOrder{"

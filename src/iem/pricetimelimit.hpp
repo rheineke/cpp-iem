@@ -16,7 +16,6 @@ class PriceTimeLimit final {
 
   inline const Price price() const { return price_; }
 
-  // TODO(rheineke): Can this be replaced in a sensible way with C++ structs?
   const boost::posix_time::ptime expiration() const;
 
   bool ioc() const noexcept;

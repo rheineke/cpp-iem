@@ -9,10 +9,6 @@ namespace iem {
 
 enum class Side : int_fast8_t { buy = 0, sell = 1 } __attribute__((packed));
 
-constexpr char sideChar(const Side& side) noexcept {
-  return (side == Side::buy) ? 'B' : 'A';
-}
-
 constexpr Side static otherSide(const Side& side) noexcept {
   return (side == Side::buy) ? Side::sell : Side::buy;
 }
