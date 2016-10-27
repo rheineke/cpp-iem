@@ -109,6 +109,8 @@ std::istream& operator>>(std::istream& is, Price& p);
 
 int snprintf_price(char* const s, std::size_t n, const Price& px);
 
+const std::string to_string(const Price& px);
+
 inline bool operator==(const Price& lhs, const Price& rhs) {
   return lhs.ticks() == rhs.ticks();
 }

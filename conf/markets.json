@@ -31,11 +31,11 @@
   "Congress16": {
     "id": 360,
     "assets": {
-      "DH_DS16": {"id": 3014, "order": "" },
-      "RH_DS16": {"id": 3015, "order": "" },
-      "DH_RS16": {"id": 3016, "order": "" },
-      "RH_RS16": {"id": 3017, "order": "" },
-      "OTHER16": {"id": 3018, "order": "" }
+      "DH_DS16": {"id": 3014, "order": 0 },
+      "RH_DS16": {"id": 3015, "order": 0 },
+      "DH_RS16": {"id": 3016, "order": 0 },
+      "RH_RS16": {"id": 3017, "order": 0 },
+      "OTHER16": {"id": 3018, "order": 0 }
     },
     "bundle": 698,
     "expiry_date": "2016-11-08"

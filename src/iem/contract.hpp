@@ -15,6 +15,7 @@ namespace iem {
 
 using MarketId = uint_fast16_t;
 using AssetId = uint_fast16_t;
+using AssetToMarketId = uint_fast16_t;
 using BundleId = uint_fast16_t;
 
 using Month = boost::date_time::months_of_year;
@@ -61,10 +62,15 @@ class Contract final {
   explicit Contract(const std::string& contract_name);
 
   inline Market market() const noexcept { return market_; }
+  // TODO(rheineke): Is asset id used in any way?
   inline AssetId asset_id() const noexcept { return asset_id_; }
+  inline AssetToMarketId asset_to_market_id() const noexcept {
+    return asset_to_market_id_;
+  }
  private:
   Market market_;
   AssetId asset_id_;
+  AssetToMarketId asset_to_market_id_;
 };
 
 std::ostream& operator<<(std::ostream& os, const Contract& c);

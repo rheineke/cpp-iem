@@ -1,12 +1,12 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
+#include "iem/session.hpp"
+
 #include <numeric>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "boost/property_tree/xml_parser.hpp"
-#include "boost/algorithm/string.hpp"
-
-#include "iem/session.hpp"
 
 namespace iem {
 
@@ -246,6 +246,32 @@ const ClientResponse Session::place_order(const Order& order) {
   // POST request
   const auto& response = client_.post(order_request);
   return response;
+}
+
+const std::string _limit_order_type(Side side) {
+  return (side == Side::buy) ? "bid" : "ask";
+}
+
+const std::string _expiration_date(const Single& order) {
+  return to_iso_extended_string(order.price_time_limit().expiration().date());
+}
+
+const ClientRequest limit_order_request(const Single& order) {
+  using boost::gregorian::to_iso_extended_string;
+  // Construct request
+  const auto& c = order.contract();
+  auto order_request = buildRequest(
+      "order/LimitOrder.action",
+      {
+          {"limitOrderAssetToMarket", std::to_string(c.asset_to_market_id())},
+          {"orderType", _limit_order_type(order.side())},
+          {"expirationDate", _expiration_date(order)},
+          {"price", ""},
+          {"limitOrderQuantity", std::to_string(order.quantity())},
+          {"placeLimitOder", "Place Limit Order"},
+          {"market", std::to_string(c.market().value())}
+      });
+  return order_request;
 }
 
 const ClientResponse Session::cancel_order(const Order& order) {

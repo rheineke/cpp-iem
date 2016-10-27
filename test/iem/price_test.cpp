@@ -33,4 +33,15 @@ TEST(PriceTest, TicksPerPoint) {
   EXPECT_EQ(1000, p.ticks_per_point());
 }
 
+TEST(PriceTest, SessionStringFormat) {
+  Price px(999);
+  // Test snprint_price directly
+  constexpr std::size_t kLen = 16;
+  char c_str[kLen];
+  snprintf_price(c_str, kLen, px);
+  EXPECT_EQ(".999", ".999");
+  // Test to_string
+  EXPECT_EQ(to_string(px), "0.999");
+}
+
 }  // namespace iem

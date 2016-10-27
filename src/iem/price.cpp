@@ -27,15 +27,6 @@ const Price& nanPrice()  {
   return np;
 }
 
-int snprintf_price(char* const s, std::size_t n, const Price& p) {
-  if (p == nanPrice()) {
-    return snprintf(s, n, "----");
-  } else {
-    const auto px = p.ticks() / static_cast<double>(p.ticks_per_point());
-    return snprintf(s, n, "%.3f", px);
-  }
-}
-
 std::ostream& operator<<(std::ostream& os, const Price& p) {
   if (p == nanPrice()) {
     return os << "----";
@@ -58,6 +49,22 @@ std::istream& operator>>(std::istream& is, Price& p) {
     p.set(static_cast<Ticks>(std::stod(px_str) * 1000));
   }
   return is;
+}
+
+int snprintf_price(char* const s, std::size_t n, const Price& p) {
+  if (p == nanPrice()) {
+    return snprintf(s, n, "----");
+  } else {
+    const auto px = p.ticks() / static_cast<double>(p.ticks_per_point());
+    return snprintf(s, n, "%.3f", px);
+  }
+}
+
+const std::string to_string(const Price& px) {
+  constexpr std::size_t kLen = 6;
+  char c_str[kLen];
+  snprintf_price(c_str, kLen, px);
+  return std::string(c_str, kLen-1);
 }
 
 }  // namespace iem
