@@ -266,10 +266,44 @@ const ClientRequest limit_order_request(const Single& order) {
           {"limitOrderAssetToMarket", std::to_string(c.asset_to_market_id())},
           {"orderType", _limit_order_type(order.side())},
           {"expirationDate", _expiration_date(order)},
-          {"price", ""},
+          {"price", to_string(order.price_time_limit().price())},
           {"limitOrderQuantity", std::to_string(order.quantity())},
           {"placeLimitOder", "Place Limit Order"},
           {"market", std::to_string(c.market().value())}
+      });
+  return order_request;
+}
+
+const std::string _market_order_type(Side side) {
+  return (side == Side::buy) ? "buy" : "sell";
+}
+
+const ClientRequest market_order_request(const Single& order) {
+  // Construct request
+  const auto& c = order.contract();
+  auto order_request = buildRequest(
+      "order/MarketOrder.action",
+      {
+          {"limitOrderAssetToMarket", std::to_string(c.asset_to_market_id())},
+          {"orderType", _market_order_type(order.side())},
+          {"marketOrderQuantity", std::to_string(order.quantity())},
+          {"placeMarketOder", "Place Market Order"},
+          {"market", std::to_string(c.market().value())}
+      });
+  return order_request;
+}
+
+const ClientRequest bundle_order_request(const Bundle& order) {
+  // Construct request
+  const auto& cb = order.contract_bundle();
+  auto order_request = buildRequest(
+      "order/MarketOrder.action",
+      {
+          {"limitOrderAssetToMarket", std::to_string(cb.bundle_id())},
+          {"orderType", _market_order_type(order.side())},
+          {"bundleOrderQuantity", std::to_string(order.quantity())},
+          {"placeBundleOder", "Place Bundle Order"},
+          {"market", std::to_string(cb.market().value())}
       });
   return order_request;
 }
