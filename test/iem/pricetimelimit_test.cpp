@@ -3,6 +3,8 @@
 
 #include "gtest/gtest.h"
 
+#include "iem/contract.hpp"
+
 namespace iem {
 
 TEST(PriceTimeLimitTest, ValidConstructorArguments) {
@@ -25,6 +27,17 @@ TEST(PriceTimeLimitTest, SessionStringFormat) {
   // TODO(rheineke): Expose session::_expiration_date to test elsewhere?
   const auto& d = _test_ptime().date();
   EXPECT_EQ(boost::gregorian::to_iso_extended_string(d), "2016-01-10");
+}
+
+TEST(PriceTimeLimitTest, ExpiryDate) {
+  const auto& markets_dict = read_markets_json();
+
+  for (const auto& mkt_name : markets_dict.getMemberNames()) {
+    const auto& assets_value = markets_dict[mkt_name]["assets"];
+    for (const auto& asset_name : assets_value.getMemberNames()) {
+      ASSERT_NO_THROW(read_expiration_ptime(mkt_name, asset_name));
+    }
+  }
 }
 
 }  // namespace iem

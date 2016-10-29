@@ -28,6 +28,9 @@ class PriceTimeLimit final {
   bool ioc_;
 };
 
+boost::posix_time::ptime read_expiration_ptime(const std::string& market_name,
+                                               const std::string& asset_name);
+
 std::ostream& operator<<(std::ostream& os, const PriceTimeLimit& ptl);
 
 } // namespace iem
