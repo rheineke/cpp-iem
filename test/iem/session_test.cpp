@@ -14,12 +14,12 @@ TEST(SessionTest, Session) {
 }
 
 TEST(SessionTest, PriceParser) {
-  auto px = iem::_parse_price("");
-  EXPECT_EQ(px, iem::nanPrice());
+  auto px = _parse_price("");
+  EXPECT_EQ(px, nanPrice());
 }
 
 TEST(SessionTest, PositionParser) {
-  auto qty = iem::_parse_quantity("");
+  auto qty = _parse_quantity("");
   EXPECT_EQ(qty, 0);
 }
 

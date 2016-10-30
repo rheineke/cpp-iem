@@ -249,7 +249,7 @@ const ClientResponse Session::place_order(const Order& order) {
 }
 
 const std::string _limit_order_type(Side side) {
-  return (side == Side::buy) ? "bid" : "ask";
+  return (side == Side::BUY) ? "bid" : "ask";
 }
 
 const std::string _expiration_date(const Single& order) {
@@ -275,7 +275,7 @@ const ClientRequest limit_order_request(const Single& order) {
 }
 
 const std::string _market_order_type(Side side) {
-  return (side == Side::buy) ? "buy" : "sell";
+  return (side == Side::BUY) ? "buy" : "SELL";
 }
 
 const ClientRequest market_order_request(const Single& order) {

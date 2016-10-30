@@ -5,9 +5,9 @@ namespace iem {
 
 std::ostream& operator<<(std::ostream& os, const Counterparty& cp) {
   switch (cp) {
-    case Counterparty::exchange:
+    case Counterparty::EXCHANGE:
       return os << "exchange";
-    case Counterparty::participant:
+    case Counterparty::PARTICIPANT:
       return os << "participant";
   }
 }
@@ -46,7 +46,7 @@ Single::Single(const Contract& contract,
                const Side& side,
                const Quantity quantity,
                const PriceTimeLimit& price_time_limit):
-    Order(side, quantity, price_time_limit, Counterparty::participant),
+    Order(side, quantity, price_time_limit, Counterparty::PARTICIPANT),
     contract_(contract) {
 }
 

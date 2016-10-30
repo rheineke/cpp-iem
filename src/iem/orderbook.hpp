@@ -33,7 +33,7 @@ class OrderBook {
   const std::string contract() const;
 
   inline const Price best_price(const Side& side) const {
-    return (side == Side::buy) ? best_bid_ : best_ask_;
+    return (side == Side::BUY) ? best_bid_ : best_ask_;
   }
 
   bool best_price_priority(const Side& side) const;

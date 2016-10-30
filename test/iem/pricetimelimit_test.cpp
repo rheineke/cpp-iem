@@ -35,7 +35,7 @@ TEST(PriceTimeLimitTest, ExpiryDate) {
   for (const auto& mkt_name : markets_dict.getMemberNames()) {
     const auto& assets_value = markets_dict[mkt_name]["assets"];
     for (const auto& asset_name : assets_value.getMemberNames()) {
-      ASSERT_NO_THROW(read_expiration_ptime(mkt_name, asset_name));
+      EXPECT_NO_THROW(read_expiration_ptime(mkt_name, asset_name));
     }
   }
 }

@@ -7,10 +7,10 @@
 
 namespace iem {
 
-enum class Side : int_fast8_t { buy = 0, sell = 1 } __attribute__((packed));
+enum class Side : int_fast8_t { BUY = 0, SELL = 1 } __attribute__((packed));
 
 constexpr Side static otherSide(const Side& side) noexcept {
-  return (side == Side::buy) ? Side::sell : Side::buy;
+  return (side == Side::BUY) ? Side::SELL : Side::BUY;
 }
 
 std::ostream& operator<<(std::ostream& os, const Side& s);

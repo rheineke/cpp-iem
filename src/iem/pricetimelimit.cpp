@@ -30,7 +30,7 @@ PriceTimeLimit::PriceTimeLimit():
 bool PriceTimeLimit::is_ioc(const Price& price,
                             const boost::posix_time::ptime& expiration) {
   using boost::date_time::not_a_date_time;
-  using boost::posix_time::to_simple_string;
+  using boost::posix_time::to_iso_extended_string;
 
   if (price == nanPrice() && expiration == not_a_date_time) {
     return true;
@@ -44,7 +44,8 @@ bool PriceTimeLimit::is_ioc(const Price& price,
     strncpy(s, fst, n);
     n += snprintf_price(s + n, kBufSize - n, price);
     constexpr auto fmt = " and expiration %s is not valid combination";
-    snprintf(s + n, kBufSize - n, fmt, "???"); // to_simple_string(expiration).c_str()
+    snprintf(s + n, kBufSize - n, fmt,
+             to_iso_extended_string(expiration).c_str());
     throw std::invalid_argument(s);
   }
 }

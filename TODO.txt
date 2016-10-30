@@ -33,9 +33,9 @@ Conceptual improvements:
    a. BinaryConstraintMatrix is the regular ConstraintMatrix
    b. NonBinaryLogisticFunction contains quantity independent variables (FV price, position, etc)
       QuantityFunction(side=buy, price=1 tick, position=0) = max_quantity
-      QuantityFunction(side=sell, price=999 ticks, position={0, infinity}?) = max_quantity
+      QuantityFunction(side=SELL, price=999 ticks, position={0, infinity}?) = max_quantity
       QuantityFunction(side=buy, price=(FV-1 tick), position=max_position(?)) = 1
-      QuantityFunction(side=sell, price=(FV+1 tick), position=max_position(?)) = 1
+      QuantityFunction(side=SELL, price=(FV+1 tick), position=max_position(?)) = 1
 
 Optimizations:
 1. Algorithmic improvements, especially in rulemanager?

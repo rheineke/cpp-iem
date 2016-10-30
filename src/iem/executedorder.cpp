@@ -9,7 +9,7 @@
 namespace iem {
 
 constexpr char sideChar(const Side& side) noexcept {
-  return (side == Side::buy) ? 'B' : 'A';
+  return (side == Side::BUY) ? 'B' : 'A';
 }
 
 std::ostream& operator<<(std::ostream& os,
@@ -36,7 +36,7 @@ std::pair<double, Position> realizedPositionPair(
     if (eo.price() == nanPrice()) {
       continue;
     }
-    if (eo.side() == Side::buy) {
+    if (eo.side() == Side::BUY) {
       buy_value += (eo.quantity() * eo.price().ticks());
       buy_qty += eo.quantity();
     } else {

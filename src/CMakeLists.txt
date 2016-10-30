@@ -8,6 +8,7 @@ add_library(cppiemlib
         json/json.h json/json-forwards.h
         jsoncpp.cpp
         iem/contract.hpp iem/contract.cpp
+        iem/event_strategy.hpp iem/event_strategy.cpp
         iem/executedorder.hpp iem/executedorder.cpp
         iem/logger.hpp iem/logger.cpp
         iem/order.hpp iem/order.cpp

@@ -31,13 +31,13 @@ OrderBook::OrderBook(const std::string& contract,
 const std::string OrderBook::contract() const { return contract_; }
 
 bool OrderBook::best_price_priority(const Side& side) const {
-  return (side == Side::buy) ? best_bid_priority_ : best_ask_priority_;
+  return (side == Side::BUY) ? best_bid_priority_ : best_ask_priority_;
 }
 
 const Price OrderBook::last_trade() const { return last_trade_; }
 
 const Orders OrderBook::orders(const Side& side) const {
-  return (side == Side::buy) ? bid_orders_ : ask_orders_;
+  return (side == Side::BUY) ? bid_orders_ : ask_orders_;
 }
 
 position_t OrderBook::position() const { return position_; }
@@ -92,8 +92,8 @@ char priority_char(const OrderBook& ob, const Side& side) {
 }
 
 std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
-  static constexpr auto s = Side::sell;
-  static constexpr auto b = Side::buy;
+  static constexpr auto s = Side::SELL;
+  static constexpr auto b = Side::BUY;
   os << "{\"name\":\"orderBook\""
      << " \"contract\":" << ob.contract()
      << " bid/ask trade: " << ob.best_price(b) << priority_char(ob, b)

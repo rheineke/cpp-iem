@@ -6,8 +6,8 @@
 namespace iem {
 
 TEST(SideTest, OtherSide) {
-EXPECT_EQ(otherSide(Side::buy), Side::sell);
-EXPECT_EQ(otherSide(Side::sell), Side::buy);
+EXPECT_EQ(otherSide(Side::BUY), Side::SELL);
+EXPECT_EQ(otherSide(Side::SELL), Side::BUY);
 }
 
 }  // namespace iem

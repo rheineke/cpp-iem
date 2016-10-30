@@ -17,7 +17,7 @@ using RequestCode = std::string;
 using OrderId = uint_fast32_t;
 using Quantity = uint_fast8_t;
 
-enum class Counterparty { exchange, participant };
+enum class Counterparty { EXCHANGE, PARTICIPANT };
 
 std::ostream& operator<<(std::ostream& os, const Counterparty& cp);
 
