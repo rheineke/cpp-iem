@@ -5,7 +5,7 @@ namespace iem {
 
 std::vector<std::unique_ptr<Order>> event_orders(const Event& event,
                                                  const Quantity qty) {
-  std::vector<std::unique_ptr<Order>> os(8);
+  std::vector<std::unique_ptr<Order>> os;
 
   const std::string mkt_name("FedPolicyB");
   const std::string expiry_str("1116");

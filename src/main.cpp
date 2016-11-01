@@ -43,6 +43,10 @@ int _main(int argc, char* argv[]) {
     std::cout << ob << std::endl;
   }
 
+  // TODO(rheineke): Generate a heartbeat thread with a mutex around cookie
+  // Make simple request every n minutes and call authenticate(...) with
+  // forceLogin=True if request fails. Update mutexed cookie if necessary
+
   // Logout
   std::cout << "Logging out..." << std::endl;
   session.logout();

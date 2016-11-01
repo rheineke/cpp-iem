@@ -41,7 +41,7 @@ class Session {
 
   const ClientResponse place_order(const Order& order);
 
-  const ClientResponse cancel_order(const Order& order);
+  const ClientResponse cancel_order(const Single& order);
 
  private:
   std::string username_;

@@ -6,7 +6,8 @@
 namespace iem {
 
 TEST(EventStrategyTest, AssertNoThrow) {
-  EXPECT_NO_THROW(event_orders(Event::SAME, 1));
+  const auto os = event_orders(Event::SAME, 1);
+  EXPECT_EQ(os.size(), 4);
 }
 
 }  // namespace iem

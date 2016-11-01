@@ -308,8 +308,16 @@ const ClientRequest bundle_order_request(const Bundle& order) {
   return order_request;
 }
 
-const ClientResponse Session::cancel_order(const Order& order) {
+const ClientResponse Session::cancel_order(const Single& order) {
   // Construct request
+  const auto cancel = url_encode(
+      {
+          {"cancelBidOrder", ""},
+          {"market", std::to_string(order.contract().market().value())},
+          // {"bidOrder", std::to_string(order.id())},
+          {"asset", std::to_string(order.contract().asset_id())},
+          {"activityType", _limit_order_type(order.side())}
+      });
   auto cancel_order_request = buildRequest("TraderActivity.action");
   // TODO(rheineke): Differentiate order types
   // Set cookie
