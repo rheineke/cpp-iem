@@ -11,6 +11,7 @@ TEST(SessionTest, Session) {
   const Session s(usr, pwd);
   EXPECT_EQ(s.username(), usr);
   EXPECT_EQ(s.password(), pwd);
+  EXPECT_EQ(s.cookie(), "");
 }
 
 TEST(SessionTest, PriceParser) {

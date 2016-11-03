@@ -20,6 +20,7 @@ using BundleId = uint_fast16_t;
 
 using Month = boost::date_time::months_of_year;
 using Year = uint_fast8_t;
+// TODO(rheineke): Consider replacing with gregorian::date(year, month, 0?)
 using MonthYear = std::pair<Month, Year>;
 
 std::ostream& operator<<(std::ostream& os, const MonthYear& month_year);
