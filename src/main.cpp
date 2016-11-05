@@ -1,4 +1,5 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
+#include <algorithm>
 #include <chrono>
 #include <iostream>
 
@@ -39,13 +40,15 @@ int _main(int argc, char* argv[]) {
 
   // FedPolicyB market
   const auto obs = session.market_orderbook(51);
-  for (const auto& ob: obs) {
+  for (const auto& ob : obs) {
     std::cout << ob << std::endl;
   }
 
   // TODO(rheineke): Generate a heartbeat thread with a mutex around cookie
   // Make simple request every n minutes and call authenticate(...) with
   // forceLogin=True if request fails. Update mutexed cookie if necessary
+  // std::thread hb(&heartbeat, session);
+  // hb.detach();
 
   // Logout
   std::cout << "Logging out..." << std::endl;
@@ -54,6 +57,15 @@ int _main(int argc, char* argv[]) {
   auto return_value = EXIT_SUCCESS;
   // std::cout << "Starting trade" << std::endl;
   return return_value;
+}
+
+void heartbeat(const iem::Session session) {
+  // Assume authenticated
+  while (true) {
+    // session.heartbeat();
+
+    std::this_thread::sleep_for(std::chrono::minutes(5));
+  }
 }
 
 int main(int argc, char* argv[]) {

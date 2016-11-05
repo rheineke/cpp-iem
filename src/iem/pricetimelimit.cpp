@@ -34,7 +34,7 @@ bool PriceTimeLimit::is_ioc(const Price& price,
 
   if (price == nanPrice() && expiration == not_a_date_time) {
     return true;
-  } else if (price != nanPrice() && expiration != not_a_date_time) {
+  } else if (price != nanPrice()) {
     return false;
   } else {
     constexpr auto kBufSize = 96;
