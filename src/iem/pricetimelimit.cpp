@@ -86,12 +86,24 @@ boost::posix_time::ptime read_expiration_ptime(const std::string& market_name,
   return boost::posix_time::ptime(expiry_dt, t);
 }
 
+const std::string to_string(const boost::posix_time::ptime& expiration_ptime) {
+  if (expiration_ptime == boost::posix_time::not_a_date_time) {
+    return "No expiration";
+  }
+  std::ostringstream ss;
+  // Locale object owns the facet instance so no memory leak here
+  auto* p_tod_facet(new boost::posix_time::time_facet("%Y-%m-%d %I:%M %p"));
+  ss.imbue(std::locale(ss.getloc(), p_tod_facet));
+  ss << expiration_ptime;
+  return ss.str();
+}
+
 std::ostream& operator<<(std::ostream& os, const PriceTimeLimit& ptl) {
   if (ptl.ioc()) {
     return os << "IOC";
   } else {
     os << "GoodTill{price=" << ptl.price() <<
-        ", expiration=" << ptl.expiration() << '}';
+        ", expiration=" << to_string(ptl.expiration()) << '}';
     return os;
   }
 }

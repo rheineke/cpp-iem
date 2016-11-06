@@ -61,6 +61,8 @@ Price _parse_price(const std::string &px_str);
 
 position_t _parse_quantity(const std::string &qty_str);
 
+const ClientRequest _order_request(const Order& order);
+
 }  // namespace iem
 
 #endif

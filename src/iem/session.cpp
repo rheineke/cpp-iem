@@ -237,23 +237,8 @@ const ClientResponse Session::asset_holdings(const Contract& contract) {
   return response;
 }
 
-const ClientResponse Session::place_order(const Order& order) {
-  // Construct request
-  auto order_request = buildRequest("order/LimitOrder.action");
-  // TODO(rheineke): Differentiate order types
-  // Set cookie
-  order_request << boost::network::header("Cookie", cookie());
-  // POST request
-  const auto& response = client_.post(order_request);
-  return response;
-}
-
 const std::string _limit_order_type(Side side) {
   return (side == Side::BUY) ? "bid" : "ask";
-}
-
-const std::string _expiration_date(const Single& order) {
-  return to_iso_extended_string(order.price_time_limit().expiration().date());
 }
 
 const ClientRequest limit_order_request(const Single& order) {
@@ -261,33 +246,34 @@ const ClientRequest limit_order_request(const Single& order) {
   // Construct request
   const auto& c = order.contract();
   auto order_request = buildRequest(
-      "order/LimitOrder.action",
+      "/iem/trader/order/LimitOrder.action",
       {
           {"limitOrderAssetToMarket", std::to_string(c.asset_to_market_id())},
           {"orderType", _limit_order_type(order.side())},
-          {"expirationDate", _expiration_date(order)},
+          {"expirationDate", to_string(order.price_time_limit().expiration())},
           {"price", to_string(order.price_time_limit().price())},
           {"limitOrderQuantity", std::to_string(order.quantity())},
-          {"placeLimitOder", "Place Limit Order"},
-          {"market", std::to_string(c.market().value())}
+          {"placeLimitOrder", "Place Limit Order"},
+          {"market", std::to_string(c.market().value())},
+          {"_sourcePage", ""},
       });
   return order_request;
 }
 
 const std::string _market_order_type(Side side) {
-  return (side == Side::BUY) ? "buy" : "SELL";
+  return (side == Side::BUY) ? "buy" : "sell";
 }
 
 const ClientRequest market_order_request(const Single& order) {
   // Construct request
   const auto& c = order.contract();
   auto order_request = buildRequest(
-      "order/MarketOrder.action",
+      "/iem/trader/order/MarketOrder.action",
       {
           {"limitOrderAssetToMarket", std::to_string(c.asset_to_market_id())},
           {"orderType", _market_order_type(order.side())},
           {"marketOrderQuantity", std::to_string(order.quantity())},
-          {"placeMarketOder", "Place Market Order"},
+          {"placeMarketOrder", "Place Market Order"},
           {"market", std::to_string(c.market().value())}
       });
   return order_request;
@@ -297,15 +283,34 @@ const ClientRequest bundle_order_request(const Bundle& order) {
   // Construct request
   const auto& cb = order.contract_bundle();
   auto order_request = buildRequest(
-      "order/MarketOrder.action",
+      "/iem/trader/order/MarketOrder.action",
       {
           {"limitOrderAssetToMarket", std::to_string(cb.bundle_id())},
           {"orderType", _market_order_type(order.side())},
           {"bundleOrderQuantity", std::to_string(order.quantity())},
-          {"placeBundleOder", "Place Bundle Order"},
+          {"placeBundleOrder", "Place Bundle Order"},
           {"market", std::to_string(cb.market().value())}
       });
   return order_request;
+}
+
+const ClientRequest _order_request(const Order& order) {
+  if (order.price_time_limit().ioc()) {
+    // TODO(rheineke): Differentiate bundle order - virtual function?
+    return market_order_request(static_cast<const Single&>(order));
+  } else {
+    return limit_order_request(static_cast<const Single&>(order));
+  }
+}
+
+const ClientResponse Session::place_order(const Order& order) {
+  // Construct request
+  ClientRequest order_request = _order_request(order);
+  // Set cookie
+  order_request << boost::network::header("Cookie", cookie());
+  // POST request
+  const auto& response = client_.post(order_request);
+  return response;
 }
 
 const ClientResponse Session::cancel_order(const Single& order) {

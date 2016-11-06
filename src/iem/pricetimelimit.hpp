@@ -31,6 +31,10 @@ class PriceTimeLimit final {
 boost::posix_time::ptime read_expiration_ptime(const std::string& market_name,
                                                const std::string& asset_name);
 
+// Returns IEM formatted expiration date string. Provided as top level function
+// so that all expirations can be printed consistently.
+const std::string to_string(const boost::posix_time::ptime& expiration_ptime);
+
 std::ostream& operator<<(std::ostream& os, const PriceTimeLimit& ptl);
 
 } // namespace iem

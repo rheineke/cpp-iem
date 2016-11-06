@@ -9,7 +9,7 @@ namespace iem {
 
 boost::posix_time::ptime _test_ptime() {
   const auto dt = boost::gregorian::date(2016, boost::date_time::Jan, 10);
-  const auto t = boost::posix_time::time_duration(10, 00, 00);
+  const auto t = boost::posix_time::time_duration(20, 01, 00);
   return boost::posix_time::ptime(dt, t);
 }
 
@@ -31,9 +31,14 @@ TEST(PriceTimeLimitTest, IOC) {
 }
 
 TEST(PriceTimeLimitTest, SessionStringFormat) {
-  // TODO(rheineke): Expose session::_expiration_date to test elsewhere?
-  const auto& d = _test_ptime().date();
+  const auto ptime = _test_ptime();
+  const auto& d = ptime.date();
+  const auto& tod = ptime.time_of_day();
+  EXPECT_EQ(boost::posix_time::to_iso_extended_string(ptime),
+            "2016-01-10T20:01:00");
   EXPECT_EQ(boost::gregorian::to_iso_extended_string(d), "2016-01-10");
+  EXPECT_EQ(to_string(ptime), "2016-01-10 08:01 PM");
+  EXPECT_EQ(to_string(boost::posix_time::not_a_date_time), "No expiration");
 }
 
 TEST(PriceTimeLimitTest, ExpiryDate) {

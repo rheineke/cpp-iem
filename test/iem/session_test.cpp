@@ -24,4 +24,15 @@ TEST(SessionTest, PositionParser) {
   EXPECT_EQ(qty, 0);
 }
 
+TEST(SessionTest, LimitOrderRequest) {
+  const auto contract_name = "FRsame1216";
+  const iem::Contract c(contract_name);
+  const iem::Price px(1);
+  const iem::PriceTimeLimit ptl(px, boost::posix_time::not_a_date_time);
+  const iem::Single o(c, iem::Side::BUY, 1, ptl);
+  const auto request = iem::_order_request(o);
+  // TODO(rheineke): Unit test aspects of this
+  std::cout << body(request) << std::endl;
+}
+
 }  // namespace iem

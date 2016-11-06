@@ -44,6 +44,15 @@ int _main(int argc, char* argv[]) {
     std::cout << ob << std::endl;
   }
 
+  // Send a test order
+  const auto contract_name = "FRsame1216";
+  const iem::Contract c(contract_name);
+  const iem::Price px(1);
+  const iem::PriceTimeLimit ptl(px, boost::posix_time::not_a_date_time);
+  const iem::Single o(c, iem::Side::BUY, 1, ptl);
+  const auto response = session.place_order(o);
+  // std::cout << body(response) << std::endl;
+
   // TODO(rheineke): Generate a heartbeat thread with a mutex around cookie
   // Make simple request every n minutes and call authenticate(...) with
   // forceLogin=True if request fails. Update mutexed cookie if necessary
