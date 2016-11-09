@@ -10,6 +10,7 @@ add_library(cppiemlib
         iem/contract.hpp iem/contract.cpp
         iem/event_strategy.hpp iem/event_strategy.cpp
         iem/executedorder.hpp iem/executedorder.cpp
+        iem/fatfinger_strategy.hpp iem/fatfinger_strategy.cpp
         iem/logger.hpp iem/logger.cpp
         iem/order.hpp iem/order.cpp
         iem/orderbook.hpp iem/orderbook.cpp

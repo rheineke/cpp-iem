@@ -44,8 +44,9 @@ class Session {
   const ClientResponse cancel_order(const Single& order);
 
  private:
-  std::string username_;
-  std::string password_;
+  const std::string username_;
+  const std::string password_;
+  // TODO(rheineke): Cooke and client should be wrapped (each?) in a mutex
   std::string cookie_;
   boost::network::http::client client_;
 };
