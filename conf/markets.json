@@ -1,93 +1,123 @@
 {
   "FedPolicyB": {
     "id": 51,
-    "assets": {
-      "FRup0616": {"id": 3042, "order": 290},
-      "FRsame0616": {"id": 3043, "order": 291},
-      "FRdown0616": {"id": 3044, "order": 292},
-      "FRup0716": {"id": 3045, "order": 293},
-      "FRsame0716": {"id": 3046, "order": 294},
-      "FRdown0716": {"id": 3047, "order": 295},
-      "FRup0916": {"id": 3048, "order": 296},
-      "FRsame0916": {"id": 3049, "order": 297},
-      "FRdown0916": {"id": 3050, "order": 298},
-      "FRup1116": {"id": 3051, "order": 299},
-      "FRsame1116": {"id": 3052, "order": 300},
-      "FRdown1116": {"id": 3053, "order": 301},
-      "FRup1216": {"id": 3054, "order": 302},
-      "FRsame1216": {"id": 3055, "order": 303},
-      "FRdown1216": {"id": 3056, "order": 304},
-      "FRup0117": {"id": 3057, "order": 305},
-      "FRsame0117": {"id": 3058, "order": 306},
-      "FRdown0117": {"id": 3059, "order": 307}
-    },
     "bundle": {
-      "0616": 704,
-      "0716": 705,
-      "0916": 706,
-      "1116": 707,
-      "1216": 708,
-      "0117": 709
-    },
-    "expiry_date": {
-      "0616": "2016-06-15",
-      "0716": "2016-07-27",
-      "0916": "2016-09-21",
-      "1116": "2016-11-02",
-      "1216": "2016-12-14",
-      "0117": "2017-02-01"
+      "0616": {
+        "assets": {
+          "FRup0616": {"id": 3042, "order": 290},
+          "FRsame0616": {"id": 3043, "order": 291},
+          "FRdown0616": {"id": 3044, "order": 292}
+        },
+        "bundle_id": 704,
+        "expiry_date": "2016-06-15"
+      },
+      "0716": {
+        "assets": {
+          "FRup0716": {"id": 3045, "order": 293},
+          "FRsame0716": {"id": 3046, "order": 294},
+          "FRdown0716": {"id": 3047, "order": 295}
+        },
+        "bundle_id": 705,
+        "expiry_date": "2016-07-27"
+      },
+      "0916": {
+        "assets": {
+          "FRup0916": {"id": 3048, "order": 296},
+          "FRsame0916": {"id": 3049, "order": 297},
+          "FRdown0916": {"id": 3050, "order": 298}
+        },
+        "bundle_id": 706,
+        "expiry_date": "2016-09-21"
+      },
+      "1116": {
+        "assets": {
+          "FRup1116": {"id": 3051, "order": 299},
+          "FRsame1116": {"id": 3052, "order": 300},
+          "FRdown1116": {"id": 3053, "order": 301}
+        },
+        "bundle_id": 707,
+        "expiry_date": "2016-11-02"
+      },
+      "1216": {
+        "assets": {
+          "FRup1216": {"id": 3054, "order": 302},
+          "FRsame1216": {"id": 3055, "order": 303},
+          "FRdown1216": {"id": 3056, "order": 304}
+        },
+        "bundle_id": 708,
+        "expiry_date": "2016-12-14"
+      },
+      "0117": {
+        "assets": {
+          "FRup0117": {"id": 3057, "order": 305},
+          "FRsame0117": {"id": 3058, "order": 306},
+          "FRdown0117": {"id": 3059, "order": 307}
+        },
+        "bundle_id": 709,
+        "expiry_date": "2017-02-01"
+      }
     }
   },
   "Congress16": {
     "id": 360,
-    "assets": {
-      "DH_DS16": {"id": 3014, "order": 0 },
-      "RH_DS16": {"id": 3015, "order": 0 },
-      "DH_RS16": {"id": 3016, "order": 0 },
-      "RH_RS16": {"id": 3017, "order": 0 },
-      "OTHER16": {"id": 3018, "order": 0 }
-    },
-    "bundle": 698,
-    "expiry_date": "2016-11-08"
+    "bundle": {
+      "assets": {
+        "DH_DS16": {"id": 3014, "order": 0 },
+        "RH_DS16": {"id": 3015, "order": 0 },
+        "DH_RS16": {"id": 3016, "order": 0 },
+        "RH_RS16": {"id": 3017, "order": 0 },
+        "OTHER16": {"id": 3018, "order": 0 }
+      },
+      "bundle_id": 698,
+      "expiry_date": "2016-11-08"
+    }
   },
   "PRES16_VS": {
     "id": 361,
-    "assets": {
-      "UDEM16_VS": {"id": 3019, "order": 273},
-      "UREP16_VS": {"id": 3020, "order": 274}
-    },
-    "bundle": 699,
-    "expiry_date": "2016-11-08"
+    "bundle": {
+      "assets": {
+        "UDEM16_VS": {"id": 3019, "order": 273},
+        "UREP16_VS": {"id": 3020, "order": 274}
+      },
+      "bundle_id": 699,
+      "expiry_date": "2016-11-08"
+    }
   },
   "PRES16_WTA": {
     "id": 362,
-    "assets": {
-      "DEM16_WTA": {"id": 3021, "order": 275},
-      "REP16_WTA": {"id": 3022, "order": 276}
-    },
-    "bundle": 700,
-    "expiry_date": "2016-11-08"
+    "bundle": {
+      "assets": {
+        "DEM16_WTA": {"id": 3021, "order": 275},
+        "REP16_WTA": {"id": 3022, "order": 276}
+      },
+      "bundle_id": 700,
+      "expiry_date": "2016-11-08"
+    }
   },
   "RCONV16": {
     "id": 364,
-    "assets": {
-      "CARS_NOM": {"id": 3034, "order": 282},
-      "CRUZ_NOM": {"id": 3035, "order": 283},
-      "RUBI_NOM": {"id": 3036, "order": 284},
-      "TRUM_NOM": {"id": 3037, "order": 285},
-      "RROF_NOM": {"id": 3038, "order": 286}
-    },
-    "bundle": 702,
-    "expiry_date": "2016-07-18"
+    "bundle": {
+      "assets": {
+        "CARS_NOM": {"id": 3034, "order": 282},
+        "CRUZ_NOM": {"id": 3035, "order": 283},
+        "RUBI_NOM": {"id": 3036, "order": 284},
+        "TRUM_NOM": {"id": 3037, "order": 285},
+        "RROF_NOM": {"id": 3038, "order": 286}
+      },
+      "bundle_id": 702,
+      "expiry_date": "2016-07-18"
+    }
   },
   "DCONV16": {
     "id": 365,
-    "assets": {
-      "CLIN_NOM": {"id": 3039, "order": 287},
-      "SAND_NOM": {"id": 3040, "order": 288},
-      "DROF_NOM": {"id": 3041, "order": 289}
-    },
-    "bundle": 703,
-    "expiry_date": "2016-07-25"
+    "bundle": {
+      "assets": {
+        "CLIN_NOM": {"id": 3039, "order": 287},
+        "SAND_NOM": {"id": 3040, "order": 288},
+        "DROF_NOM": {"id": 3041, "order": 289}
+      },
+      "bundle_id": 703,
+      "expiry_date": "2016-07-25"
+    }
   }
 }

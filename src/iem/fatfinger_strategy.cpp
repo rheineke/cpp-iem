@@ -7,6 +7,10 @@ namespace iem {
 
 std::vector<std::unique_ptr<Order>> fatfinger_orders(const Market market,
                                                      const Quantity qty) {
+  std::vector<std::unique_ptr<Order>> os;
+
+  const auto& mkt_dict = read_markets_json()[market.name()];
+
   return {};
 }
 

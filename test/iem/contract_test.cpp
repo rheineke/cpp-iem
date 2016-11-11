@@ -36,18 +36,20 @@ TEST(ContractTest, ContractBundle) {
 
     // Expected market object
     const auto expected_market = Market(name);
-    if (bundles_value.isObject()) {
+
+    const auto bundle_id_value = bundles_value["bundle_id"];
+    if (bundle_id_value.isNull()) {
       // Market has at least one expiration; iterate through all
       for (const auto& bundle_exp : bundles_value.getMemberNames()) {
         const auto exp_monthyear = expiration_monthyear(bundle_exp);
         const ContractBundle cb(name, exp_monthyear);
         EXPECT_EQ(cb.market().value(), expected_market.value());
         EXPECT_EQ(cb.expiration(), exp_monthyear);
-        EXPECT_EQ(cb.bundle_id(), bundles_value[bundle_exp].asInt());
+        EXPECT_EQ(cb.bundle_id(), bundles_value[bundle_exp]["bundle_id"].asInt());
       }
     } else {
       // Market has one expiration associated with it
-      const auto expected_bundle_id = bundles_value.asInt();
+      const auto expected_bundle_id = bundle_id_value.asInt();
       const MonthYear null_exp(boost::date_time::months_of_year::NotAMonth, 0);
       const ContractBundle cb(name, null_exp);
       EXPECT_EQ(cb.market().value(), expected_market.value());

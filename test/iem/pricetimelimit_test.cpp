@@ -45,9 +45,19 @@ TEST(PriceTimeLimitTest, ExpiryDate) {
   const auto& markets_dict = read_markets_json();
 
   for (const auto& mkt_name : markets_dict.getMemberNames()) {
-    const auto& assets_value = markets_dict[mkt_name]["assets"];
-    for (const auto& asset_name : assets_value.getMemberNames()) {
-      EXPECT_NO_THROW(read_expiration_ptime(mkt_name, asset_name));
+    const auto& bundle_value = markets_dict[mkt_name]["bundle"];
+    const auto& assets_value = bundle_value["assets"];
+    if (assets_value.isNull()) {
+      for (const auto& bundle_name : bundle_value.getMemberNames()) {
+        const auto& assets_value = bundle_value[bundle_name]["assets"];
+        for (const auto &asset_name : assets_value.getMemberNames()) {
+          EXPECT_NO_THROW(read_expiration_ptime(mkt_name, asset_name));
+        }
+      }
+    } else {
+      for (const auto &asset_name : assets_value.getMemberNames()) {
+        EXPECT_NO_THROW(read_expiration_ptime(mkt_name, asset_name));
+      }
     }
   }
 }

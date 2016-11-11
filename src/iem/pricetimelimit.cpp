@@ -62,17 +62,20 @@ bool PriceTimeLimit::is_ioc(const Price& price,
 
 boost::gregorian::date _read_expiration_date(const std::string& market_name,
                                              const std::string& asset_name) {
-  const auto expiry_dt_value = read_markets_json()[market_name]["expiry_date"];
-  if (expiry_dt_value.isNull()) {
-    throw std::invalid_argument("Market expiry_date name not found");
-  }
-
+  const auto& bundle_value = read_markets_json()[market_name]["bundle"];
+  const auto& expiry_dt_value = bundle_value["expiry_date"];
   std::string expiry_date_str;
-  if (expiry_dt_value.isObject()) {
-    // Assume that asset_name contains expiry_date key
-    // TODO(rheineke): More robust way of splitting asset name?
-    const auto expiry_date_key = asset_name.substr(asset_name.size() - 4);
-    expiry_date_str = expiry_dt_value[expiry_date_key].asString();
+  if (expiry_dt_value.isNull()) {
+    for (const auto& bundle_name : bundle_value.getMemberNames()) {
+      const auto& asset_value = bundle_value[bundle_name]["assets"][asset_name];
+      if (!asset_value.isNull()) {
+        expiry_date_str = bundle_value[bundle_name]["expiry_date"].asString();
+      }
+    }
+
+    if (expiry_date_str.length() == 0) {
+      throw std::invalid_argument("Market expiry_date name not found");
+    }
   } else {
     expiry_date_str = expiry_dt_value.asString();
   }

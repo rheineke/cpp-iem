@@ -56,11 +56,9 @@ int _read_bundle_id(const std::string& market_name,
                     const MonthYear& expiration) {
   const auto bundles_value = read_markets_json()[market_name]["bundle"];
 
-  Json::Value id_value;
-  if (bundles_value.isObject()) {
-    id_value = bundles_value[_expiration_string(expiration)];
-  } else {
-    id_value = bundles_value;
+  Json::Value id_value = bundles_value["bundle_id"];
+  if (id_value.isNull()) {
+    id_value = bundles_value[_expiration_string(expiration)]["bundle_id"];
   }
 
   if (id_value == Json::Value::nullSingleton()) {
@@ -89,22 +87,43 @@ const std::string _read_market_name(const std::string &contract_name) {
   const auto mkts_dict = read_markets_json();
 
   for (const auto& market_name : mkts_dict.getMemberNames()) {
-    const auto& mkt_dict = mkts_dict[market_name];
-    const auto asset_value = mkt_dict["assets"][contract_name];
+    const auto& bundle_value = mkts_dict[market_name]["bundle"];
+    const auto& assets_value = bundle_value["assets"];
+    if (assets_value.isNull()) {
+      for (const auto& bundle_name : bundle_value.getMemberNames()) {
+        const auto& asset_value = bundle_value[bundle_name]["assets"][contract_name];
+        if (!asset_value.isNull()) {
+          return market_name;
+        }
+      }
+    }
+
+    const auto asset_value = assets_value[contract_name];
     if (!asset_value.isNull()) {
       return market_name;
     }
   }
 
-  throw std::invalid_argument("Contract name not found");
+  throw std::invalid_argument("Market name for contract name not found");
 }
 
 int _read_asset_id(const std::string &contract_name) {
   const auto mkts_dict = read_markets_json();
-  for (const auto& market_name : mkts_dict.getMemberNames()) {
-    const auto& mkt_dict = mkts_dict[market_name];
-    const auto asset_value = mkt_dict["assets"][contract_name];
 
+  for (const auto& market_name : mkts_dict.getMemberNames()) {
+    const auto& bundle_value = mkts_dict[market_name]["bundle"];
+    const auto& assets_value = bundle_value["assets"];
+
+    if (assets_value.isNull()) {
+      for (const auto& bundle_name : bundle_value.getMemberNames()) {
+        const auto& asset_value = bundle_value[bundle_name]["assets"][contract_name];
+        if (!asset_value.isNull()) {
+          return asset_value["id"].asInt();
+        }
+      }
+    }
+
+    const auto& asset_value = assets_value[contract_name];
     if (!asset_value.isNull()) {
       return asset_value["id"].asInt();
     }
@@ -116,9 +135,19 @@ int _read_asset_id(const std::string &contract_name) {
 Json::Value _read_asset(const std::string& contract_name) {
   const auto mkts_dict = read_markets_json();
   for (const auto& market_name : mkts_dict.getMemberNames()) {
-    const auto& mkt_dict = mkts_dict[market_name];
-    const auto asset_value = mkt_dict["assets"][contract_name];
+    const auto& bundle_value = mkts_dict[market_name]["bundle"];
+    auto& assets_value = bundle_value["assets"];
+    if (assets_value.isNull()) {
+      for (const auto& bundle_name : bundle_value.getMemberNames()) {
+        auto& assets_value = bundle_value[bundle_name]["assets"];
+        const auto& asset_value = assets_value[contract_name];
+        if (!asset_value.isNull()) {
+          return asset_value;
+        }
+      }
+    }
 
+    const auto asset_value = assets_value[contract_name];
     if (!asset_value.isNull()) {
       return asset_value;
     }
@@ -135,7 +164,7 @@ int _read_asset_to_market_id(const std::string& contract_name) {
 Contract::Contract(const std::string& contract_name):
     market_(_read_market_name(contract_name)),
     asset_id_(_read_asset_id(contract_name)),
-    asset_to_market_id_(_read_asset_to_market_id(contract_name)){
+    asset_to_market_id_(_read_asset_to_market_id(contract_name)) {
 
 }
 
