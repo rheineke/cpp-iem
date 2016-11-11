@@ -170,7 +170,8 @@ Contract::Contract(const std::string& contract_name):
 
 std::ostream& operator<<(std::ostream& os, const Contract& c) {
   os << "{\"market\":" << c.market()
-     << ", \"asset\":" << c.asset_id() << "}";
+     << ", \"asset\":" << c.asset_id()
+     << ", \"asset_to_market\":" << c.asset_to_market_id() << "}";
   return os;
 }
 
