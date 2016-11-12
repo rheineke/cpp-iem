@@ -7,6 +7,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} iem)
 add_library(cppiemlib
         json/json.h json/json-forwards.h
         jsoncpp.cpp
+        iem/config.hpp iem/config.cpp
         iem/contract.hpp iem/contract.cpp
         iem/event_strategy.hpp iem/event_strategy.cpp
         iem/executedorder.hpp iem/executedorder.cpp

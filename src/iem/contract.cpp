@@ -1,7 +1,6 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/contract.hpp"
 
-#include <fstream>
 #include <regex>
 #include <string>
 
@@ -11,26 +10,9 @@ std::ostream& operator<<(std::ostream& os, const MonthYear& my) {
   return os << "(" << my.first << ", " << static_cast<int>(my.second) << ")";
 }
 
-const Json::Value& read_markets_json(char const* filename) {
-  // Open file in binary mode
-  static Json::Value root;
-  // TODO(rheineke): Check filename for existence
-  if (root.isNull()) {
-    std::ifstream config_doc(filename, std::ifstream::binary);
-    config_doc >> root;
-  }
-
-  return root;
-}
-
 int _read_market_value(const std::string &name, char const *filename) {
-  const auto id_value = read_markets_json(filename)[name]["id"];
-
-  if (id_value.isNull()) {
-    throw std::invalid_argument("Market name not found");
-  }
-
-  return id_value.asInt();
+  const auto& json_root = read_markets_json(filename);
+  return market_value(json_root, name)["id"].asInt();
 }
 
 Market::Market(const std::string& name, char const* filename):
@@ -54,18 +36,10 @@ std::string _expiration_string(const MonthYear& expiration) {
 
 int _read_bundle_id(const std::string& market_name,
                     const MonthYear& expiration) {
-  const auto bundles_value = read_markets_json()[market_name]["bundle"];
-
-  Json::Value id_value = bundles_value["bundle_id"];
-  if (id_value.isNull()) {
-    id_value = bundles_value[_expiration_string(expiration)]["bundle_id"];
-  }
-
-  if (id_value == Json::Value::nullSingleton()) {
-    throw std::invalid_argument("Bundle id not found");
-  }
-
-  return id_value.asInt();
+  const auto json_root = read_markets_json();
+  const auto expiry_date_str = _expiration_string(expiration);
+  const auto bundle_val = bundle_value(json_root, market_name, expiry_date_str);
+  return bundle_val["bundle_id"].asInt();
 }
 
 ContractBundle::ContractBundle(const std::string& market_name,
@@ -161,8 +135,9 @@ int _read_asset_to_market_id(const std::string& contract_name) {
   return asset_value["order"].asInt();
 }
 
-Contract::Contract(const std::string& contract_name):
-    market_(_read_market_name(contract_name)),
+Contract::Contract(const std::string& market_name,
+                   const std::string& contract_name):
+    market_(market_name),
     asset_id_(_read_asset_id(contract_name)),
     asset_to_market_id_(_read_asset_to_market_id(contract_name)) {
 

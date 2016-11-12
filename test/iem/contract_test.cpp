@@ -62,10 +62,11 @@ TEST(ContractTest, ContractBundle) {
 TEST(ContractTest, Contract) {
   const auto markets_dict = read_markets_json();
 
-  for (const auto& mkt_dict : markets_dict) {
+  for (const auto& mkt_name : markets_dict.getMemberNames()) {
+    const auto& mkt_dict = markets_dict[mkt_name];
     const auto& assets_value = mkt_dict["assets"];
     for (const auto& contract_name : assets_value.getMemberNames()) {
-      Contract c(contract_name);
+      Contract c(mkt_name, contract_name);
       EXPECT_EQ(c.market().value(), mkt_dict["id"].asInt());
       EXPECT_EQ(c.asset_id(), assets_value[contract_name]["id"].asInt());
     }

@@ -14,7 +14,7 @@ std::vector<std::unique_ptr<Order>> event_orders(const Event& event,
 
   // Buy outstanding orders for in-the-money (ITM) contract
   const PriceTimeLimit itm_ptl(Price(999), exp_ptime);
-  const Contract itm_c(itm_asset_name);
+  const Contract itm_c(mkt_name, itm_asset_name);
   os.emplace_back(std::make_unique<Single>(itm_c, Side::BUY, qty, itm_ptl));
 
   // Buy bundle from exchange (optional)
@@ -26,7 +26,7 @@ std::vector<std::unique_ptr<Order>> event_orders(const Event& event,
   const std::array<std::string, 2> otm_asset_names{{"FRup1116", "FRdown1116"}};
   const PriceTimeLimit otm_ptl(Price(1), exp_ptime);
   for (const auto& otm_asset_name : otm_asset_names) {
-    const Contract otm_c(otm_asset_name);
+    const Contract otm_c(mkt_name, otm_asset_name);
     os.emplace_back(std::make_unique<Single>(otm_c, Side::SELL, qty, otm_ptl));
   }
   return os;

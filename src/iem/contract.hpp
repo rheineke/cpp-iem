@@ -9,7 +9,7 @@
 
 #include <boost/date_time/date_defs.hpp>
 
-#include "json/json.h"
+#include "iem/config.hpp"
 
 namespace iem {
 
@@ -24,10 +24,6 @@ using Year = uint_fast8_t;
 using MonthYear = std::pair<Month, Year>;
 
 std::ostream& operator<<(std::ostream& os, const MonthYear& month_year);
-
-constexpr auto kDefaultFilename = "conf/markets.json";
-
-const Json::Value& read_markets_json(char const* filename=kDefaultFilename);
 
 class Market final {
  public:
@@ -60,7 +56,8 @@ std::ostream& operator<<(std::ostream& os, const ContractBundle& cb);
 
 class Contract final {
  public:
-  explicit Contract(const std::string& contract_name);
+  explicit Contract(const std::string& market_name,
+                    const std::string& contract_name);
 
   inline Market market() const noexcept { return market_; }
   // TODO(rheineke): Is asset id used in any way?

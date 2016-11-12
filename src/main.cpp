@@ -45,8 +45,7 @@ int _main(int argc, char* argv[]) {
   }
 
   // Send a test order
-  const auto contract_name = "FRsame1216";
-  const iem::Contract c(contract_name);
+  const iem::Contract c("FedPolicyB", "FRsame1216");
   const iem::Price px(1);
   const iem::PriceTimeLimit ptl(px, boost::posix_time::not_a_date_time);
   const iem::Single o(c, iem::Side::BUY, 1, ptl);
