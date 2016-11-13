@@ -58,58 +58,17 @@ std::ostream& operator<<(std::ostream& os, const ContractBundle& cb) {
 }
 
 int _read_asset_id(const std::string& market_name,
-                   const std::string &contract_name) {
+                   const std::string& contract_name) {
   const auto& json_root = read_markets_json();
-  const auto& mkt_value = market_value(json_root, market_name);
-  const auto& bundle_value = mkt_value["bundle"];
-  const auto& assets_value = bundle_value["assets"];
-
-  if (assets_value.isNull()) {
-    for (const auto& bundle_name : bundle_value.getMemberNames()) {
-      const auto& asset_value = bundle_value[bundle_name]["assets"][contract_name];
-      if (!asset_value.isNull()) {
-        return asset_value["id"].asInt();
-      }
-    }
-  }
-
-  const auto& asset_value = assets_value[contract_name];
-  if (!asset_value.isNull()) {
-    return asset_value["id"].asInt();
-  }
-
-  throw std::invalid_argument("Contract name not found");
-}
-
-Json::Value _read_asset(const std::string& market_name,
-                        const std::string& contract_name) {
-  const auto json_root = read_markets_json();
-  const auto& mkt_value = market_value(json_root, market_name);
-  const auto& bundle_value = mkt_value["bundle"];
-  auto& assets_value = bundle_value["assets"];
-
-  if (assets_value.isNull()) {
-    for (const auto& bundle_name : bundle_value.getMemberNames()) {
-      auto& assets_value = bundle_value[bundle_name]["assets"];
-      const auto& asset_value = assets_value[contract_name];
-      if (!asset_value.isNull()) {
-        return asset_value;
-      }
-    }
-  }
-
-  const auto asset_value = assets_value[contract_name];
-  if (!asset_value.isNull()) {
-    return asset_value;
-  }
-
-  throw std::invalid_argument("Contract name not found");
+  const auto& asset_val = asset_value(json_root, market_name, contract_name);
+  return asset_val["id"].asInt();
 }
 
 int _read_asset_to_market_id(const std::string& market_name,
                              const std::string& contract_name) {
-  const auto asset_value = _read_asset(market_name, contract_name);
-  return asset_value["order"].asInt();
+  const auto& json_root = read_markets_json();
+  const auto& asset_val = asset_value(json_root, market_name, contract_name);
+  return asset_val["order"].asInt();
 }
 
 Contract::Contract(const std::string& market_name,

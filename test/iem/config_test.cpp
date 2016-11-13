@@ -26,7 +26,28 @@ TEST(ConfigTest, BundleValue) {
         EXPECT_FALSE(bundle_value(root, market_name, bundle_name).isNull());
       }
     } else {  // Market has one bundle
-      // EXPECT_FALSE(bundle_value(root, market_name, "").isNull());
+      EXPECT_FALSE(bundle_value(root, market_name, "").isNull());
+    }
+  }
+}
+
+TEST(ConfigTest, AssetValue) {
+  const auto& root = read_markets_json();
+  for (const auto& market_name : root.getMemberNames()) {
+    // Non-const return value will insert a null value for "bundle"
+    const auto& bundles_val = root[market_name]["bundle"];
+    if (bundles_val["bundle_id"].isNull()) {  // Market has multiple bundles
+      for (const auto& bundle_val : bundles_val) {
+        const auto& assets_val = bundle_val["assets"];
+        for (const auto& asset_name : assets_val.getMemberNames()) {
+          EXPECT_FALSE(asset_value(root, market_name, asset_name).isNull());
+        }
+      }
+    } else {  // Market has one bundle
+      const auto& assets_val = bundles_val["assets"];
+      for (const auto& asset_name : assets_val.getMemberNames()) {
+        EXPECT_FALSE(asset_value(root, market_name, asset_name).isNull());
+      }
     }
   }
 }
