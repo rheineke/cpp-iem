@@ -17,9 +17,6 @@ const Json::Value bundle_value(const Json::Value& json_root,
                                const std::string& market_name,
                                const std::string& expiry_date_str);
 
-//const Json::Value market_value(const Json::Value& json_root,
-//                               const std::string& asset_name);
-
 }  // namespace iem
 
 #endif //CPP_IEM_CONFIG_HPP_

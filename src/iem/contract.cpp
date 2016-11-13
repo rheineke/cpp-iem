@@ -57,89 +57,66 @@ std::ostream& operator<<(std::ostream& os, const ContractBundle& cb) {
   return os;
 }
 
-const std::string _read_market_name(const std::string &contract_name) {
-  const auto mkts_dict = read_markets_json();
+int _read_asset_id(const std::string& market_name,
+                   const std::string &contract_name) {
+  const auto& json_root = read_markets_json();
+  const auto& mkt_value = market_value(json_root, market_name);
+  const auto& bundle_value = mkt_value["bundle"];
+  const auto& assets_value = bundle_value["assets"];
 
-  for (const auto& market_name : mkts_dict.getMemberNames()) {
-    const auto& bundle_value = mkts_dict[market_name]["bundle"];
-    const auto& assets_value = bundle_value["assets"];
-    if (assets_value.isNull()) {
-      for (const auto& bundle_name : bundle_value.getMemberNames()) {
-        const auto& asset_value = bundle_value[bundle_name]["assets"][contract_name];
-        if (!asset_value.isNull()) {
-          return market_name;
-        }
+  if (assets_value.isNull()) {
+    for (const auto& bundle_name : bundle_value.getMemberNames()) {
+      const auto& asset_value = bundle_value[bundle_name]["assets"][contract_name];
+      if (!asset_value.isNull()) {
+        return asset_value["id"].asInt();
       }
-    }
-
-    const auto asset_value = assets_value[contract_name];
-    if (!asset_value.isNull()) {
-      return market_name;
     }
   }
 
-  throw std::invalid_argument("Market name for contract name not found");
-}
-
-int _read_asset_id(const std::string &contract_name) {
-  const auto mkts_dict = read_markets_json();
-
-  for (const auto& market_name : mkts_dict.getMemberNames()) {
-    const auto& bundle_value = mkts_dict[market_name]["bundle"];
-    const auto& assets_value = bundle_value["assets"];
-
-    if (assets_value.isNull()) {
-      for (const auto& bundle_name : bundle_value.getMemberNames()) {
-        const auto& asset_value = bundle_value[bundle_name]["assets"][contract_name];
-        if (!asset_value.isNull()) {
-          return asset_value["id"].asInt();
-        }
-      }
-    }
-
-    const auto& asset_value = assets_value[contract_name];
-    if (!asset_value.isNull()) {
-      return asset_value["id"].asInt();
-    }
+  const auto& asset_value = assets_value[contract_name];
+  if (!asset_value.isNull()) {
+    return asset_value["id"].asInt();
   }
 
   throw std::invalid_argument("Contract name not found");
 }
 
-Json::Value _read_asset(const std::string& contract_name) {
-  const auto mkts_dict = read_markets_json();
-  for (const auto& market_name : mkts_dict.getMemberNames()) {
-    const auto& bundle_value = mkts_dict[market_name]["bundle"];
-    auto& assets_value = bundle_value["assets"];
-    if (assets_value.isNull()) {
-      for (const auto& bundle_name : bundle_value.getMemberNames()) {
-        auto& assets_value = bundle_value[bundle_name]["assets"];
-        const auto& asset_value = assets_value[contract_name];
-        if (!asset_value.isNull()) {
-          return asset_value;
-        }
+Json::Value _read_asset(const std::string& market_name,
+                        const std::string& contract_name) {
+  const auto json_root = read_markets_json();
+  const auto& mkt_value = market_value(json_root, market_name);
+  const auto& bundle_value = mkt_value["bundle"];
+  auto& assets_value = bundle_value["assets"];
+
+  if (assets_value.isNull()) {
+    for (const auto& bundle_name : bundle_value.getMemberNames()) {
+      auto& assets_value = bundle_value[bundle_name]["assets"];
+      const auto& asset_value = assets_value[contract_name];
+      if (!asset_value.isNull()) {
+        return asset_value;
       }
     }
+  }
 
-    const auto asset_value = assets_value[contract_name];
-    if (!asset_value.isNull()) {
-      return asset_value;
-    }
+  const auto asset_value = assets_value[contract_name];
+  if (!asset_value.isNull()) {
+    return asset_value;
   }
 
   throw std::invalid_argument("Contract name not found");
 }
 
-int _read_asset_to_market_id(const std::string& contract_name) {
-  const auto asset_value = _read_asset(contract_name);
+int _read_asset_to_market_id(const std::string& market_name,
+                             const std::string& contract_name) {
+  const auto asset_value = _read_asset(market_name, contract_name);
   return asset_value["order"].asInt();
 }
 
 Contract::Contract(const std::string& market_name,
                    const std::string& contract_name):
     market_(market_name),
-    asset_id_(_read_asset_id(contract_name)),
-    asset_to_market_id_(_read_asset_to_market_id(contract_name)) {
+    asset_id_(_read_asset_id(market_name, contract_name)),
+    asset_to_market_id_(_read_asset_to_market_id(market_name, contract_name)) {
 
 }
 
