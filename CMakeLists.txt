@@ -27,7 +27,7 @@ add_definitions(-DBOOST_TEST_DYN_LINK)
 # Always use multi-threaded Boost libraries.
 set(Boost_USE_MULTI_THREADED ON)
 
-find_package(Boost 1.62.0 REQUIRED COMPONENTS date_time system)
+find_package(Boost 1.62.0 REQUIRED COMPONENTS date_time filesystem system)
 
 if (APPLE)
     # /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/cmake/cppnetlib/cppnetlibTargets-release.cmake
@@ -61,14 +61,17 @@ if (APPLE)
 endif()
 find_package(OpenSSL 1.0.2 REQUIRED)
 set(OPENSSL_INCLUDE_DIRS /usr/local/opt/openssl/include/)
-set(OPENSSL_LIBRARIES /usr/local/opt/openssl/lib/libssl.dylib;/usr/local/opt/openssl/lib/libcrypto.dylib)
+set(OPENSSL_LIBRARIES
+        /usr/local/opt/openssl/lib/libssl.dylib
+        /usr/local/opt/openssl/lib/libcrypto.dylib)
 
 # set(CMAKE_VERBOSE_MAKEFILE on)
 
 set(CPP-IEM_VERSION_MAJOR 0) # MUST bump this whenever we make ABI-incompatible changes
 set(CPP-IEM_VERSION_MINOR 1)
 set(CPP-IEM_VERSION_PATCH 1)
-set(CPP-IEM_VERSION_STRING ${CPP-IEM_VERSION_MAJOR}.${CPP-IEM_VERSION_MINOR}.${CPP-IEM_VERSION_PATCH})
+set(CPP-IEM_VERSION_STRING
+        ${CPP-IEM_VERSION_MAJOR}.${CPP-IEM_VERSION_MINOR}.${CPP-IEM_VERSION_PATCH})
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DBOOST_NETWORK_DEBUG)

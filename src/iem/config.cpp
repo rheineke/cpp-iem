@@ -3,18 +3,34 @@
 
 #include <fstream>
 
+#include <boost/filesystem.hpp>
+
 namespace iem {
 
-const Json::Value& read_markets_json(char const* filename) {
+std::shared_ptr<const Json::Value> json_root;
+std::once_flag json_flag;
+
+const void init_json_root(char const* filename) {
+//  namespace fs = std::experimental::filesystem;
+  namespace fs = boost::filesystem;
+  fs::path p(filename);
+  if (!fs::exists(p)) {
+    const auto msg = "Path does not exist: " + std::string(filename);
+    throw std::invalid_argument(msg);
+  }
   // Open file in binary mode
-  static Json::Value root;
-  // TODO(rheineke): Check filename for existence
-  if (root.isNull()) {
+  auto p_root = new Json::Value;
+  if (p_root->isNull()) {
     std::ifstream config_doc(filename, std::ifstream::binary);
-    config_doc >> root;
+    config_doc >> *p_root;
   }
 
-  return root;
+  json_root.reset(p_root);
+}
+
+const Json::Value& read_markets_json(char const* filename) {
+  std::call_once(json_flag, init_json_root, filename);
+  return json_root.operator*();
 }
 
 const Json::Value market_value(const Json::Value& json_root,
