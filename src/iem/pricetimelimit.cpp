@@ -62,24 +62,11 @@ bool PriceTimeLimit::is_ioc(const Price& price,
 
 boost::gregorian::date _read_expiration_date(const std::string& market_name,
                                              const std::string& asset_name) {
-  const auto& bundle_value = read_markets_json()[market_name]["bundle"];
-  const auto& expiry_dt_value = bundle_value["expiry_date"];
-  std::string expiry_date_str;
-  if (expiry_dt_value.isNull()) {
-    for (const auto& bundle_name : bundle_value.getMemberNames()) {
-      const auto& asset_value = bundle_value[bundle_name]["assets"][asset_name];
-      if (!asset_value.isNull()) {
-        expiry_date_str = bundle_value[bundle_name]["expiry_date"].asString();
-      }
-    }
-
-    if (expiry_date_str.length() == 0) {
-      throw std::invalid_argument("Market expiry_date name not found");
-    }
-  } else {
-    expiry_date_str = expiry_dt_value.asString();
-  }
-  return boost::gregorian::from_simple_string(expiry_date_str);
+  const auto& json_root = read_markets_json();
+  const auto& expiry_str = asset_name.substr(asset_name.length() - 4);
+  const auto& bundle_val = bundle_value(json_root, market_name, expiry_str);
+  const auto& expiry_dt_str = bundle_val["expiry_date"].asString();
+  return boost::gregorian::from_simple_string(expiry_dt_str);
 }
 
 boost::posix_time::ptime read_expiration_ptime(const std::string& market_name,
