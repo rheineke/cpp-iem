@@ -11,8 +11,9 @@
 
 namespace iem {
 
-std::vector<std::unique_ptr<Order>> fatfinger_orders(const Market market,
-                                                     const Quantity qty);
+Orders fatfinger_orders(const Market& market,
+                        const std::string& expiry_date,
+                        const Quantity qty);
 
 }  // namespace iem
 

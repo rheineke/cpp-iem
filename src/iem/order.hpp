@@ -78,8 +78,9 @@ class Bundle final : public Order {
   ContractBundle contract_bundle_;
 };
 
-// using Orders = std::vector<Single, boost::pool_allocator<Single> >;
-using Orders = std::vector<Single>;
+// using SingleOrders = std::vector<Single, boost::pool_allocator<Single> >;
+using SingleOrders = std::vector<Single>;
+using Orders = std::vector<std::unique_ptr<Order>>;
 
 }  // namespace iem
 

@@ -40,14 +40,14 @@ class OrderBook {
 
   const Price last_trade() const;
 
-  const Orders orders(const Side& side) const;
+  const SingleOrders orders(const Side& side) const;
 
   position_t position() const;
 
   const ExecutedOrders executedOrders() const;
 
-  void update(const Orders& bid_orders,
-              const Orders& ask_orders);
+  void update(const SingleOrders& bid_orders,
+              const SingleOrders& ask_orders);
 
   void update(const ExecutedOrders& executed_orders);
 
@@ -60,8 +60,8 @@ class OrderBook {
   Price best_ask_;
   bool best_ask_priority_;
   Price last_trade_;
-  Orders bid_orders_;
-  Orders ask_orders_;
+  SingleOrders bid_orders_;
+  SingleOrders ask_orders_;
   position_t position_;
 
   ExecutedOrders executed_orders_;
@@ -69,7 +69,7 @@ class OrderBook {
   uint_fast64_t num_updates_;
 };
 
-using OrderInfo = boost::variant<NumOrders, Orders>;
+using OrderInfo = boost::variant<NumOrders, SingleOrders>;
 
 std::ostream& operator<<(std::ostream& os, const OrderInfo& orders);
 

@@ -37,7 +37,7 @@ bool OrderBook::best_price_priority(const Side& side) const {
 
 const Price OrderBook::last_trade() const { return last_trade_; }
 
-const Orders OrderBook::orders(const Side& side) const {
+const SingleOrders OrderBook::orders(const Side& side) const {
   return (side == Side::BUY) ? bid_orders_ : ask_orders_;
 }
 
@@ -47,7 +47,7 @@ const ExecutedOrders OrderBook::executedOrders() const {
   return executed_orders_;
 }
 
-void OrderBook::update(const Orders& bid_orders, const Orders& ask_orders) {
+void OrderBook::update(const SingleOrders& bid_orders, const SingleOrders& ask_orders) {
   bid_orders_ = bid_orders;
   ask_orders_ = ask_orders;
 }
@@ -67,7 +67,7 @@ class OrdersVisitor final : public boost::static_visitor<bool> {
     return false;
   }
 
-  bool operator()(const Orders& orders) const {
+  bool operator()(const SingleOrders& orders) const {
     *p_os_ << orders.size() << '~';
     return false;
   }

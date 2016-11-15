@@ -11,8 +11,7 @@ namespace iem {
   enum class Event { UP, SAME, DOWN };
 
   // Assume FedPolicyB for now
-  std::vector<std::unique_ptr<Order>> event_orders(const Event& event,
-                                                   const Quantity qty);
+  Orders event_orders(const Event& event, const Quantity qty);
 
 }  // namespace iem
 
