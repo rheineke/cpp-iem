@@ -46,4 +46,5 @@ Makefile
 
 # Build location
 build/
+cmake-build-debug/
 Testing/

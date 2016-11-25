@@ -96,6 +96,7 @@ def configure(ctx):
     print(ctx.env.INCLUDES)
     ctx.env.LIB = [
         'boost_date_time-mt',
+        'boost-filesystem-mt',
         'boost_system-mt',
         'boost_thread-mt',
         'crypto',

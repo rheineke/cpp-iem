@@ -194,10 +194,8 @@ const std::vector<OrderBook> read_html(const std::string& body) {
   ptree pt;
   read_xml(is, pt);
   // XML nodes(terminology?) of interest
-  const auto table = pt.get_child("table");
-  const auto tbody = table.get_child("tbody");
+  const auto tbody = pt.get_child("table.tbody");
   // As a test, let's get the first contract(terminology?) name
-  const auto tr = tbody.get_child("tr");
   const auto tr_its = tbody.equal_range("tr");
 
   std::vector<OrderBook> obs;
@@ -211,8 +209,9 @@ const std::vector<OrderBook> Session::market_orderbook(int market) {
   // Construct request
   auto market_orderbook_request = buildRequest(
       "/iem/trader/MarketTrader.action",
-      {{"market", std::to_string(market)}}
-  );
+      {
+          {"market", std::to_string(market)}
+      });
   // Set cookie
   market_orderbook_request << boost::network::header("Cookie", cookie());
   // POST request
