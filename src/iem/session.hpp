@@ -35,13 +35,18 @@ class Session {
 
   const ClientResponse logout();
 
-  const std::vector<OrderBook> market_orderbook(int market);
+  const std::vector<OrderBook> orderbook(const Market& market);
 
-  const ClientResponse asset_holdings(const Contract& contract);
+  const ClientResponse holdings(const Contract& contract);
+
+  const ClientResponse outstanding_orders(const Contract& contract,
+                                          const Side& side);
 
   const ClientResponse place_order(const Order& order);
 
   const ClientResponse cancel_order(const Single& order);
+
+  const ClientResponse messages(const Market& market);
 
  private:
   const std::string username_;

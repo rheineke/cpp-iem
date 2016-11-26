@@ -39,7 +39,8 @@ int _main(int argc, char* argv[]) {
   logger.log();
 
   // FedPolicyB market
-  const auto obs = session.market_orderbook(51);
+  const iem::Market mkt("FedPolicyB");
+  const auto obs = session.orderbook(mkt);
   for (const auto& ob : obs) {
     std::cout << ob << std::endl;
   }
@@ -51,6 +52,10 @@ int _main(int argc, char* argv[]) {
   const iem::Single o(c, iem::Side::BUY, 1, ptl);
   const auto response = session.place_order(o);
   // std::cout << body(response) << std::endl;
+
+  // Retrieve trade messages
+  const auto msg_response = session.messages(mkt);
+  std::cout << body(msg_response) << std::endl;
 
   // TODO(rheineke): Generate a heartbeat thread with a mutex around cookie
   // Make simple request every n minutes and call authenticate(...) with

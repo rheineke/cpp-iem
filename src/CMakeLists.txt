@@ -18,7 +18,8 @@ add_library(cppiemlib
         iem/price.hpp iem/price.cpp
         iem/pricetimelimit.hpp iem/pricetimelimit.cpp
         iem/session.hpp iem/session.cpp
-        iem/side.hpp iem/side.cpp)
+        iem/side.hpp iem/side.cpp
+        iem/trader_message.hpp iem/trader_message.cpp)
 
 target_link_libraries(cppiemlib
         ${OPENSSL_LIBRARIES}

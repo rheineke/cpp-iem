@@ -8,6 +8,8 @@
 
 #include "boost/property_tree/xml_parser.hpp"
 
+#include "iem/trader_message.hpp"
+
 namespace iem {
 
 using ptree = boost::property_tree::ptree;
@@ -182,20 +184,27 @@ const OrderBook _read_html(ptree::const_assoc_iterator tr_it) {
   return OrderBook(contract_name, bb, bbp, ba, bap, lp, noo, nao, pos);
 }
 
-const std::vector<OrderBook> read_html(const std::string& body) {
+const std::string _table_html_string(const std::string& body) {
   // In order to increase likelihood of parsing valid XML, find substring that
-  // covers all html tables. Might assume one table.
-  size_t pos = body.find("<table");
-  size_t len = body.rfind("table") - pos + 6;
-  auto tables_str = body.substr(pos, len);
+  // covers all html tables
+  const size_t pos = body.find("<table");
+  const size_t len = body.rfind("table") - pos + 6;  // 6 is length of "<table"
+  return body.substr(pos, len);
+}
+
+ptree _tbody_ptree(const std::string& body) {
+  const auto tables_str = _table_html_string(body);
   // Boost ptree works on streams only
   std::istringstream is(tables_str);
   // ptree
   ptree pt;
   read_xml(is, pt);
-  // XML nodes(terminology?) of interest
-  const auto tbody = pt.get_child("table.tbody");
-  // As a test, let's get the first contract(terminology?) name
+  // XML nodes (terminology?) of interest
+  return pt.get_child("table.tbody");
+}
+
+const std::vector<OrderBook> read_html(const std::string& body) {
+  auto tbody = _tbody_ptree(body);
   const auto tr_its = tbody.equal_range("tr");
 
   std::vector<OrderBook> obs;
@@ -205,12 +214,12 @@ const std::vector<OrderBook> read_html(const std::string& body) {
   return obs;
 }
 
-const std::vector<OrderBook> Session::market_orderbook(int market) {
+const std::vector<OrderBook> Session::orderbook(const Market& market) {
   // Construct request
   auto market_orderbook_request = buildRequest(
       "/iem/trader/MarketTrader.action",
       {
-          {"market", std::to_string(market)}
+          {"market", std::to_string(market.value())}
       });
   // Set cookie
   market_orderbook_request << boost::network::header("Cookie", cookie());
@@ -219,7 +228,7 @@ const std::vector<OrderBook> Session::market_orderbook(int market) {
   return read_html(body(response));
 }
 
-const ClientResponse Session::asset_holdings(const Contract& contract) {
+const ClientResponse Session::holdings(const Contract &contract) {
   // Construct request
   auto asset_holdings_request = buildRequest(
       "/iem/trader/TraderActivity.action",
@@ -325,10 +334,81 @@ const ClientResponse Session::cancel_order(const Single& order) {
   auto cancel_order_request = buildRequest("TraderActivity.action");
   // TODO(rheineke): Differentiate order types
   // Set cookie
-  cancel_order_request << boost::network::header("Cookie", cookie());
+  cancel_order_request << boost::network::header("Cookie", this->cookie());
   // POST request
   const auto& response = client_.post(cancel_order_request);
   return response;
+}
+
+const TraderMessage _read_message_html(const std::string& market_name,
+                                       ptree::const_assoc_iterator tr_it) {
+  // Trader message values
+  boost::posix_time::ptime date;
+  MessageType msg_type;
+  std::string contract_name;
+  Action action;
+  Quantity quantity = 0;
+  Price price;
+  boost::posix_time::ptime expiration_date;
+
+  auto td_its = tr_it->second.equal_range("td");
+  int i = 0;
+  for (auto it = td_its.first; it != td_its.second; it++) {
+    if (i == 0) {  // date
+      // date = boost::posix_time::from_iso_string();
+    } else if (i == 1) {  // msg_type
+
+    } else if (i == 2) {  // contract_name
+      contract_name = it->second.data();
+      boost::trim(contract_name);
+    } else if (i == 3) {  // action
+
+    } else if (i == 4) {  // quantity
+
+    } else if (i == 5) {  // price
+
+    } else if (i == 6) {  // expiration_date
+
+    }
+
+    i++;
+  }
+
+  return TraderMessage(
+      date,
+      msg_type,
+      Contract(market_name, contract_name),
+      action,
+      quantity,
+      price,
+      expiration_date
+  );
+}
+
+const std::vector<TraderMessage> _read_messages_html(const Market& market,
+                                                     const std::string& body) {
+  auto tbody = _tbody_ptree(body);
+  const auto tr_its = tbody.equal_range("tr");
+
+  std::vector<TraderMessage> msgs;
+  for (auto it = tr_its.first; it != tr_its.second; it++) {
+    msgs.push_back(_read_message_html(market.name(), it));
+  }
+  return msgs;
+}
+
+const ClientResponse Session::messages(const Market& market) {
+  // Construct request
+  const auto msg = url_encode(
+      {
+          {"home", ""},
+          {"market", std::to_string(market.value())}
+      });
+  std::cout << msg << std::endl;
+  auto msg_request = buildRequest("/iem/trader/TraderMessages.action?" + msg);
+  msg_request << boost::network::header("Cookie", this->cookie());
+  // GET request
+  return client_.get(msg_request);
 }
 
 int snprintf_session(char* const str, const Session& s) {
