@@ -14,7 +14,8 @@ set(TESTS
         price_test
         pricetimelimit_test
         session_test
-        side_test)
+        side_test
+        trader_message_test)
 
 foreach ( test ${TESTS} )
     add_executable(cppiem-iem-${test} ${test}.cpp)

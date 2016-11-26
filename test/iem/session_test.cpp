@@ -36,7 +36,7 @@ TEST(SessionTest, LimitOrderRequest) {
   std::cout << body(request) << std::endl;
 }
 
-TEST(SessionTest, ReadHTML) {
+TEST(SessionTest, ReadTradeMessageHTML) {
   const auto s =
       "<table id=\"data-table\" class=\"table table-striped form-table jumbotronTable\" aria-describedby=\"Trader activity table\">\n"
       "<h2>Outstanding Bid: FRup1216</h2>\n"

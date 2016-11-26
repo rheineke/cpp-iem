@@ -8,8 +8,8 @@
 namespace iem {
 
 boost::posix_time::ptime _test_ptime() {
-  const auto dt = boost::gregorian::date(2016, boost::date_time::Jan, 10);
-  const auto t = boost::posix_time::time_duration(20, 01, 00);
+  const boost::gregorian::date dt(2016, boost::date_time::Jan, 10);
+  const boost::posix_time::time_duration t(20, 01, 00);
   return boost::posix_time::ptime(dt, t);
 }
 
@@ -33,7 +33,6 @@ TEST(PriceTimeLimitTest, IOC) {
 TEST(PriceTimeLimitTest, SessionStringFormat) {
   const auto ptime = _test_ptime();
   const auto& d = ptime.date();
-  const auto& tod = ptime.time_of_day();
   EXPECT_EQ(boost::posix_time::to_iso_extended_string(ptime),
             "2016-01-10T20:01:00");
   EXPECT_EQ(boost::gregorian::to_iso_extended_string(d), "2016-01-10");
