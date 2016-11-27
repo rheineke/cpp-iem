@@ -4,6 +4,58 @@
 
 namespace iem {
 
+constexpr auto order_cstr("Order");
+constexpr auto order_resolution_cstr("Order Resolution");
+
+const std::string to_string(const MessageType& msg_type) {
+  switch (msg_type) {
+    case MessageType::ORDER:
+      return order_cstr;
+    case MessageType::ORDER_RESOLUTION:
+      return order_resolution_cstr;
+  }
+}
+
+MessageType message_type_from_string(const std::string& msg_type_str) {
+  if (msg_type_str == order_cstr) {
+    return MessageType::ORDER;
+  } else if (msg_type_str == order_resolution_cstr) {
+    return MessageType::ORDER_RESOLUTION;
+  } else {
+    throw std::invalid_argument("Unknown string: " + msg_type_str);
+  }
+}
+
+constexpr auto ask_entered("Ask entered");
+constexpr auto bid_entered("Bid entered");
+constexpr auto fixed_bundle_purchase_executed("Fixed bundle purchase executed");
+constexpr auto fixed_bundle_sale_executed("Fixed bundle sale executed");
+
+inline const std::string to_string(const Action& action) {
+  switch (action) {
+    case Action::ASK_ENTERED:
+      return ask_entered;
+    case Action::BID_ENTERED:
+      return bid_entered;
+    case Action::FIXED_BUNDLE_PURCHASE_EXECUTED:
+      return fixed_bundle_purchase_executed;
+    case Action::FIXED_BUNDLE_SALE_EXECUTED:
+      return fixed_bundle_sale_executed;
+  }
+}
+
+Action action_from_string(const std::string& action_str) {
+  if (action_str == ask_entered) {
+    return Action::ASK_ENTERED;
+  } else if (action_str == bid_entered) {
+    return Action::BID_ENTERED;
+  } else if (action_str == fixed_bundle_purchase_executed) {
+    return Action::FIXED_BUNDLE_PURCHASE_EXECUTED;
+  } else {
+    throw std::invalid_argument("Unknown string: " + action_str);
+  }
+}
+
 TraderMessage::TraderMessage(const boost::posix_time::ptime& date,
                              const MessageType& type,
                              const Contract& contract,
@@ -35,7 +87,8 @@ std::ostream& operator<<(std::ostream& os, const TraderMessage& msg) {
 
 boost::posix_time::ptime date_from_string(const std::string& str) {
   auto p_tif = new boost::posix_time::time_input_facet;
-  p_tif->format("%Y-%m-%d %H:%M:%S%F");
+  p_tif->format("%b %d, %Y %H:%M:%S");  //  %p
+  // p_tif->format("%Y-%m-%d %H:%M:%S%F");
 
   std::istringstream iss(str);
   iss.imbue(std::locale(iss.getloc(), p_tif));

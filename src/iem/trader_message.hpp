@@ -9,33 +9,22 @@
 
 namespace iem {
 
-enum class MessageType { ORDER, RESOLUTION };
+enum class MessageType { ORDER, ORDER_RESOLUTION };
 
-inline const std::string to_string(const MessageType& msg_type) {
-  switch (msg_type) {
-    case MessageType::ORDER:
-      return "order";
-    case MessageType::RESOLUTION:
-      return "resolution";
-  }
-}
+const std::string to_string(const MessageType& msg_type);
+
+MessageType message_type_from_string(const std::string& msg_type_str);
 
 enum class Action {
   ASK_ENTERED,
   BID_ENTERED,
-  FIXED_BUNDLE_PURCHASE_EXECUTED
+  FIXED_BUNDLE_PURCHASE_EXECUTED,
+  FIXED_BUNDLE_SALE_EXECUTED,
 };
 
-inline const std::string to_string(const Action& action) {
-  switch (action) {
-    case Action::ASK_ENTERED:
-      return "ask entered";
-    case Action::BID_ENTERED:
-      return "bid entered";
-    case Action::FIXED_BUNDLE_PURCHASE_EXECUTED:
-      return "fixed bundle purchase executed";
-  }
-}
+const std::string to_string(const Action& action);
+
+Action action_from_string(const std::string& action_str);
 
 class TraderMessage final {
  public:

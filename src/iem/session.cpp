@@ -355,9 +355,9 @@ const TraderMessage _read_message_html(const std::string& market_name,
   int i = 0;
   for (auto it = td_its.first; it != td_its.second; it++) {
     if (i == 0) {  // date
-      // date = boost::posix_time::from_iso_string();
+      date = date_from_string(it->second.data());
     } else if (i == 1) {  // msg_type
-
+      msg_type = message_type_from_string(it->second.data());
     } else if (i == 2) {  // contract_name
       contract_name = it->second.data();
       boost::trim(contract_name);
