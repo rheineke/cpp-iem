@@ -8,8 +8,6 @@
 
 #include "boost/property_tree/xml_parser.hpp"
 
-#include "iem/trader_message.hpp"
-
 namespace iem {
 
 using ptree = boost::property_tree::ptree;
@@ -343,32 +341,32 @@ const ClientResponse Session::cancel_order(const Single& order) {
 const TraderMessage _read_message_html(const std::string& market_name,
                                        ptree::const_assoc_iterator tr_it) {
   // Trader message values
-  boost::posix_time::ptime date;
+  boost::posix_time::ptime date = boost::posix_time::not_a_date_time;
   MessageType msg_type;
   std::string contract_name;
   Action action;
   Quantity quantity = 0;
   Price price;
-  boost::posix_time::ptime expiration_date;
+  boost::posix_time::ptime expiration_date = boost::posix_time::not_a_date_time;
 
   auto td_its = tr_it->second.equal_range("td");
   int i = 0;
   for (auto it = td_its.first; it != td_its.second; it++) {
     if (i == 0) {  // date
-      date = date_from_string(it->second.data());
+      // date = date_from_string(it->second.data());
     } else if (i == 1) {  // msg_type
       msg_type = message_type_from_string(it->second.data());
     } else if (i == 2) {  // contract_name
       contract_name = it->second.data();
       boost::trim(contract_name);
     } else if (i == 3) {  // action
-
+      action = action_from_string(it->second.data());
     } else if (i == 4) {  // quantity
-
+      quantity = std::stoi(it->second.data());
     } else if (i == 5) {  // price
-
+      price = _parse_price(it->second.data());
     } else if (i == 6) {  // expiration_date
-
+      // expiration_date = expiration_date_from_string(it->second.data());
     }
 
     i++;
@@ -387,6 +385,7 @@ const TraderMessage _read_message_html(const std::string& market_name,
 
 const std::vector<TraderMessage> _read_messages_html(const Market& market,
                                                      const std::string& body) {
+  std::cout << body << std::endl;
   auto tbody = _tbody_ptree(body);
   const auto tr_its = tbody.equal_range("tr");
 
@@ -397,7 +396,7 @@ const std::vector<TraderMessage> _read_messages_html(const Market& market,
   return msgs;
 }
 
-const ClientResponse Session::messages(const Market& market) {
+const std::vector<TraderMessage> Session::messages(const Market& market) {
   // Construct request
   const auto msg = url_encode(
       {
@@ -408,7 +407,8 @@ const ClientResponse Session::messages(const Market& market) {
   auto msg_request = buildRequest("/iem/trader/TraderMessages.action?" + msg);
   msg_request << boost::network::header("Cookie", this->cookie());
   // GET request
-  return client_.get(msg_request);
+  const auto& response = client_.get(msg_request);
+  return _read_messages_html(market, body(response));
 }
 
 int snprintf_session(char* const str, const Session& s) {

@@ -8,6 +8,7 @@
 #include "boost/network/protocol/http/client.hpp"
 
 #include "iem/orderbook.hpp"
+#include "iem/trader_message.hpp"
 
 namespace iem {
 
@@ -46,7 +47,7 @@ class Session {
 
   const ClientResponse cancel_order(const Single& order);
 
-  const ClientResponse messages(const Market& market);
+  const std::vector<TraderMessage> messages(const Market& market);
 
  private:
   const std::string username_;

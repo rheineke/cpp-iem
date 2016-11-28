@@ -59,6 +59,8 @@ std::ostream& operator<<(std::ostream& os, const TraderMessage& msg);
 
 boost::posix_time::ptime date_from_string(const std::string& str);
 
+boost::posix_time::ptime expiration_date_from_string(const std::string& str);
+
 }  // namespace iem
 
 #endif //CPP_IEM_TRADER_MESSAGE_HPP

@@ -99,4 +99,22 @@ boost::posix_time::ptime date_from_string(const std::string& str) {
   return abs_time;
 }
 
+boost::posix_time::ptime expiration_date_from_string(const std::string& str) {
+  if (str == "") {  // No expiration
+    return boost::posix_time::not_a_date_time;
+  }
+
+  auto p_tif = new boost::posix_time::time_input_facet;
+  p_tif->format("%b %d, %Y %H:%M:%S");  //  %p
+  // p_tif->format("%Y-%m-%d %H:%M:%S%F");
+
+  std::istringstream iss(str);
+  iss.imbue(std::locale(iss.getloc(), p_tif));
+
+  boost::posix_time::ptime abs_time;
+  iss >> abs_time;
+
+  return abs_time;
+}
+
 }  // namespace iem
