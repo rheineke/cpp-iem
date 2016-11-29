@@ -30,7 +30,7 @@ class TraderMessage final {
  public:
   TraderMessage(const boost::posix_time::ptime& date,
                 const MessageType& type,
-                const Contract& contract,
+                const std::string& contract,
                 const Action& action,
                 const Quantity quantity,
                 const Price& unit_price,
@@ -38,7 +38,7 @@ class TraderMessage final {
 
   inline const boost::posix_time::ptime date() const { return date_; }
   inline const MessageType type() const { return type_; }
-  inline const Contract contract() const { return contract_; }
+  inline const std::string contract() const { return contract_; }
   inline const Action action() const { return action_; }
   inline const Quantity quantity() const { return quantity_; }
   inline const Price unit_price() const { return unit_price_; }
@@ -48,7 +48,7 @@ class TraderMessage final {
  private:
   boost::posix_time::ptime date_;
   MessageType type_;
-  Contract contract_;
+  std::string contract_;
   Action action_;
   Quantity quantity_;
   Price unit_price_;

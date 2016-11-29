@@ -32,12 +32,16 @@ TEST(TraderMessageTest, Action) {
             Action::FIXED_BUNDLE_PURCHASE_EXECUTED);
 }
 
-TEST(SessionTest, DISABLED_TradeMessageDateFromString) {
-  const boost::gregorian::date d(2016, boost::date_time::Nov, 25);
-  const boost::posix_time::time_duration t(15, 20, 33);
+TEST(TraderMessageTest, TradeMessageDateFromString) {
+  const boost::gregorian::date d(2016, boost::gregorian::Nov, 28);
+  const boost::posix_time::time_duration t(19, 19, 30, 613000);
   const boost::posix_time::ptime expected_dt(d, t);
-  const auto dt = date_from_string("Nov 25, 2016 03:20:33");
+  const auto dt = date_from_string("2016-11-28 19:19:30.613");
   EXPECT_EQ(dt, expected_dt);
+}
+
+TEST(TraderMessageTest, Quantity) {
+  EXPECT_NO_THROW(std::stoi("1.000000"));
 }
 
 }  // namespace iem

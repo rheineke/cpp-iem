@@ -50,6 +50,8 @@ class Session {
   const std::vector<TraderMessage> messages(const Market& market);
 
  private:
+  std::string first_authenticate(const bool force_login);
+
   const std::string username_;
   const std::string password_;
   // TODO(rheineke): Cooke and client should be wrapped (each?) in a mutex

@@ -51,6 +51,8 @@ Action action_from_string(const std::string& action_str) {
     return Action::BID_ENTERED;
   } else if (action_str == fixed_bundle_purchase_executed) {
     return Action::FIXED_BUNDLE_PURCHASE_EXECUTED;
+  } else if (action_str == fixed_bundle_sale_executed) {
+    return Action::FIXED_BUNDLE_SALE_EXECUTED;
   } else {
     throw std::invalid_argument("Unknown string: " + action_str);
   }
@@ -58,7 +60,7 @@ Action action_from_string(const std::string& action_str) {
 
 TraderMessage::TraderMessage(const boost::posix_time::ptime& date,
                              const MessageType& type,
-                             const Contract& contract,
+                             const std::string& contract,
                              const Action& action,
                              const Quantity quantity,
                              const Price& unit_price,
@@ -86,12 +88,12 @@ std::ostream& operator<<(std::ostream& os, const TraderMessage& msg) {
 }
 
 boost::posix_time::ptime date_from_string(const std::string& str) {
-  auto p_tif = new boost::posix_time::time_input_facet;
-  p_tif->format("%b %d, %Y %H:%M:%S");  //  %p
-  // p_tif->format("%Y-%m-%d %H:%M:%S%F");
-
   std::istringstream iss(str);
-  iss.imbue(std::locale(iss.getloc(), p_tif));
+  // Almost ISO extended
+  constexpr auto fmt("%Y-%m-%d %H:%M:%S%F");
+  // Locale object owns the facet instance so no memory leak here
+  auto* p_dt_facet(new boost::posix_time::time_input_facet(fmt));
+  iss.imbue(std::locale(iss.getloc(), p_dt_facet));
 
   boost::posix_time::ptime abs_time;
   iss >> abs_time;
@@ -104,17 +106,17 @@ boost::posix_time::ptime expiration_date_from_string(const std::string& str) {
     return boost::posix_time::not_a_date_time;
   }
 
-  auto p_tif = new boost::posix_time::time_input_facet;
-  p_tif->format("%b %d, %Y %H:%M:%S");  //  %p
-  // p_tif->format("%Y-%m-%d %H:%M:%S%F");
-
   std::istringstream iss(str);
-  iss.imbue(std::locale(iss.getloc(), p_tif));
+  constexpr auto fmt("%b %d, %Y %H:%M:%S");
+  // Locale object owns the facet instance so no memory leak here
+  auto* p_dt_facet(new boost::posix_time::time_input_facet(fmt));
 
-  boost::posix_time::ptime abs_time;
-  iss >> abs_time;
+  iss.imbue(std::locale(iss.getloc(), p_dt_facet));
 
-  return abs_time;
+  boost::posix_time::ptime expiry_dt;
+  iss >> expiry_dt;
+
+  return expiry_dt;
 }
 
 }  // namespace iem

@@ -56,6 +56,21 @@ ClientRequest buildRequest(const std::string &path,
 }
 
 const ClientResponse Session::authenticate(const bool force_login) {
+  auto location = first_authenticate(false);
+  std::cout << cookie_ << " ; " << location << std::endl;
+  if (location == "") {  // If location is empty string, then login failed
+    location = first_authenticate(true);  // Force login
+  }
+
+  // Market select request
+  auto market_select_request = buildRequest(location);
+  // Set cookie
+  market_select_request << boost::network::header("Set-Cookie", cookie());
+  // GET request
+  return client_.get(market_select_request);
+}
+
+std::string Session::first_authenticate(const bool force_login) {
   // Login request
   auto login_request = buildRequest(
       "/iem/trader/TraderLogin.action",
@@ -77,13 +92,7 @@ const ClientResponse Session::authenticate(const bool force_login) {
       location = h.second;
     }
   }
-
-  // Market select request
-  auto market_select_request = buildRequest(location);
-  // Set cookie
-  market_select_request << boost::network::header("Set-Cookie", cookie());
-  // GET request
-  return client_.get(market_select_request);
+  return location;
 }
 
 const ClientResponse Session::logout() {
@@ -341,32 +350,34 @@ const ClientResponse Session::cancel_order(const Single& order) {
 const TraderMessage _read_message_html(const std::string& market_name,
                                        ptree::const_assoc_iterator tr_it) {
   // Trader message values
-  boost::posix_time::ptime date = boost::posix_time::not_a_date_time;
+  boost::posix_time::ptime date;
   MessageType msg_type;
   std::string contract_name;
   Action action;
   Quantity quantity = 0;
   Price price;
-  boost::posix_time::ptime expiration_date = boost::posix_time::not_a_date_time;
+  boost::posix_time::ptime expiration_date;
 
   auto td_its = tr_it->second.equal_range("td");
   int i = 0;
   for (auto it = td_its.first; it != td_its.second; it++) {
+    auto data_str = it->second.data();
+    boost::trim(data_str);
+    std::cout << data_str << std::endl;
     if (i == 0) {  // date
-      // date = date_from_string(it->second.data());
+      date = date_from_string(data_str);
     } else if (i == 1) {  // msg_type
-      msg_type = message_type_from_string(it->second.data());
+      msg_type = message_type_from_string(data_str);
     } else if (i == 2) {  // contract_name
-      contract_name = it->second.data();
-      boost::trim(contract_name);
+      contract_name = data_str;
     } else if (i == 3) {  // action
-      action = action_from_string(it->second.data());
+      action = action_from_string(data_str);
     } else if (i == 4) {  // quantity
-      quantity = std::stoi(it->second.data());
+      quantity = std::stoi(data_str);
     } else if (i == 5) {  // price
-      price = _parse_price(it->second.data());
+      price = _parse_price(data_str);
     } else if (i == 6) {  // expiration_date
-      // expiration_date = expiration_date_from_string(it->second.data());
+      expiration_date = expiration_date_from_string(data_str);
     }
 
     i++;
@@ -375,7 +386,7 @@ const TraderMessage _read_message_html(const std::string& market_name,
   return TraderMessage(
       date,
       msg_type,
-      Contract(market_name, contract_name),
+      contract_name,
       action,
       quantity,
       price,
