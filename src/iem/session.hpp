@@ -32,7 +32,7 @@ class Session {
   inline const std::string password() const { return password_; }
   inline const std::string cookie() const { return cookie_; }
 
-  const ClientResponse authenticate(const bool force_login=false);
+  const ClientResponse authenticate();
 
   const ClientResponse logout();
 

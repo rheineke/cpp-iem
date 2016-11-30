@@ -55,10 +55,10 @@ ClientRequest buildRequest(const std::string &path,
   return request;
 }
 
-const ClientResponse Session::authenticate(const bool force_login) {
+const ClientResponse Session::authenticate() {
   auto location = first_authenticate(false);
-  std::cout << cookie_ << " ; " << location << std::endl;
   if (location == "") {  // If location is empty string, then login failed
+    std::cout << "Login failed; attempting forcing login..." << std::endl;
     location = first_authenticate(true);  // Force login
   }
 
