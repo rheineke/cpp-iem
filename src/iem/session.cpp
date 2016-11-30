@@ -390,13 +390,11 @@ const TraderMessage _read_message_html(const std::string& market_name,
       action,
       quantity,
       price,
-      expiration_date
-  );
+      expiration_date);
 }
 
 const std::vector<TraderMessage> _read_messages_html(const Market& market,
                                                      const std::string& body) {
-  std::cout << body << std::endl;
   auto tbody = _tbody_ptree(body);
   const auto tr_its = tbody.equal_range("tr");
 
@@ -414,12 +412,26 @@ const std::vector<TraderMessage> Session::messages(const Market& market) {
           {"home", ""},
           {"market", std::to_string(market.value())}
       });
-  std::cout << msg << std::endl;
   auto msg_request = buildRequest("/iem/trader/TraderMessages.action?" + msg);
   msg_request << boost::network::header("Cookie", this->cookie());
   // GET request
   const auto& response = client_.get(msg_request);
   return _read_messages_html(market, body(response));
+}
+
+const ClientResponse Session::remove_messages(const Market& market) {
+  // Construct request
+  const auto msg = url_encode(
+      {
+          {"removeMessages", ""},
+          {"market", std::to_string(market.value())}
+      });
+  std::cout << msg << std::endl;
+  auto msg_request = buildRequest("/iem/trader/TraderMessages.action?" + msg);
+  msg_request << boost::network::header("Cookie", this->cookie());
+  // GET request
+  const auto& response = client_.get(msg_request);
+  return response;
 }
 
 int snprintf_session(char* const str, const Session& s) {

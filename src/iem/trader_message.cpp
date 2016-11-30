@@ -30,6 +30,8 @@ constexpr auto ask_entered("Ask entered");
 constexpr auto bid_entered("Bid entered");
 constexpr auto fixed_bundle_purchase_executed("Fixed bundle purchase executed");
 constexpr auto fixed_bundle_sale_executed("Fixed bundle sale executed");
+constexpr auto ask_order_withdrawn("Your ask order was withdrawn");
+constexpr auto bid_order_withdrawn("Your bid order was withdrawn");
 
 inline const std::string to_string(const Action& action) {
   switch (action) {
@@ -41,6 +43,10 @@ inline const std::string to_string(const Action& action) {
       return fixed_bundle_purchase_executed;
     case Action::FIXED_BUNDLE_SALE_EXECUTED:
       return fixed_bundle_sale_executed;
+    case Action::ASK_ORDER_WITHDRAWN:
+      return ask_order_withdrawn;
+    case Action::BID_ORDER_WITHDRAWN:
+      return bid_order_withdrawn;
   }
 }
 
@@ -53,6 +59,10 @@ Action action_from_string(const std::string& action_str) {
     return Action::FIXED_BUNDLE_PURCHASE_EXECUTED;
   } else if (action_str == fixed_bundle_sale_executed) {
     return Action::FIXED_BUNDLE_SALE_EXECUTED;
+  } else if (action_str == ask_order_withdrawn) {
+    return Action::ASK_ORDER_WITHDRAWN;
+  } else if (action_str == bid_order_withdrawn) {
+    return Action::BID_ORDER_WITHDRAWN;
   } else {
     throw std::invalid_argument("Unknown string: " + action_str);
   }
@@ -106,17 +116,7 @@ boost::posix_time::ptime expiration_date_from_string(const std::string& str) {
     return boost::posix_time::not_a_date_time;
   }
 
-  std::istringstream iss(str);
-  constexpr auto fmt("%b %d, %Y %H:%M:%S");
-  // Locale object owns the facet instance so no memory leak here
-  auto* p_dt_facet(new boost::posix_time::time_input_facet(fmt));
-
-  iss.imbue(std::locale(iss.getloc(), p_dt_facet));
-
-  boost::posix_time::ptime expiry_dt;
-  iss >> expiry_dt;
-
-  return expiry_dt;
+  return date_from_string(str);
 }
 
 }  // namespace iem

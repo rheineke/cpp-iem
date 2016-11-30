@@ -49,6 +49,8 @@ class Session {
 
   const std::vector<TraderMessage> messages(const Market& market);
 
+  const ClientResponse remove_messages(const Market& market);
+
  private:
   std::string first_authenticate(const bool force_login);
 

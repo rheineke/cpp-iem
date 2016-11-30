@@ -20,6 +20,8 @@ enum class Action {
   BID_ENTERED,
   FIXED_BUNDLE_PURCHASE_EXECUTED,
   FIXED_BUNDLE_SALE_EXECUTED,
+  ASK_ORDER_WITHDRAWN,
+  BID_ORDER_WITHDRAWN,
 };
 
 const std::string to_string(const Action& action);
