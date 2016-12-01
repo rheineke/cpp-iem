@@ -1,6 +1,6 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 
-#include "iem/trader_message.hpp"
+#include "iem/message.hpp"
 
 #include "gtest/gtest.h"
 

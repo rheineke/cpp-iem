@@ -10,12 +10,12 @@ set(TESTS
         config_test
         contract_test
         event_strategy_test
+        message_test
         order_test
         price_test
         pricetimelimit_test
         session_test
-        side_test
-        trader_message_test)
+        side_test)
 
 foreach ( test ${TESTS} )
     add_executable(cppiem-iem-${test} ${test}.cpp)

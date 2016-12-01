@@ -1,7 +1,7 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 
-#ifndef CPP_IEM_TRADER_MESSAGE_HPP
-#define CPP_IEM_TRADER_MESSAGE_HPP
+#ifndef CPP_IEM_MESSAGE_HPP
+#define CPP_IEM_MESSAGE_HPP
 
 #include "boost/date_time/posix_time/posix_time.hpp"
 
@@ -63,6 +63,28 @@ boost::posix_time::ptime date_from_string(const std::string& str);
 
 boost::posix_time::ptime expiration_date_from_string(const std::string& str);
 
+class HoldingMessage final {
+ public:
+  HoldingMessage(const boost::posix_time::ptime& date,
+                 const Market& market,
+                 const Action& action,
+                 const Quantity quantity,
+                 const Price& price);
+
+  inline const boost::posix_time::ptime date() const { return date_; }
+  inline const Market market() const { return market_; }
+  inline const Action action() const { return action_; }
+  inline const Quantity quantity() const { return quantity_; }
+  inline const Price price() const { return price_; }
+
+ private:
+  boost::posix_time::ptime date_;
+  Market market_;
+  Action action_;
+  Quantity quantity_;
+  Price price_;
+};
+
 }  // namespace iem
 
-#endif //CPP_IEM_TRADER_MESSAGE_HPP
+#endif //CPP_IEM_MESSAGE_HPP

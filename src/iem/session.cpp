@@ -56,10 +56,10 @@ ClientRequest buildRequest(const std::string &path,
 }
 
 const ClientResponse Session::authenticate() {
-  auto location = first_authenticate(false);
+  auto location = login(false);
   if (location == "") {  // If location is empty string, then login failed
     std::cout << "Login failed; attempting forcing login..." << std::endl;
-    location = first_authenticate(true);  // Force login
+    location = login(true);  // Force login
   }
 
   // Market select request
@@ -70,7 +70,7 @@ const ClientResponse Session::authenticate() {
   return client_.get(market_select_request);
 }
 
-std::string Session::first_authenticate(const bool force_login) {
+std::string Session::login(const bool force_login) {
   // Login request
   auto login_request = buildRequest(
       "/iem/trader/TraderLogin.action",
@@ -85,7 +85,7 @@ std::string Session::first_authenticate(const bool force_login) {
   const auto login_response = client_.post(login_request);
   // Extract important headers - IEM requests a redirect
   std::string location;
-  for (auto h : login_response.headers()) {
+  for (const auto& h : login_response.headers()) {
     if (h.first == "Set-Cookie") {
       cookie_ = h.second;
     } else if (h.first == "Location") {
@@ -144,7 +144,7 @@ unsigned int num_open_orders(ptree::const_assoc_iterator it) {
   return std::stoi(value);
 }
 
-const OrderBook _read_html(ptree::const_assoc_iterator tr_it) {
+const OrderBook _read_orderbook_html(ptree::const_assoc_iterator tr_it) {
   // Orderbook values
   std::string contract_name;
   Price bb;
@@ -210,13 +210,13 @@ ptree _tbody_ptree(const std::string& body) {
   return pt.get_child("table.tbody");
 }
 
-const std::vector<OrderBook> read_html(const std::string& body) {
+const std::vector<OrderBook> _read_orderbooks_html(const std::string &body) {
   auto tbody = _tbody_ptree(body);
   const auto tr_its = tbody.equal_range("tr");
 
   std::vector<OrderBook> obs;
   for (auto it = tr_its.first; it != tr_its.second; it++) {
-    obs.push_back(_read_html(it));
+    obs.push_back(_read_orderbook_html(it));
   }
   return obs;
 }
@@ -232,7 +232,7 @@ const std::vector<OrderBook> Session::orderbook(const Market& market) {
   market_orderbook_request << boost::network::header("Cookie", cookie());
   // POST request
   const auto& response = client_.post(market_orderbook_request);
-  return read_html(body(response));
+  return _read_orderbooks_html(body(response));
 }
 
 const ClientResponse Session::holdings(const Contract &contract) {
@@ -249,6 +249,7 @@ const ClientResponse Session::holdings(const Contract &contract) {
   asset_holdings_request << boost::network::header("Cookie", cookie());
   // POST request
   const auto& response = client_.post(asset_holdings_request);
+  std::cout << body(response) << std::endl;
   return response;
 }
 
@@ -363,7 +364,6 @@ const TraderMessage _read_message_html(const std::string& market_name,
   for (auto it = td_its.first; it != td_its.second; it++) {
     auto data_str = it->second.data();
     boost::trim(data_str);
-    std::cout << data_str << std::endl;
     if (i == 0) {  // date
       date = date_from_string(data_str);
     } else if (i == 1) {  // msg_type

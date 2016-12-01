@@ -53,11 +53,14 @@ int _main(int argc, char* argv[]) {
   const auto response = session.place_order(o);
   // std::cout << body(response) << std::endl;
 
-  // Retrieve trade messages
+  // Request trade messages
   const auto msgs = session.messages(mkt);
   for (const auto& msg : msgs) {
     std::cout << msg << std::endl;
   }
+
+  // Request holdings
+  const auto holdings_response = session.holdings(c);
 
   // TODO(rheineke): Generate a heartbeat thread with a mutex around cookie
   // Make simple request every n minutes and call authenticate(...) with

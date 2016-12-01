@@ -7,8 +7,8 @@
 
 #include "boost/network/protocol/http/client.hpp"
 
+#include "iem/message.hpp"
 #include "iem/orderbook.hpp"
-#include "iem/trader_message.hpp"
 
 namespace iem {
 
@@ -52,7 +52,7 @@ class Session {
   const ClientResponse remove_messages(const Market& market);
 
  private:
-  std::string first_authenticate(const bool force_login);
+  std::string login(const bool force_login);
 
   const std::string username_;
   const std::string password_;
@@ -61,7 +61,7 @@ class Session {
   boost::network::http::client client_;
 };
 
-const std::vector<OrderBook> read_html(const std::string& body);
+const std::vector<OrderBook> _read_orderbooks_html(const std::string &body);
 
 int snprintf_session(char* const str, const Session& s);
 

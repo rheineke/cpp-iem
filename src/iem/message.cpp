@@ -1,6 +1,6 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 
-#include "trader_message.hpp"
+#include "iem/message.hpp"
 
 namespace iem {
 
@@ -117,6 +117,18 @@ boost::posix_time::ptime expiration_date_from_string(const std::string& str) {
   }
 
   return date_from_string(str);
+}
+
+HoldingMessage::HoldingMessage(const boost::posix_time::ptime& date,
+                               const Market& market,
+                               const Action& action,
+                               const Quantity quantity,
+                               const Price& price):
+    date_(date),
+    market_(market),
+    action_(action),
+    quantity_(quantity),
+    price_(price) {
 }
 
 }  // namespace iem
