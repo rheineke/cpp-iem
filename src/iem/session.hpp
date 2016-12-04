@@ -38,7 +38,7 @@ class Session {
 
   const std::vector<OrderBook> orderbook(const Market& market);
 
-  const ClientResponse holdings(const Contract& contract);
+  const std::vector<HoldingMessage> holdings(const Contract& contract);
 
   const ClientResponse outstanding_orders(const Contract& contract,
                                           const Side& side);

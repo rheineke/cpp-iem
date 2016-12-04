@@ -235,7 +235,58 @@ const std::vector<OrderBook> Session::orderbook(const Market& market) {
   return _read_orderbooks_html(body(response));
 }
 
-const ClientResponse Session::holdings(const Contract &contract) {
+const HoldingMessage _read_message_html(ptree::const_assoc_iterator tr_it) {
+  // Trader message values
+  boost::posix_time::ptime date;
+  std::string market_name;
+  Action action;
+  Quantity quantity = 0;
+  Price price;
+
+  auto td_its = tr_it->second.equal_range("td");
+  int i = 0;
+  for (auto it = td_its.first; it != td_its.second; it++) {
+    auto data_str = it->second.data();
+    boost::trim(data_str);
+    std::cout << data_str << std::endl;
+    if (i == 0) {  // date
+      date = date_from_string(data_str);
+    } else if (i == 1) {  // market
+      market_name = data_str;
+    } else if (i == 2) {  // action
+      data_str = it->second.get_child("a").data();
+      action = action_from_string(data_str);
+    } else if (i == 4) {  // quantity
+      quantity = std::stoi(data_str);
+    } else if (i == 5) {  // price
+      price = _parse_price(data_str);
+    }
+
+    i++;
+  }
+
+  return HoldingMessage(
+      date,
+      Market(market_name),
+      action,
+      quantity,
+      price);
+}
+
+const std::vector<HoldingMessage> _read_messages_html(const std::string& body) {
+  auto tbody = _tbody_ptree(body);
+  const auto tr_its = tbody.equal_range("tr");
+
+  std::cout << _table_html_string(body) << std::endl;
+
+  std::vector<HoldingMessage> msgs;
+  for (auto it = tr_its.first; it != tr_its.second; it++) {
+    msgs.push_back(_read_message_html(it));
+  }
+  return msgs;
+}
+
+const std::vector<HoldingMessage> Session::holdings(const Contract &contract) {
   // Construct request
   auto asset_holdings_request = buildRequest(
       "/iem/trader/TraderActivity.action",
@@ -249,8 +300,7 @@ const ClientResponse Session::holdings(const Contract &contract) {
   asset_holdings_request << boost::network::header("Cookie", cookie());
   // POST request
   const auto& response = client_.post(asset_holdings_request);
-  std::cout << body(response) << std::endl;
-  return response;
+  return _read_messages_html(body(response));
 }
 
 const std::string _limit_order_type(Side side) {

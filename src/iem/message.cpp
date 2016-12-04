@@ -26,6 +26,7 @@ MessageType message_type_from_string(const std::string& msg_type_str) {
   }
 }
 
+//
 constexpr auto ask_entered("Ask entered");
 constexpr auto bid_entered("Bid entered");
 constexpr auto fixed_bundle_purchase_executed("Fixed bundle purchase executed");
