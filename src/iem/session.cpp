@@ -238,7 +238,7 @@ const std::vector<OrderBook> Session::orderbook(const Market& market) {
 const HoldingMessage _read_message_html(ptree::const_assoc_iterator tr_it) {
   // Trader message values
   boost::posix_time::ptime date;
-  std::string market_name;
+  std::string market_label;
   Action action;
   Quantity quantity = 0;
   Price price;
@@ -252,12 +252,12 @@ const HoldingMessage _read_message_html(ptree::const_assoc_iterator tr_it) {
     if (i == 0) {  // date
       date = date_from_string(data_str);
     } else if (i == 1) {  // market
-      market_name = data_str;
+      market_label = data_str;
     } else if (i == 2) {  // action
       data_str = it->second.get_child("a").data();
       action = action_from_string(data_str);
     } else if (i == 4) {  // quantity
-      quantity = std::stoi(data_str);
+      quantity = _parse_quantity(data_str);
     } else if (i == 5) {  // price
       price = _parse_price(data_str);
     }
@@ -267,7 +267,7 @@ const HoldingMessage _read_message_html(ptree::const_assoc_iterator tr_it) {
 
   return HoldingMessage(
       date,
-      Market(market_name),
+      market_label,
       action,
       quantity,
       price);

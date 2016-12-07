@@ -66,20 +66,20 @@ boost::posix_time::ptime expiration_date_from_string(const std::string& str);
 class HoldingMessage final {
  public:
   HoldingMessage(const boost::posix_time::ptime& date,
-                 const Market& market,
+                 const std::string& market_label,
                  const Action& action,
                  const Quantity quantity,
                  const Price& price);
 
   inline const boost::posix_time::ptime date() const { return date_; }
-  inline const Market market() const { return market_; }
+  inline const std::string market_label() const { return market_label_; }
   inline const Action action() const { return action_; }
   inline const Quantity quantity() const { return quantity_; }
   inline const Price price() const { return price_; }
 
  private:
   boost::posix_time::ptime date_;
-  Market market_;
+  std::string market_label_;
   Action action_;
   Quantity quantity_;
   Price price_;

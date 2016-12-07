@@ -26,13 +26,17 @@ MessageType message_type_from_string(const std::string& msg_type_str) {
   }
 }
 
-//
+// Trader message values
 constexpr auto ask_entered("Ask entered");
 constexpr auto bid_entered("Bid entered");
 constexpr auto fixed_bundle_purchase_executed("Fixed bundle purchase executed");
 constexpr auto fixed_bundle_sale_executed("Fixed bundle sale executed");
 constexpr auto ask_order_withdrawn("Your ask order was withdrawn");
 constexpr auto bid_order_withdrawn("Your bid order was withdrawn");
+// Holding message values
+constexpr auto sell("Sell");
+constexpr auto buy_fixed_price_bundle("Buy Fixed Price Bundle");
+constexpr auto sell_fixed_price_bundle("Sell Fixed Price Bundle");
 
 inline const std::string to_string(const Action& action) {
   switch (action) {
@@ -52,13 +56,15 @@ inline const std::string to_string(const Action& action) {
 }
 
 Action action_from_string(const std::string& action_str) {
-  if (action_str == ask_entered) {
+  if (action_str == ask_entered || action_str == sell) {
     return Action::ASK_ENTERED;
   } else if (action_str == bid_entered) {
     return Action::BID_ENTERED;
-  } else if (action_str == fixed_bundle_purchase_executed) {
+  } else if (action_str == fixed_bundle_purchase_executed ||
+      action_str == buy_fixed_price_bundle) {
     return Action::FIXED_BUNDLE_PURCHASE_EXECUTED;
-  } else if (action_str == fixed_bundle_sale_executed) {
+  } else if (action_str == fixed_bundle_sale_executed
+      || action_str == sell_fixed_price_bundle) {
     return Action::FIXED_BUNDLE_SALE_EXECUTED;
   } else if (action_str == ask_order_withdrawn) {
     return Action::ASK_ORDER_WITHDRAWN;
@@ -121,12 +127,12 @@ boost::posix_time::ptime expiration_date_from_string(const std::string& str) {
 }
 
 HoldingMessage::HoldingMessage(const boost::posix_time::ptime& date,
-                               const Market& market,
+                               const std::string& market_label,
                                const Action& action,
                                const Quantity quantity,
                                const Price& price):
     date_(date),
-    market_(market),
+    market_label_(market_label),
     action_(action),
     quantity_(quantity),
     price_(price) {
