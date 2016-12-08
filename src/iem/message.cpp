@@ -34,12 +34,17 @@ constexpr auto fixed_bundle_sale_executed("Fixed bundle sale executed");
 constexpr auto ask_order_withdrawn("Your ask order was withdrawn");
 constexpr auto bid_order_withdrawn("Your bid order was withdrawn");
 // Holding message values
+constexpr auto buy("Buy");
 constexpr auto sell("Sell");
 constexpr auto buy_fixed_price_bundle("Buy Fixed Price Bundle");
 constexpr auto sell_fixed_price_bundle("Sell Fixed Price Bundle");
 
 inline const std::string to_string(const Action& action) {
   switch (action) {
+    case Action::BUY:
+      return buy;
+    case Action::SELL:
+      return sell;
     case Action::ASK_ENTERED:
       return ask_entered;
     case Action::BID_ENTERED:
@@ -56,7 +61,11 @@ inline const std::string to_string(const Action& action) {
 }
 
 Action action_from_string(const std::string& action_str) {
-  if (action_str == ask_entered || action_str == sell) {
+  if (action_str == buy) {
+    return Action::BUY;
+  } else if (action_str == sell) {
+    return Action::SELL;
+  } else if (action_str == ask_entered) {
     return Action::ASK_ENTERED;
   } else if (action_str == bid_entered) {
     return Action::BID_ENTERED;

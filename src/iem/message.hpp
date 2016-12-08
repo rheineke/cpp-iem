@@ -18,6 +18,8 @@ MessageType message_type_from_string(const std::string& msg_type_str);
 enum class Action {
   ASK_ENTERED,
   BID_ENTERED,
+  SELL,
+  BUY,
   FIXED_BUNDLE_PURCHASE_EXECUTED,
   FIXED_BUNDLE_SALE_EXECUTED,
   ASK_ORDER_WITHDRAWN,

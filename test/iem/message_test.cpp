@@ -20,16 +20,24 @@ TEST(TraderMessageTest, MessageType) {
 
 TEST(TraderMessageTest, Action) {
   // Serialization
+  EXPECT_EQ(to_string(Action::BUY), "Buy");
+  EXPECT_EQ(to_string(Action::SELL), "Sell");
   EXPECT_EQ(to_string(Action::ASK_ENTERED), "Ask entered");
   EXPECT_EQ(to_string(Action::BID_ENTERED), "Bid entered");
   EXPECT_EQ(to_string(Action::FIXED_BUNDLE_PURCHASE_EXECUTED),
             "Fixed bundle purchase executed");
 
   // Deserialization
+  EXPECT_EQ(action_from_string("Buy"), Action::BUY);
+  EXPECT_EQ(action_from_string("Sell"), Action::SELL);
   EXPECT_EQ(action_from_string("Ask entered"), Action::ASK_ENTERED);
   EXPECT_EQ(action_from_string("Bid entered"), Action::BID_ENTERED);
   EXPECT_EQ(action_from_string("Fixed bundle purchase executed"),
             Action::FIXED_BUNDLE_PURCHASE_EXECUTED);
+  EXPECT_EQ(action_from_string("Buy Fixed Price Bundle"),
+            Action::FIXED_BUNDLE_PURCHASE_EXECUTED);
+  EXPECT_EQ(action_from_string("Sell Fixed Price Bundle"),
+            Action::FIXED_BUNDLE_SALE_EXECUTED);
 }
 
 TEST(TraderMessageTest, TradeMessageDateFromString) {
