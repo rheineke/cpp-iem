@@ -1,6 +1,6 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
-#ifndef CPPIEM_SRC_IEM_ARBITRAGE_STRATEGY_HPP_
-#define CPPIEM_SRC_IEM_ARBITRAGE_STRATEGY_HPP_
+#ifndef CPPIEM_IEM_ARBITRAGE_STRATEGY_HPP_
+#define CPPIEM_IEM_ARBITRAGE_STRATEGY_HPP_
 
 #include <memory>
 #include <vector>
@@ -15,4 +15,4 @@ namespace iem {
 
 }  // namespace iem
 
-#endif // CPPIEM_SRC_IEM_ARBITRAGE_STRATEGY_HPP_
+#endif  // CPPIEM_IEM_ARBITRAGE_STRATEGY_HPP_

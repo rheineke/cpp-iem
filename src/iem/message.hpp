@@ -1,7 +1,7 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 
-#ifndef CPP_IEM_MESSAGE_HPP
-#define CPP_IEM_MESSAGE_HPP
+#ifndef CPPIEM_IEM_MESSAGE_HPP
+#define CPPIEM_IEM_MESSAGE_HPP
 
 #include "boost/date_time/posix_time/posix_time.hpp"
 
@@ -89,4 +89,4 @@ class HoldingMessage final {
 
 }  // namespace iem
 
-#endif //CPP_IEM_MESSAGE_HPP
+#endif  // CPPIEM_IEM_MESSAGE_HPP

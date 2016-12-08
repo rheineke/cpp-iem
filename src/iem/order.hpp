@@ -1,6 +1,6 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
-#ifndef CPPIEM_SRC_IEM_ORDER_HPP_
-#define CPPIEM_SRC_IEM_ORDER_HPP_
+#ifndef CPPIEM_IEM_ORDER_HPP_
+#define CPPIEM_IEM_ORDER_HPP_
 
 #include <string>
 #include <vector>
@@ -84,4 +84,4 @@ using Orders = std::vector<std::unique_ptr<Order>>;
 
 }  // namespace iem
 
-#endif
+#endif  // CPPIEM_IEM_ORDER_HPP_

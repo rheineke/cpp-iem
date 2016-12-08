@@ -1,6 +1,6 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
-#ifndef CPPIEM_SRC_IEM_ORDERBOOK_HPP_
-#define CPPIEM_SRC_IEM_ORDERBOOK_HPP_
+#ifndef CPPIEM_IEM_ORDERBOOK_HPP_
+#define CPPIEM_IEM_ORDERBOOK_HPP_
 
 #include <map>
 #include <unordered_map>
@@ -85,4 +85,4 @@ using MarketOrderBooks = std::array<iem::OrderBook*, N>;
 
 }  // namespace iem
 
-#endif
+#endif  // CPPIEM_IEM_ORDERBOOK_HPP_

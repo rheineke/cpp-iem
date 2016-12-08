@@ -1,6 +1,6 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
-#ifndef CPPIEM_SRC_IEM_SESSION_HPP_
-#define CPPIEM_SRC_IEM_SESSION_HPP_
+#ifndef CPPIEM_IEM_SESSION_HPP_
+#define CPPIEM_IEM_SESSION_HPP_
 
 #include <memory>
 #include <string>
@@ -76,4 +76,4 @@ const ClientRequest _order_request(const Order& order);
 
 }  // namespace iem
 
-#endif
+#endif  // CPPIEM_IEM_SESSION_HPP_

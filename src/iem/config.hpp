@@ -1,6 +1,6 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
-#ifndef CPP_IEM_CONFIG_HPP_
-#define CPP_IEM_CONFIG_HPP_
+#ifndef CPPIEM_IEM_CONFIG_HPP_
+#define CPPIEM_IEM_CONFIG_HPP_
 
 #include "json/json.h"
 
@@ -23,4 +23,4 @@ const Json::Value asset_value(const Json::Value& json_root,
 
 }  // namespace iem
 
-#endif //CPP_IEM_CONFIG_HPP_
+#endif  // CPPIEM_IEM_CONFIG_HPP_

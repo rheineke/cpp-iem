@@ -1,6 +1,6 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
-#ifndef CPPIEM_SRC_IEM_LOGGER_HPP_
-#define CPPIEM_SRC_IEM_LOGGER_HPP_
+#ifndef CPPIEM_IEM_LOGGER_HPP_
+#define CPPIEM_IEM_LOGGER_HPP_
 
 #include <iostream>
 
@@ -20,4 +20,4 @@ class Logger final {
 
 }  // namespace iem
 
-#endif
+#endif  // CPPIEM_IEM_LOGGER_HPP_

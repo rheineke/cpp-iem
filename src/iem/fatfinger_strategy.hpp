@@ -1,8 +1,7 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
-//
 
-#ifndef CPPIEM_FATFINGER_STRATEGY_HPP_
-#define CPPIEM_FATFINGER_STRATEGY_HPP_
+#ifndef CPPIEM_IEM_FATFINGER_STRATEGY_HPP_
+#define CPPIEM_IEM_FATFINGER_STRATEGY_HPP_
 
 #include <memory>
 #include <vector>
@@ -18,4 +17,4 @@ Orders fatfinger_orders(const Market& market,
 }  // namespace iem
 
 
-#endif //CPPIEM_FATFINGER_STRATEGY_HPP_
+#endif  // CPPIEM_IEM_FATFINGER_STRATEGY_HPP_

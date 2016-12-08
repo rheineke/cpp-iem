@@ -1,6 +1,6 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
-#ifndef CPPIEM_SRC_IEM_SIDE_HPP_
-#define CPPIEM_SRC_IEM_SIDE_HPP_
+#ifndef CPPIEM_IEM_SIDE_HPP_
+#define CPPIEM_IEM_SIDE_HPP_
 
 #include <cstdint>
 #include <iosfwd>
@@ -17,4 +17,4 @@ std::ostream& operator<<(std::ostream& os, const Side& s);
 
 }  // namespace iem
 
-#endif
+#endif  // CPPIEM_IEM_SIDE_HPP_

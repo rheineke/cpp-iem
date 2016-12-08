@@ -1,6 +1,6 @@
 // Copyright 2015 Reece Heineke<reece.heineke@gmail.com>
-#ifndef CPPIEM_SRC_IEM_PRICETIMELIMIT_HPP_
-#define CPPIEM_SRC_IEM_PRICETIMELIMIT_HPP_
+#ifndef CPPIEM_IEM_PRICETIMELIMIT_HPP_
+#define CPPIEM_IEM_PRICETIMELIMIT_HPP_
 
 #include "boost/date_time/posix_time/posix_time.hpp"
 
@@ -41,4 +41,4 @@ std::ostream& operator<<(std::ostream& os, const PriceTimeLimit& ptl);
 
 } // namespace iem
 
-#endif
+#endif  // CPPIEM_IEM_PRICETIMELIMIT_HPP_

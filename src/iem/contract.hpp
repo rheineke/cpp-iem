@@ -1,6 +1,6 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
-#ifndef CPPIEM_SRC_IEM_CONTRACT_HPP_
-#define CPPIEM_SRC_IEM_CONTRACT_HPP_
+#ifndef CPPIEM_IEM_CONTRACT_HPP_
+#define CPPIEM_IEM_CONTRACT_HPP_
 
 #include <functional>
 #include <iosfwd>
@@ -89,4 +89,4 @@ struct hash<iem::Market> {
 
 }  // namespace std
 
-#endif
+#endif  // CPPIEM_IEM_CONTRACT_HPP_

@@ -1,6 +1,6 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
-#ifndef CPPIEM_SRC_IEM_PRICE_HPP_
-#define CPPIEM_SRC_IEM_PRICE_HPP_
+#ifndef CPPIEM_IEM_PRICE_HPP_
+#define CPPIEM_IEM_PRICE_HPP_
 
 #include <algorithm>
 #include <functional>
@@ -137,4 +137,4 @@ inline bool operator>=(const Price& lhs, const Price& rhs) {
 
 }  // namespace iem
 
-#endif
+#endif  // CPPIEM_IEM_PRICE_HPP_

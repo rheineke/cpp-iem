@@ -1,6 +1,6 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
-#ifndef CPPIEM_SRC_IEM_EXECUTED_ORDER_HPP_
-#define CPPIEM_SRC_IEM_EXECUTED_ORDER_HPP_
+#ifndef CPPIEM_IEM_EXECUTED_ORDER_HPP_
+#define CPPIEM_IEM_EXECUTED_ORDER_HPP_
 
 #include <algorithm>
 #include <utility>
@@ -66,4 +66,4 @@ int tradeVolume(const std::vector<ExecutedOrder>& eos, const Side& s);
 
 }  // namespace iem
 
-#endif
+#endif  // CPPIEM_IEM_EXECUTED_ORDER_HPP_
