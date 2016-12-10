@@ -4,6 +4,8 @@
 
 #include "gtest/gtest.h"
 
+#include <map>
+
 // #include "spacemeasure_test.hpp"
 
 namespace iem {
@@ -34,14 +36,22 @@ TEST(PriceTest, TicksPerPoint) {
 }
 
 TEST(PriceTest, SessionStringFormat) {
-  Price px(999);
-  // Test snprint_price directly
-  constexpr std::size_t kLen = 16;
+  std::map<Price, std::string> price_expected_str_map{
+      {Price(999), "0.999"},
+      {Price(), "----"},
+  };
+
+  constexpr std::size_t kLen = 8;
   char c_str[kLen];
-  snprintf_price(c_str, kLen, px);
-  EXPECT_EQ(".999", ".999");
-  // Test to_string
-  EXPECT_EQ(to_string(px), "0.999");
+
+  for (const auto& it : price_expected_str_map) {
+    // Test snprint_price directly
+    snprintf_price(c_str, kLen, it.first);
+    EXPECT_EQ(std::string(c_str), it.second);
+
+    // Test to_string
+    EXPECT_EQ(to_string(it.first), it.second);
+  }
 }
 
 }  // namespace iem

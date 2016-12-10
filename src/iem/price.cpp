@@ -61,7 +61,7 @@ int snprintf_price(char* const s, std::size_t n, const Price& p) {
 }
 
 const std::string to_string(const Price& px) {
-  constexpr std::size_t kLen = 6;
+  const std::size_t kLen = (px == nanPrice()) ? 5 : 6;
   char c_str[kLen];
   snprintf_price(c_str, kLen, px);
   return std::string(c_str, kLen-1);
