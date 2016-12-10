@@ -1,6 +1,7 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/session.hpp"
 
+#include <algorithm>
 #include <numeric>
 #include <string>
 #include <vector>
@@ -14,7 +15,7 @@ using ptree = boost::property_tree::ptree;
 using StringPair = std::pair<std::string, std::string>;
 using StringPairVector = std::vector<StringPair>;
 
-constexpr auto _VAH = "viewAssetHoldings";
+constexpr auto _VAH("viewAssetHoldings");
 
 Session::Session(const std::string& username, const std::string& password):
     username_(username), password_(password), cookie_(""), client_() {
@@ -157,7 +158,7 @@ const OrderBook _read_orderbook_html(ptree::const_assoc_iterator tr_it) {
   unsigned int nao;
 
   auto td_its = tr_it->second.equal_range("td");
-  const std::string& c = "contract";
+  constexpr auto c("contract");
   for (auto it = td_its.first; it != td_its.second; it++) {
     // XML attribute called class
     const auto& klass = it->second.get<std::string>("<xmlattr>.class", c);
@@ -248,7 +249,6 @@ const HoldingMessage _read_message_html(ptree::const_assoc_iterator tr_it) {
   for (auto it = td_its.first; it != td_its.second; it++) {
     auto data_str = it->second.data();
     boost::trim(data_str);
-    std::cout << data_str << std::endl;
     if (i == 0) {  // date
       date = date_from_string(data_str);
     } else if (i == 1) {  // market
@@ -277,8 +277,6 @@ const std::vector<HoldingMessage> _read_messages_html(const std::string& body) {
   auto tbody = _tbody_ptree(body);
   const auto tr_its = tbody.equal_range("tr");
 
-  std::cout << _table_html_string(body) << std::endl;
-
   std::vector<HoldingMessage> msgs;
   for (auto it = tr_its.first; it != tr_its.second; it++) {
     msgs.push_back(_read_message_html(it));
@@ -303,8 +301,103 @@ const std::vector<HoldingMessage> Session::holdings(const Contract &contract) {
   return _read_messages_html(body(response));
 }
 
-const std::string _limit_order_type(Side side) {
+const std::string _activity_type(Side side) {
   return (side == Side::BUY) ? "bid" : "ask";
+}
+
+const Side _side_from_string(const std::string& side_str) {
+  if (side_str == "bid") {
+    return Side::BUY;
+  } else if (side_str == "ask") {
+    return Side::SELL;
+  } else {
+    throw std::invalid_argument("Unknown side: " + side_str);
+  }
+}
+
+const std::string _order_id(const std::string& href_str, const Side& side) {
+  const std::string& key = (side == Side::BUY) ? "bidOrder=" : "askOrder=";
+  const size_t pos = href_str.find(key) + key.size();
+  const size_t len = href_str.find("&", pos) - pos;
+  return href_str.substr(pos, len);
+}
+
+const Single _read_order_html(const ptree::const_assoc_iterator tr_it) {
+  // Outstanding order values
+  boost::posix_time::ptime order_date;
+  std::string market_name;
+  std::string contract_name;
+  std::string order_type;
+  Quantity quantity = 0;
+  Price price;
+  boost::posix_time::ptime expiration;
+  std::string order_id;
+
+  auto td_its = tr_it->second.equal_range("td");
+  int i = 0;
+  for (auto it = td_its.first; it != td_its.second; it++) {
+    auto data_str = it->second.data();
+    boost::trim(data_str);
+    std::cout << data_str << std::endl;
+    if (i == 0) {  // order date
+      order_date = date_from_string(data_str);
+    } else if (i == 1) {  // market
+      market_name = data_str;
+    } else if (i == 2) {  // contract name
+      contract_name = data_str;
+    } else if (i == 3) {  // order type
+      order_type = data_str;
+    } else if (i == 4) {  // quantity
+      quantity = _parse_quantity(data_str);
+    } else if (i == 5) {  // price
+      price = _parse_price(data_str);
+    } else if (i == 6) {  // expiration date
+      expiration = date_from_string(data_str);
+    } else if (i == 7) {  // order id
+      order_id = _order_id(it->second.get<std::string>("a.<xmlattr>.href"),
+                           _side_from_string(order_type));
+      std::cout << order_id << std::endl;
+    }
+
+    i++;
+  }
+
+  return Single(
+      Contract(market_name, contract_name),
+      _side_from_string(order_type),
+      quantity,
+      PriceTimeLimit(price, expiration)
+  );
+}
+
+const std::vector<Single> _read_orders_html(const std::string& body) {
+  auto tbody = _tbody_ptree(body);
+  const auto tr_its = tbody.equal_range("tr");
+
+  std::cout << _table_html_string(body) << std::endl;
+
+  std::vector<Single> os;
+  for (auto it = tr_its.first; it != tr_its.second; it++) {
+    os.push_back(_read_order_html(it));
+  }
+  return os;
+}
+
+const SingleOrders Session::outstanding_orders(const Contract& contract, const Side& side) {
+  // Construct request
+  auto outstanding_order_request = buildRequest(
+      "/iem/trader/TraderActivity.action",
+      {
+          {"market", std::to_string(contract.market().value())},
+          {"asset", std::to_string(contract.asset_id())},
+          {"activityType", _activity_type(side)},
+          // {_VAH, std::to_string(30)}  // Number of outstanding orders? Required?
+      });
+  // Set cookie
+  outstanding_order_request << boost::network::header("Cookie", cookie());
+  // POST request
+  const auto& response = client_.post(outstanding_order_request);
+  return _read_orders_html(body(response));
 }
 
 const ClientRequest limit_order_request(const Single& order) {
@@ -315,7 +408,7 @@ const ClientRequest limit_order_request(const Single& order) {
       "/iem/trader/order/LimitOrder.action",
       {
           {"limitOrderAssetToMarket", std::to_string(c.asset_to_market_id())},
-          {"orderType", _limit_order_type(order.side())},
+          {"orderType", _activity_type(order.side())},
           {"expirationDate", to_string(order.price_time_limit().expiration())},
           {"price", to_string(order.price_time_limit().price())},
           {"limitOrderQuantity", std::to_string(order.quantity())},
@@ -387,7 +480,7 @@ const ClientResponse Session::cancel_order(const Single& order) {
           {"market", std::to_string(order.contract().market().value())},
           // {"bidOrder", std::to_string(order.id())},
           {"asset", std::to_string(order.contract().asset_id())},
-          {"activityType", _limit_order_type(order.side())}
+          {"activityType", _activity_type(order.side())}
       });
   auto cancel_order_request = buildRequest("TraderActivity.action");
   // TODO(rheineke): Differentiate order types
@@ -457,39 +550,48 @@ const std::vector<TraderMessage> _read_messages_html(const Market& market,
 
 const std::vector<TraderMessage> Session::messages(const Market& market) {
   // Construct request
-  const auto msg = url_encode(
-      {
-          {"home", ""},
-          {"market", std::to_string(market.value())}
-      });
-  auto msg_request = buildRequest("/iem/trader/TraderMessages.action?" + msg);
-  msg_request << boost::network::header("Cookie", this->cookie());
+  const auto request = market_client_request(market, "home");
   // GET request
-  const auto& response = client_.get(msg_request);
+  const auto& response = client_.get(request);
   return _read_messages_html(market, body(response));
 }
 
 const ClientResponse Session::remove_messages(const Market& market) {
   // Construct request
+  const auto request = market_client_request(market, "removeMessages");
+  // GET request
+  const auto& response = client_.get(request);
+  return response;
+}
+
+const ClientResponse Session::portfolio(const Market& market) {
+  // Construct request
+  const auto request = market_client_request(market, "viewPortfolio");
+  // GET request
+  const auto& response = client_.get(request);
+  // TODO(rheineke): Parse and return results
+  return response;
+}
+
+ClientRequest Session::market_client_request(const Market& market,
+                                             const std::string& query) {
+  // Construct request
   const auto msg = url_encode(
       {
-          {"removeMessages", ""},
+          {query, ""},
           {"market", std::to_string(market.value())}
       });
-  std::cout << msg << std::endl;
-  auto msg_request = buildRequest("/iem/trader/TraderMessages.action?" + msg);
-  msg_request << boost::network::header("Cookie", this->cookie());
-  // GET request
-  const auto& response = client_.get(msg_request);
-  return response;
+  auto request = buildRequest("/iem/trader/TraderMessages.action?" + msg);
+  request << boost::network::header("Cookie", this->cookie());
+  return request;
 }
 
 int snprintf_session(char* const str, const Session& s) {
   static const auto fmt("{\"name\":\"session\", \"username\":\"%s\", "
                         "\"password\":\"%s\", \"cookie\":\"%s\"}");
-
-  return snprintf(str, 160, fmt, s.username().c_str(), s.password().c_str(),
-                  s.cookie().c_str());
+  const auto buf_size = std::min<std::size_t>(sizeof(str), 160);
+  return snprintf(str, buf_size, fmt, s.username().c_str(),
+                  s.password().c_str(), s.cookie().c_str());
 }
 
 }  // namespace iem

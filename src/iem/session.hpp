@@ -40,8 +40,8 @@ class Session {
 
   const std::vector<HoldingMessage> holdings(const Contract& contract);
 
-  const ClientResponse outstanding_orders(const Contract& contract,
-                                          const Side& side);
+  const SingleOrders outstanding_orders(const Contract& contract,
+                                        const Side& side);
 
   const ClientResponse place_order(const Order& order);
 
@@ -51,8 +51,12 @@ class Session {
 
   const ClientResponse remove_messages(const Market& market);
 
+  const ClientResponse portfolio(const Market& market);
+
  private:
   std::string login(const bool force_login);
+  ClientRequest market_client_request(const Market &market,
+                                      const std::string &query);
 
   const std::string username_;
   const std::string password_;

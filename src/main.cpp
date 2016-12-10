@@ -47,11 +47,14 @@ int _main(int argc, char* argv[]) {
 
   // Send a test order
   const iem::Contract c("FedPolicyB", "FRsame1216");
-  const iem::Price px(1);
-  const iem::PriceTimeLimit ptl(px, boost::posix_time::not_a_date_time);
-  const iem::Single o(c, iem::Side::BUY, 1, ptl);
-  const auto response = session.place_order(o);
-  // std::cout << body(response) << std::endl;
+//  const iem::Price px(1);
+//  const iem::PriceTimeLimit ptl(px, boost::posix_time::not_a_date_time);
+//  const iem::Single o(c, iem::Side::BUY, 1, ptl);
+//  const auto response = session.place_order(o);
+
+  // Request outstanding orders
+  const auto oo_response = session.outstanding_orders(c, iem::Side::BUY);
+  // std::cout << body(oo_response) << std::endl;
 
   // Request trade messages
   const auto msgs = session.messages(mkt);
