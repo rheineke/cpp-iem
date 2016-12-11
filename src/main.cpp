@@ -45,16 +45,41 @@ int _main(int argc, char* argv[]) {
     std::cout << ob << std::endl;
   }
 
-  // Send a test order
-  const iem::Contract c("FedPolicyB", "FRsame1216");
-//  const iem::Price px(1);
-//  const iem::PriceTimeLimit ptl(px, boost::posix_time::not_a_date_time);
-//  const iem::Single o(c, iem::Side::BUY, 1, ptl);
-//  const auto response = session.place_order(o);
+  // Send a test bid order
+  const iem::Contract c(mkt.name(), "FRsame1216");
+  const iem::Price bid_px(1);
+  const iem::PriceTimeLimit bid_ptl(bid_px, boost::posix_time::not_a_date_time);
+  const iem::Single bid_o(c, iem::Side::BUY, 1, bid_ptl);
+  const auto response = session.place_order(bid_o);
+  // std::cout << body(response) << std::endl;
 
-  // Request outstanding orders
-  const auto oo_response = session.outstanding_orders(c, iem::Side::BUY);
-  // std::cout << body(oo_response) << std::endl;
+  // Send a test ask order
+  const iem::Price ask_px(999);
+  const iem::PriceTimeLimit ask_ptl(ask_px, boost::posix_time::not_a_date_time);
+  const iem::Single ask_o(c, iem::Side::SELL, 1, ask_ptl);
+  const auto ask_response = session.place_order(ask_o);
+
+  // For each side
+  const std::vector<iem::Side> sides{iem::Side::BUY, iem::Side::SELL};
+  for (const auto& side : sides) {
+    // Request side outstanding orders
+    const auto oos = session.outstanding_orders(c, side);
+    for (const auto& oo : oos) {
+      std::cout << oo << std::endl;
+    }
+
+    // Cancel most recent bid order
+    const auto cxl_o = oos[oos.size() - 1];
+    std::cout << cxl_o << std::endl;
+    const auto cxl_response = session.cancel_order(cxl_o);
+  }
+
+  // Send a test bundle order
+  const iem::ContractBundle cb(mkt.name(),
+                               iem::MonthYear(boost::gregorian::Dec, 16));
+  const iem::Bundle b(cb, iem::Side::BUY, 1, iem::Counterparty::EXCHANGE);
+  const auto bundle_response = session.place_order(b);
+  std::cout << body(bundle_response) << std::endl;
 
   // Request trade messages
   const auto msgs = session.messages(mkt);

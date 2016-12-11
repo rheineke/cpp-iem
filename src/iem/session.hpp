@@ -43,7 +43,9 @@ class Session {
   const SingleOrders outstanding_orders(const Contract& contract,
                                         const Side& side);
 
-  const ClientResponse place_order(const Order& order);
+  const ClientResponse place_order(const Single& order);
+
+  const ClientResponse place_order(const Bundle& order);
 
   const ClientResponse cancel_order(const Single& order);
 

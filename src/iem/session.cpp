@@ -315,11 +315,11 @@ const Side _side_from_string(const std::string& side_str) {
   }
 }
 
-const std::string _order_id(const std::string& href_str, const Side& side) {
+OrderId _order_id(const std::string& href_str, const Side& side) {
   const std::string& key = (side == Side::BUY) ? "bidOrder=" : "askOrder=";
   const size_t pos = href_str.find(key) + key.size();
   const size_t len = href_str.find("&", pos) - pos;
-  return href_str.substr(pos, len);
+  return std::stoi(href_str.substr(pos, len));
 }
 
 const Single _read_order_html(const ptree::const_assoc_iterator tr_it) {
@@ -331,14 +331,13 @@ const Single _read_order_html(const ptree::const_assoc_iterator tr_it) {
   Quantity quantity = 0;
   Price price;
   boost::posix_time::ptime expiration;
-  std::string order_id;
+  OrderId order_id;
 
   auto td_its = tr_it->second.equal_range("td");
   int i = 0;
   for (auto it = td_its.first; it != td_its.second; it++) {
     auto data_str = it->second.data();
     boost::trim(data_str);
-    std::cout << data_str << std::endl;
     if (i == 0) {  // order date
       order_date = date_from_string(data_str);
     } else if (i == 1) {  // market
@@ -356,25 +355,24 @@ const Single _read_order_html(const ptree::const_assoc_iterator tr_it) {
     } else if (i == 7) {  // order id
       order_id = _order_id(it->second.get<std::string>("a.<xmlattr>.href"),
                            _side_from_string(order_type));
-      std::cout << order_id << std::endl;
     }
 
     i++;
   }
 
-  return Single(
+  Single so(
       Contract(market_name, contract_name),
       _side_from_string(order_type),
       quantity,
       PriceTimeLimit(price, expiration)
   );
+  so.set_id(order_id);
+  return so;
 }
 
 const std::vector<Single> _read_orders_html(const std::string& body) {
   auto tbody = _tbody_ptree(body);
   const auto tr_its = tbody.equal_range("tr");
-
-  std::cout << _table_html_string(body) << std::endl;
 
   std::vector<Single> os;
   for (auto it = tr_its.first; it != tr_its.second; it++) {
@@ -383,7 +381,8 @@ const std::vector<Single> _read_orders_html(const std::string& body) {
   return os;
 }
 
-const SingleOrders Session::outstanding_orders(const Contract& contract, const Side& side) {
+const SingleOrders Session::outstanding_orders(const Contract& contract,
+                                               const Side& side) {
   // Construct request
   auto outstanding_order_request = buildRequest(
       "/iem/trader/TraderActivity.action",
@@ -391,7 +390,6 @@ const SingleOrders Session::outstanding_orders(const Contract& contract, const S
           {"market", std::to_string(contract.market().value())},
           {"asset", std::to_string(contract.asset_id())},
           {"activityType", _activity_type(side)},
-          // {_VAH, std::to_string(30)}  // Number of outstanding orders? Required?
       });
   // Set cookie
   outstanding_order_request << boost::network::header("Cookie", cookie());
@@ -414,7 +412,7 @@ const ClientRequest limit_order_request(const Single& order) {
           {"limitOrderQuantity", std::to_string(order.quantity())},
           {"placeLimitOrder", "Place Limit Order"},
           {"market", std::to_string(c.market().value())},
-          {"_sourcePage", ""},
+          {"_sourcePage", ""},  // Required?
       });
   return order_request;
 }
@@ -438,21 +436,6 @@ const ClientRequest market_order_request(const Single& order) {
   return order_request;
 }
 
-const ClientRequest bundle_order_request(const Bundle& order) {
-  // Construct request
-  const auto& cb = order.contract_bundle();
-  auto order_request = buildRequest(
-      "/iem/trader/order/MarketOrder.action",
-      {
-          {"limitOrderAssetToMarket", std::to_string(cb.bundle_id())},
-          {"orderType", _market_order_type(order.side())},
-          {"bundleOrderQuantity", std::to_string(order.quantity())},
-          {"placeBundleOrder", "Place Bundle Order"},
-          {"market", std::to_string(cb.market().value())}
-      });
-  return order_request;
-}
-
 const ClientRequest _order_request(const Order& order) {
   if (order.price_time_limit().ioc()) {
     // TODO(rheineke): Differentiate bundle order - virtual function?
@@ -462,7 +445,7 @@ const ClientRequest _order_request(const Order& order) {
   }
 }
 
-const ClientResponse Session::place_order(const Order& order) {
+const ClientResponse Session::place_order(const Single& order) {
   // Construct request
   ClientRequest order_request = _order_request(order);
   // Set cookie
@@ -472,22 +455,57 @@ const ClientResponse Session::place_order(const Order& order) {
   return response;
 }
 
+const std::string _bundle_order_type(const Side& side, const Counterparty& cp) {
+  const auto action_str = _market_order_type(side);
+  const auto cp_str = (cp == Counterparty::EXCHANGE) ? "Fixed" : "Market";
+  return action_str + "At" + cp_str;
+}
+
+const ClientRequest _bundle_order_request(const Bundle& order) {
+  // Construct request
+  const auto& cb = order.contract_bundle();
+  auto order_request = buildRequest(
+      "/iem/trader/order/BundleOrder.action",
+      {
+          {"bundle", std::to_string(cb.bundle_id())},
+          {"orderType", _bundle_order_type(order.side(), order.counterparty())},
+          {"bundleOrderQuantity", std::to_string(order.quantity())},
+          {"placeBundleOrder", "Place Bundle Order"},
+          {"market", std::to_string(cb.market().value())}
+      });
+  return order_request;
+}
+
+const ClientResponse Session::place_order(const Bundle& order) {
+  // Construct request
+  ClientRequest order_request = _bundle_order_request(order);
+  // Set cookie
+  order_request << boost::network::header("Cookie", cookie());
+  // POST request
+  const auto& response = client_.post(order_request);
+  return response;
+}
+
+const std::string _action(const Side& side) {
+  return (side == Side::BUY) ? "cancelBidOrder" : "cancelAskOrder";
+}
+
 const ClientResponse Session::cancel_order(const Single& order) {
   // Construct request
-  const auto cancel = url_encode(
+  const auto oid = (order.side() == Side::BUY) ? "bidOrder": "askOrder";
+  const auto cxl = url_encode(
       {
-          {"cancelBidOrder", ""},
+          {_action(order.side()), ""},
           {"market", std::to_string(order.contract().market().value())},
-          // {"bidOrder", std::to_string(order.id())},
+          {oid, std::to_string(order.id())},
           {"asset", std::to_string(order.contract().asset_id())},
           {"activityType", _activity_type(order.side())}
       });
-  auto cancel_order_request = buildRequest("TraderActivity.action");
-  // TODO(rheineke): Differentiate order types
+  auto cxl_request = buildRequest("/iem/trader/TraderActivity.action?" + cxl);
   // Set cookie
-  cancel_order_request << boost::network::header("Cookie", this->cookie());
+  cxl_request << boost::network::header("Cookie", this->cookie());
   // POST request
-  const auto& response = client_.post(cancel_order_request);
+  const auto& response = client_.get(cxl_request);
   return response;
 }
 

@@ -12,10 +12,6 @@ std::ostream& operator<<(std::ostream& os, const Counterparty& cp) {
   }
 }
 
-Side Order::side() const noexcept { return side_; }
-Quantity Order::quantity() const noexcept { return quantity_; }
-Counterparty Order::counterparty() const { return counterparty_; }
-
 std::ostream& operator<<(std::ostream& os, const Order& o) {
   o.print(&os);
   return os;
@@ -31,15 +27,14 @@ Order::Order(const Side& side,
     counterparty_(counterparty) {
 }
 
-const Contract Single::contract() const { return contract_; }
-
 void Single::print(std::ostream* const p_os) const {
   *p_os << "SingleOrder{"
         << "side=" << side()
         << ", quantity=" << static_cast<int>(quantity())
         << ", priceTimeLimit=" << price_time_limit()
         << ", counterparty=" << counterparty()
-        << ", contract=" << contract() << "}";
+        << ", contract=" << contract()
+        << ", id=" << static_cast<int>(id()) << "}";
 }
 
 Single::Single(const Contract& contract,

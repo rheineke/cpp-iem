@@ -22,7 +22,7 @@ MessageType message_type_from_string(const std::string& msg_type_str) {
   } else if (msg_type_str == order_resolution_cstr) {
     return MessageType::ORDER_RESOLUTION;
   } else {
-    throw std::invalid_argument("Unknown string: " + msg_type_str);
+    throw std::invalid_argument("Unknown message string: " + msg_type_str);
   }
 }
 
@@ -31,6 +31,8 @@ constexpr auto ask_entered("Ask entered");
 constexpr auto bid_entered("Bid entered");
 constexpr auto fixed_bundle_purchase_executed("Fixed bundle purchase executed");
 constexpr auto fixed_bundle_sale_executed("Fixed bundle sale executed");
+constexpr auto mkt_bundle_purchase_executed("Market bundle purchase executed");
+constexpr auto mkt_bundle_sale_executed("Market bundle sale executed");
 constexpr auto ask_order_withdrawn("Your ask order was withdrawn");
 constexpr auto bid_order_withdrawn("Your bid order was withdrawn");
 // Holding message values
@@ -38,6 +40,8 @@ constexpr auto buy("Buy");
 constexpr auto sell("Sell");
 constexpr auto buy_fixed_price_bundle("Buy Fixed Price Bundle");
 constexpr auto sell_fixed_price_bundle("Sell Fixed Price Bundle");
+constexpr auto buy_market_price_bundle("Buy Market Price Bundle");
+constexpr auto sell_market_price_bundle("Sell Market Price Bundle");
 
 inline const std::string to_string(const Action& action) {
   switch (action) {
@@ -53,10 +57,16 @@ inline const std::string to_string(const Action& action) {
       return fixed_bundle_purchase_executed;
     case Action::FIXED_BUNDLE_SALE_EXECUTED:
       return fixed_bundle_sale_executed;
+    case Action::MARKET_BUNDLE_PURCHASE_EXECUTED:
+      return mkt_bundle_purchase_executed;
+    case Action::MARKET_BUNDLE_SALE_EXECUTED:
+      return mkt_bundle_sale_executed;
     case Action::ASK_ORDER_WITHDRAWN:
       return ask_order_withdrawn;
     case Action::BID_ORDER_WITHDRAWN:
       return bid_order_withdrawn;
+//    default:
+//      throw std::invalid_argument("Unknown action");
   }
 }
 
@@ -75,12 +85,18 @@ Action action_from_string(const std::string& action_str) {
   } else if (action_str == fixed_bundle_sale_executed
       || action_str == sell_fixed_price_bundle) {
     return Action::FIXED_BUNDLE_SALE_EXECUTED;
+  } else if (action_str == mkt_bundle_purchase_executed ||
+      action_str == buy_market_price_bundle) {
+    return Action::MARKET_BUNDLE_PURCHASE_EXECUTED;
+  } else if (action_str == mkt_bundle_sale_executed ||
+      action_str == sell_market_price_bundle) {
+    return Action::MARKET_BUNDLE_SALE_EXECUTED;
   } else if (action_str == ask_order_withdrawn) {
     return Action::ASK_ORDER_WITHDRAWN;
   } else if (action_str == bid_order_withdrawn) {
     return Action::BID_ORDER_WITHDRAWN;
   } else {
-    throw std::invalid_argument("Unknown string: " + action_str);
+    throw std::invalid_argument("Unknown action string: " + action_str);
   }
 }
 

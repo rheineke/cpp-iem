@@ -23,12 +23,12 @@ std::ostream& operator<<(std::ostream& os, const Counterparty& cp);
 
 class Order {
  public:
-  Side side() const noexcept;
-  Quantity quantity() const noexcept;
+  inline Side side() const noexcept { return side_; }
+  inline Quantity quantity() const noexcept { return quantity_; }
   inline const PriceTimeLimit price_time_limit() const {
     return price_time_limit_;
   }
-  Counterparty counterparty() const;
+  inline Counterparty counterparty() const { return counterparty_; }
 
   friend std::ostream& operator<<(std::ostream& os, const Order& o);
 
@@ -51,15 +51,20 @@ std::ostream& operator<<(std::ostream& os, const Order& o);
 
 class Single final : public Order {
  public:
-  const Contract contract() const;
-  void print(std::ostream* const p_os) const final;
-
   Single(const Contract& contract,
          const Side& side,
          const Quantity quantity,
          const PriceTimeLimit& price_time_limit);
+
+  inline const Contract contract() const { return contract_; }
+  inline OrderId id() const { return id_; }
+  inline void set_id(const OrderId id) {
+    id_ = id;
+  }
+  void print(std::ostream* const p_os) const final;
  private:
   Contract contract_;
+  OrderId id_;
 };
 
 class Bundle final : public Order {
