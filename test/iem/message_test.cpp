@@ -26,6 +26,12 @@ TEST(TraderMessageTest, Action) {
   EXPECT_EQ(to_string(Action::BID_ENTERED), "Bid entered");
   EXPECT_EQ(to_string(Action::FIXED_BUNDLE_PURCHASE_EXECUTED),
             "Fixed bundle purchase executed");
+  EXPECT_EQ(to_string(Action::FIXED_BUNDLE_SALE_EXECUTED),
+            "Fixed bundle sale executed");
+  EXPECT_EQ(to_string(Action::MARKET_BUNDLE_PURCHASE_EXECUTED),
+            "Market bundle purchase executed");
+  EXPECT_EQ(to_string(Action::MARKET_BUNDLE_SALE_EXECUTED),
+            "Market bundle sale executed");
 
   // Deserialization
   EXPECT_EQ(action_from_string("Buy"), Action::BUY);
