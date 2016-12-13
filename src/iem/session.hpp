@@ -62,7 +62,7 @@ class Session {
 
   const std::string username_;
   const std::string password_;
-  // TODO(rheineke): Cooke and client should be wrapped (each?) in a mutex
+  // TODO(rheineke): Cookie and client should be wrapped (each?) in a mutex
   std::string cookie_;
   boost::network::http::client client_;
 };
@@ -78,7 +78,7 @@ Price _parse_price(const std::string &px_str);
 
 position_t _parse_quantity(const std::string &qty_str);
 
-const ClientRequest _order_request(const Order& order);
+const ClientRequest _single_order_request(const Single &order);
 
 }  // namespace iem
 

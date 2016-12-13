@@ -90,6 +90,9 @@ int _main(int argc, char* argv[]) {
   // Request holdings
   const auto holdings_response = session.holdings(c);
 
+  // Request portfolio
+  const auto portfolio_response = session.portfolio(mkt);
+
   // TODO(rheineke): Generate a heartbeat thread with a mutex around cookie
   // Make simple request every n minutes and call authenticate(...) with
   // forceLogin=True if request fails. Update mutexed cookie if necessary

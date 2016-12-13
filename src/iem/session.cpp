@@ -436,18 +436,17 @@ const ClientRequest market_order_request(const Single& order) {
   return order_request;
 }
 
-const ClientRequest _order_request(const Order& order) {
+const ClientRequest _single_order_request(const Single &order) {
   if (order.price_time_limit().ioc()) {
-    // TODO(rheineke): Differentiate bundle order - virtual function?
-    return market_order_request(static_cast<const Single&>(order));
+    return market_order_request(order);
   } else {
-    return limit_order_request(static_cast<const Single&>(order));
+    return limit_order_request(order);
   }
 }
 
 const ClientResponse Session::place_order(const Single& order) {
   // Construct request
-  ClientRequest order_request = _order_request(order);
+  ClientRequest order_request = _single_order_request(order);
   // Set cookie
   order_request << boost::network::header("Cookie", cookie());
   // POST request
@@ -588,6 +587,7 @@ const ClientResponse Session::portfolio(const Market& market) {
   // GET request
   const auto& response = client_.get(request);
   // TODO(rheineke): Parse and return results
+  std::cout << _table_html_string(body(response)) << std::endl;
   return response;
 }
 

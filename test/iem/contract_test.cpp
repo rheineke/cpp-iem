@@ -18,7 +18,7 @@ TEST(ContractTest, MarketMembers) {
 
 TEST(ContractTest, BadMarketNameException) {
   EXPECT_ANY_THROW(iem::Market("FedPolicyC"));
-  // TODO(rheineke): Test throw "string" with struct implementing what()
+  EXPECT_THROW(iem::Market("FedPolicyC"), std::invalid_argument);
 }
 
 const MonthYear expiration_monthyear(const std::string& expiration_str) {

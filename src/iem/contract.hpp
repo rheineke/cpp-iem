@@ -20,7 +20,7 @@ using BundleId = uint_fast16_t;
 
 using Month = boost::date_time::months_of_year;
 using Year = uint_fast8_t;
-// TODO(rheineke): Consider replacing with gregorian::date(year, month, 0?)
+// Bundle expiry
 using MonthYear = std::pair<Month, Year>;
 
 std::ostream& operator<<(std::ostream& os, const MonthYear& month_year);
@@ -60,7 +60,6 @@ class Contract final {
                     const std::string& contract_name);
 
   inline Market market() const noexcept { return market_; }
-  // TODO(rheineke): Is asset id used in any way?
   inline AssetId asset_id() const noexcept { return asset_id_; }
   inline AssetToMarketId asset_to_market_id() const noexcept {
     return asset_to_market_id_;
