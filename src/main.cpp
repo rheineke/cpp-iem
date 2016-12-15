@@ -92,7 +92,12 @@ int _main(int argc, char* argv[]) {
   const auto holdings_response = session.holdings(c);
 
   // Request portfolio
-  const auto portfolio_response = session.portfolio(mkt);
+  std::cout << "Requesting portfolio messages" << std::endl;
+  const auto portfolio_trader_messages = session.portfolio(mkt);
+  for (const auto& msg : msgs) {
+    std::cout << msg << std::endl;
+  }
+
 
   // TODO(rheineke): Generate a heartbeat thread with a mutex around cookie
   // Make simple request every n minutes and call authenticate(...) with

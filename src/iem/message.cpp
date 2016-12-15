@@ -42,6 +42,9 @@ constexpr auto buy_fixed_price_bundle("Buy Fixed Price Bundle");
 constexpr auto sell_fixed_price_bundle("Sell Fixed Price Bundle");
 constexpr auto buy_market_price_bundle("Buy Market Price Bundle");
 constexpr auto sell_market_price_bundle("Sell Market Price Bundle");
+// Portfolio message values
+constexpr auto bid_traded("Bid traded");
+constexpr auto ask_traded("Ask traded");
 
 inline const std::string to_string(const Action& action) {
   switch (action) {
@@ -71,9 +74,9 @@ inline const std::string to_string(const Action& action) {
 }
 
 Action action_from_string(const std::string& action_str) {
-  if (action_str == buy) {
+  if (action_str == buy || action_str == bid_traded) {
     return Action::BUY;
-  } else if (action_str == sell) {
+  } else if (action_str == sell || action_str == ask_traded) {
     return Action::SELL;
   } else if (action_str == ask_entered) {
     return Action::ASK_ENTERED;

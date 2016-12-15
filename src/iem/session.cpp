@@ -592,14 +592,12 @@ const ClientResponse Session::remove_messages(const Market& market) {
   return response;
 }
 
-const ClientResponse Session::portfolio(const Market& market) {
+const std::vector<TraderMessage> Session::portfolio(const Market& market) {
   // Construct request
   const auto request = market_client_request(market, "viewPortfolio");
   // GET request
   const auto& response = client_.get(request);
-  // TODO(rheineke): Parse and return results
-  std::cout << _table_html_string(body(response)) << std::endl;
-  return response;
+  return _read_messages_html(market, body(response));
 }
 
 ClientRequest Session::market_client_request(const Market& market,
