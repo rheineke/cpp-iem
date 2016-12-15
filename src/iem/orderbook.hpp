@@ -8,7 +8,6 @@
 
 #include "boost/variant/variant_fwd.hpp"
 
-#include "iem/executedorder.hpp"
 #include "iem/price.hpp"
 #include "iem/order.hpp"
 
@@ -20,7 +19,7 @@ using Balance = double;
 
 class OrderBook {
  public:
-  OrderBook(const std::string& contract,
+  OrderBook(const Contract& contract,
             const Price& best_bid,
             const bool best_bid_priority,
             const Price& best_ask,
@@ -30,7 +29,7 @@ class OrderBook {
             const unsigned int num_sell_orders,
             const position_t position);
 
-  const std::string contract() const;
+  inline const Contract contract() const { return contract_; }
 
   inline const Price best_price(const Side& side) const {
     return (side == Side::BUY) ? best_bid_ : best_ask_;
@@ -44,17 +43,13 @@ class OrderBook {
 
   position_t position() const;
 
-  const ExecutedOrders executedOrders() const;
-
   void update(const SingleOrders& bid_orders,
               const SingleOrders& ask_orders);
-
-  void update(const ExecutedOrders& executed_orders);
 
   inline uint_fast64_t num_updates() const { return num_updates_; }
 
  private:
-  std::string contract_;
+  Contract contract_;
   Price best_bid_;
   bool best_bid_priority_;
   Price best_ask_;
@@ -63,8 +58,6 @@ class OrderBook {
   SingleOrders bid_orders_;
   SingleOrders ask_orders_;
   position_t position_;
-
-  ExecutedOrders executed_orders_;
 
   uint_fast64_t num_updates_;
 };

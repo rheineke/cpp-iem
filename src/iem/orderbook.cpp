@@ -7,7 +7,7 @@
 
 namespace iem {
 
-OrderBook::OrderBook(const std::string& contract,
+OrderBook::OrderBook(const Contract& contract,
                      const Price& best_bid,
                      const bool best_bid_priority,
                      const Price& best_ask,
@@ -24,13 +24,10 @@ OrderBook::OrderBook(const std::string& contract,
     last_trade_(last_trade),
     bid_orders_(),
     ask_orders_(),
-    position_(position),
-    executed_orders_() {
+    position_(position) {
   bid_orders_.reserve(num_buy_orders);
   ask_orders_.reserve(num_sell_orders);
 }
-
-const std::string OrderBook::contract() const { return contract_; }
 
 bool OrderBook::best_price_priority(const Side& side) const {
   return (side == Side::BUY) ? best_bid_priority_ : best_ask_priority_;
@@ -44,17 +41,10 @@ const SingleOrders OrderBook::orders(const Side& side) const {
 
 position_t OrderBook::position() const { return position_; }
 
-const ExecutedOrders OrderBook::executedOrders() const {
-  return executed_orders_;
-}
-
-void OrderBook::update(const SingleOrders& bid_orders, const SingleOrders& ask_orders) {
+void OrderBook::update(const SingleOrders& bid_orders,
+                       const SingleOrders& ask_orders) {
   bid_orders_ = bid_orders;
   ask_orders_ = ask_orders;
-}
-
-void OrderBook::update(const ExecutedOrders& executed_orders) {
-  executed_orders_ = executed_orders;
 }
 
 class OrdersVisitor final : public boost::static_visitor<bool> {
@@ -94,8 +84,8 @@ char priority_char(const OrderBook& ob, const Side& side) {
 }
 
 std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
-  static constexpr auto s = Side::SELL;
-  static constexpr auto b = Side::BUY;
+  constexpr auto s = Side::SELL;
+  constexpr auto b = Side::BUY;
   os << "{\"name\":\"orderBook\""
      << " \"contract\":" << ob.contract()
      << " bid/ask trade: " << ob.best_price(b) << priority_char(ob, b)
@@ -104,8 +94,7 @@ std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
      << ", bid orders=" << ob.orders(b)
      << ", ask orders=" << ob.orders(s)
      << ']'
-     << ", position=" << static_cast<int>(ob.position())
-     << ", num executed orders=" << ob.executedOrders().size() << '}';
+     << ", position=" << static_cast<int>(ob.position()) << '}';
 
   return os;
 }

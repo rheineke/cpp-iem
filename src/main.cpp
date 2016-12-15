@@ -47,19 +47,20 @@ int _main(int argc, char* argv[]) {
 
   // Send a test bid order
   const iem::Contract c(mkt.name(), "FRsame1216");
-  const iem::Price bid_px(1);
-  const iem::PriceTimeLimit bid_ptl(bid_px, boost::posix_time::not_a_date_time);
-  const iem::Single bid_o(c, iem::Side::BUY, 1, bid_ptl);
-  const auto response = session.place_order(bid_o);
-  // std::cout << body(response) << std::endl;
+//  const iem::Price bid_px(0);
+//  const iem::PriceTimeLimit bid_ptl(bid_px, boost::posix_time::not_a_date_time);
+//  const iem::Single bid_o(c, iem::Side::BUY, 1, bid_ptl);
+//  const auto response = session.place_order(bid_o);
+//  std::cout << body(response) << std::endl;
 
   // Send a test ask order
-  const iem::Price ask_px(999);
-  const iem::PriceTimeLimit ask_ptl(ask_px, boost::posix_time::not_a_date_time);
-  const iem::Single ask_o(c, iem::Side::SELL, 1, ask_ptl);
-  const auto ask_response = session.place_order(ask_o);
+//  const iem::Price ask_px(1000);
+//  const iem::PriceTimeLimit ask_ptl(ask_px, boost::posix_time::not_a_date_time);
+//  const iem::Single ask_o(c, iem::Side::SELL, 1, ask_ptl);
+//  const auto ask_response = session.place_order(ask_o);
 
   // For each side
+  std::cout << "Requesting outstanding orders" << std::endl;
   const std::vector<iem::Side> sides{iem::Side::BUY, iem::Side::SELL};
   for (const auto& side : sides) {
     // Request side outstanding orders
@@ -69,9 +70,9 @@ int _main(int argc, char* argv[]) {
     }
 
     // Cancel most recent bid order
-    const auto cxl_o = oos[oos.size() - 1];
-    std::cout << cxl_o << std::endl;
-    const auto cxl_response = session.cancel_order(cxl_o);
+//    const auto cxl_o = oos[oos.size() - 1];
+//    std::cout << cxl_o << std::endl;
+//    const auto cxl_response = session.cancel_order(cxl_o);
   }
 
   // Send a test bundle order

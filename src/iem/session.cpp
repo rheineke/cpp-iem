@@ -145,17 +145,18 @@ unsigned int num_open_orders(ptree::const_assoc_iterator it) {
   return std::stoi(value);
 }
 
-const OrderBook _read_orderbook_html(ptree::const_assoc_iterator tr_it) {
+const OrderBook _read_orderbook_html(ptree::const_assoc_iterator tr_it,
+                                     const Market& market) {
   // Orderbook values
   std::string contract_name;
-  Price bb;
-  bool bbp;
-  Price ba;
-  bool bap;
-  Price lp;
-  position_t pos;
-  unsigned int noo;
-  unsigned int nao;
+  Price best_bid_px;
+  bool best_bid_priority;
+  Price best_ask_px;
+  bool best_ask_priority;
+  Price last_trade_px;
+  position_t position;
+  unsigned int num_open_bid_orders;
+  unsigned int num_open_ask_orders;
 
   auto td_its = tr_it->second.equal_range("td");
   constexpr auto c("contract");
@@ -168,28 +169,37 @@ const OrderBook _read_orderbook_html(ptree::const_assoc_iterator tr_it) {
     } else if (klass == "change-cell bestBidPrice") {  // Best bid price
       auto data = it->second.get_child("p").data();
       boost::trim(data);
-      bb = _parse_price(data);
-      bbp = data.find("*") != std::string::npos;
+      best_bid_px = _parse_price(data);
+      best_bid_priority = data.find("*") != std::string::npos;
     } else if (klass == "change-cell bestAskPrice") {  // Best ask price
       auto data = it->second.get_child("p").data();
       boost::trim(data);
-      ba = _parse_price(data);
-      bap = data.find("*") != std::string::npos;
+      best_ask_px = _parse_price(data);
+      best_ask_priority = data.find("*") != std::string::npos;
     } else if (klass == "change-cell lastPrice") {  // Last trade price
       auto data = it->second.get_child("p").data();
       boost::trim(data);
-      lp = _parse_price(data);
+      last_trade_px = _parse_price(data);
     } else if (klass == "change-cell quantity") {  // Position
       auto data = it->second.get<std::string>("<xmlattr>.value");
-      pos = _parse_quantity(data);
+      position = _parse_quantity(data);
     } else if (klass == "yourBidsCell") {  // Number of open bid orders
-      noo = num_open_orders(it);
+      num_open_bid_orders = num_open_orders(it);
     } else if (klass == "yourAsksCell") {  // Number of open ask orders
-      nao = num_open_orders(it);
+      num_open_ask_orders = num_open_orders(it);
     }
   }
 
-  return OrderBook(contract_name, bb, bbp, ba, bap, lp, noo, nao, pos);
+  return OrderBook(
+      Contract(market.name(), contract_name),
+      best_bid_px,
+      best_bid_priority,
+      best_ask_px,
+      best_ask_priority,
+      last_trade_px,
+      num_open_bid_orders,
+      num_open_ask_orders,
+      position);
 }
 
 const std::string _table_html_string(const std::string& body) {
@@ -211,13 +221,14 @@ ptree _tbody_ptree(const std::string& body) {
   return pt.get_child("table.tbody");
 }
 
-const std::vector<OrderBook> _read_orderbooks_html(const std::string &body) {
+const std::vector<OrderBook> _read_orderbooks_html(const std::string &body,
+                                                   const Market& market) {
   auto tbody = _tbody_ptree(body);
   const auto tr_its = tbody.equal_range("tr");
 
   std::vector<OrderBook> obs;
   for (auto it = tr_its.first; it != tr_its.second; it++) {
-    obs.push_back(_read_orderbook_html(it));
+    obs.push_back(_read_orderbook_html(it, market));
   }
   return obs;
 }
@@ -233,7 +244,7 @@ const std::vector<OrderBook> Session::orderbook(const Market& market) {
   market_orderbook_request << boost::network::header("Cookie", cookie());
   // POST request
   const auto& response = client_.post(market_orderbook_request);
-  return _read_orderbooks_html(body(response));
+  return _read_orderbooks_html(body(response), market);
 }
 
 const HoldingMessage _read_message_html(ptree::const_assoc_iterator tr_it) {
@@ -284,7 +295,7 @@ const std::vector<HoldingMessage> _read_messages_html(const std::string& body) {
   return msgs;
 }
 
-const std::vector<HoldingMessage> Session::holdings(const Contract &contract) {
+const std::vector<HoldingMessage> Session::holdings(const Contract& contract) {
   // Construct request
   auto asset_holdings_request = buildRequest(
       "/iem/trader/TraderActivity.action",
