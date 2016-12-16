@@ -42,7 +42,8 @@ Single::Single(const Contract& contract,
                const Quantity quantity,
                const PriceTimeLimit& price_time_limit):
     Order(side, quantity, price_time_limit, Counterparty::PARTICIPANT),
-    contract_(contract) {
+    contract_(contract),
+    id_(std::numeric_limits<OrderId>::lowest()) {
 }
 
 void Bundle::print(std::ostream* const p_os) const {

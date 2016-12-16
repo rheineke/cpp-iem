@@ -32,21 +32,31 @@ class Session {
   inline const std::string password() const { return password_; }
   inline const std::string cookie() const { return cookie_; }
 
+  // Request a session cookie. This must be called before any other session
+  // calls. If a valid session exists, then this method will request a session
+  // that invalidates the existing one
   const ClientResponse authenticate();
 
+  // Requests that the current session cookie be invalidated
   const ClientResponse logout();
 
+  // Requests orderbook information for the specified market
   const std::vector<OrderBook> orderbook(const Market& market);
 
+  // Requests position change messages for the specific contract
   const std::vector<HoldingMessage> holdings(const Contract& contract);
 
+  // Requests outstanding orders for the specified contract and side
   const SingleOrders outstanding_orders(const Contract& contract,
                                         const Side& side);
 
+  // Request to place a single market or limit order
   const ClientResponse place_order(const Single& order);
 
+  // Request to place a fixed or market price bundle order
   const ClientResponse place_order(const Bundle& order);
 
+  // Request to cancel a single limit order. Order must have its id set.
   const ClientResponse cancel_order(const Single& order);
 
   // Returns a list of new trader messages for the specified market. New is

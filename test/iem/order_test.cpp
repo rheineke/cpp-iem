@@ -15,6 +15,8 @@ TEST(OrderTest, Constructor) {
   const PriceTimeLimit ptl(Price(1), exp_ptime);
   Single o(c, Side::BUY, 1, ptl);
   EXPECT_EQ(typeid(o), typeid(Single));
+  EXPECT_EQ(o.id(), 0);
+  EXPECT_EQ(std::numeric_limits<OrderId>::lowest(), 0);
 
   // OrderId to string
   o.set_id(42);

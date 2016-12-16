@@ -502,6 +502,11 @@ const std::string _action(const Side& side) {
 
 const ClientResponse Session::cancel_order(const Single& order) {
   // Construct request
+  if (valid_id(order)) {
+    // Return something useful
+    return ClientResponse();
+  }
+
   const auto oid = (order.side() == Side::BUY) ? "bidOrder": "askOrder";
   const auto cxl = url_encode(
       {

@@ -67,6 +67,10 @@ class Single final : public Order {
   OrderId id_;
 };
 
+inline bool valid_id(const Single& order) {
+  return order.id() == std::numeric_limits<OrderId>::lowest();
+}
+
 class Bundle final : public Order {
  public:
   Bundle(const ContractBundle& contract_bundle,
