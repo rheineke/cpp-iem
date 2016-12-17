@@ -11,7 +11,7 @@
 
 using LoginCreds = std::pair<std::string, std::string>;
 
-LoginCreds read_login_credentials(char const* filename = "conf/login.json") {
+LoginCreds _read_login_credentials(char const* filename = "conf/login.json") {
   // Open file in binary mode
   Json::Value root;
   std::ifstream config_doc(filename, std::ifstream::binary);
@@ -23,12 +23,16 @@ LoginCreds read_login_credentials(char const* filename = "conf/login.json") {
   return {username, password};
 }
 
+LoginCreds read_login_credentials(int argc, char* argv[]) {
+  return (argc == 2) ?
+         _read_login_credentials(argv[1]) : _read_login_credentials();
+}
+
 int _main(int argc, char* argv[]) {
   using std::chrono::duration_cast;
   using std::chrono::high_resolution_clock;
 
-  const auto login = (argc == 2) ?
-                     read_login_credentials(argv[1]) : read_login_credentials();
+  const auto login = read_login_credentials(argc, argv);
 
   iem::Session session(login.first, login.second);
   std::cout << "Logging in..." << std::endl;
@@ -109,9 +113,34 @@ int _main(int argc, char* argv[]) {
   std::cout << "Logging out..." << std::endl;
   session.logout();
 
-  auto return_value = EXIT_SUCCESS;
+  const auto return_value = EXIT_SUCCESS;
   // std::cout << "Starting trade" << std::endl;
   return return_value;
+}
+
+int _main2(int argc, char* argv[]) {
+  const auto login = read_login_credentials(argc, argv);
+
+  iem::Session session(login.first, login.second);
+
+  // Logout before logging in
+  const auto fst_logout_response = session.logout();
+  std::cout << status(fst_logout_response) << std::endl;
+  std::cout << body(fst_logout_response) << std::endl;
+
+  std::cout << "Logging in..." << std::endl;
+  session.authenticate();
+  // Print session after authentication
+  iem::Logger logger;
+  iem::snprintf_session(logger.getBuffer(), session);
+  logger.log();
+
+  // Logout after logging in
+  const auto snd_logout_response = session.logout();
+  std::cout << status(snd_logout_response) << std::endl;
+  std::cout << body(snd_logout_response) << std::endl;
+
+  return EXIT_SUCCESS;
 }
 
 void heartbeat(const iem::Session session) {
@@ -124,7 +153,7 @@ void heartbeat(const iem::Session session) {
 }
 
 int main(int argc, char* argv[]) {
-  return _main(argc, argv);
+  return _main2(argc, argv);
 
 //  iem::Market mkt("FedPolicyB");
 //  std::cout << mkt.value() << std::endl;
