@@ -102,7 +102,12 @@ const ClientResponse Session::logout() {
   // Set cookie
   logout_request << boost::network::header("Cookie", this->cookie());
   // GET request
-  return client_.get(logout_request);
+  const auto response = client_.get(logout_request);
+  // Set cookie_ to empty string if successful
+  if (status(response) == 200) {
+    this->cookie_ = "";
+  }
+  return response;
 }
 
 Price _parse_price(const std::string &px_str) {

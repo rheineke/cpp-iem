@@ -15,15 +15,26 @@ namespace iem {
 using ClientRequest = boost::network::http::client::request;
 using ClientResponse = boost::network::http::client::response;
 
+// IEM HTTP session. Session requires a username and password at construction,
+// and any account specific requests for IEM require a session object. Session
+// must perform an authentication before any other requests can be made. Logout
+// is not required, but encouraged.
+// Example:
+//   Session s("username", "password);
+//   s.authenticate();
+//   ...
+//   s.logout();
 class Session {
  public:
+  // IEM Session requires username and password at construction
   Session(const std::string& username, const std::string& password);
+  // Session is unique and therefore cannot be copied, but moves are acceptable
   Session(const Session&) = delete;
   Session operator=(const Session&) = delete;
 
   // Don't throw exception on destruction!
 //  ~Session() {
-//    if (this->session() != "") {
+//    if (this->cookie_ != "") {
 //      this->logout();
 //    }
 //  }
