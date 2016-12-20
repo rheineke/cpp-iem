@@ -92,12 +92,19 @@ class Session {
   boost::network::http::client client_;
 };
 
-const std::vector<OrderBook> _read_orderbooks_html(const std::string &body);
-
+// snprintf function for a session object
 int snprintf_session(char* const str, const Session& s);
 
+// Unique session with a custom deleter to automatically log out
 using UniqueSession = std::unique_ptr<const Session,
                                       void (*)(const Session* const)>;
+
+UniqueSession make_unique_session(const std::string& username,
+                                  const std::string& password);
+
+// Private functions exposed for unit testing
+const std::vector<OrderBook> _read_orderbooks_html(const std::string &body,
+                                                   const Market& market);
 
 Price _parse_price(const std::string &px_str);
 

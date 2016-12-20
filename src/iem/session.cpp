@@ -631,4 +631,11 @@ int snprintf_session(char* const str, const Session& s) {
                   s.password().c_str(), s.cookie().c_str());
 }
 
+// TODO(rheineke): Write function
+//UniqueSession make_unique_session(const std::string& username,
+//                                  const std::string& password) {
+//  return std::unique_ptr(new Session(username, password),
+//                         decltype(&Session::logout));
+//}
+
 }  // namespace iem
