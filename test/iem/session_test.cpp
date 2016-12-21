@@ -33,7 +33,7 @@ TEST(SessionTest, LimitOrderRequest) {
   const iem::Single o(c, iem::Side::BUY, 1, ptl);
   const auto request = iem::_single_order_request(o);
   // TODO(rheineke): Unit test aspects of this
-  std::cout << body(request) << std::endl;
+  std::cout << body(request) << '\n';
 }
 
 TEST(SessionTest, ReadTradeMessageHTML) {

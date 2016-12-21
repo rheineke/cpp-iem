@@ -23,12 +23,14 @@ Session::Session(const std::string& username, const std::string& password):
 
 const std::string url_encode(const std::vector<StringPair>& nvs) {
   using boost::network::uri::encoded;
+  using std::operator ""s;
+
   auto op = [](const std::string& a, const StringPair& p) {
     return a.empty() ?
            encoded(p.first) + '=' + encoded(p.second) :
            a + '&' + encoded(p.first) + '=' + encoded(p.second);
   };
-  return std::accumulate(nvs.begin(), nvs.end(), std::string{}, op);
+  return std::accumulate(nvs.begin(), nvs.end(), ""s, op);
 }
 
 ClientRequest buildRequest(const std::string &path,
@@ -38,19 +40,21 @@ ClientRequest buildRequest(const std::string &path,
   url << boost::network::uri::scheme("https")
       << boost::network::uri::host("iem.uiowa.edu")
       << boost::network::uri::path(path);
+
   ClientRequest request(url);
+
   // Add default headers
   using boost::network::header;
   // Python requests default headers
   request << header("User-Agent", "python-requests/2.10.0")
           << header("Accept-Encoding", "gzip, deflate")
           << header("Accept", "*/*");
-          // << header("Connection", "keep-alive");
+
   // Optional body
   if (name_value_pairs.size()) {
     const auto body = url_encode(name_value_pairs);
-    request << boost::network::body(body);
-    request << header("Content-Length", std::to_string(body.length()))
+    request << boost::network::body(body)
+            << header("Content-Length", std::to_string(body.length()))
             << header("Content-Type", "application/x-www-form-urlencoded");
   }
   return request;
@@ -59,7 +63,7 @@ ClientRequest buildRequest(const std::string &path,
 const ClientResponse Session::authenticate() {
   auto location = login(false);
   if (location == "") {  // If location is empty string, then login failed
-    std::cout << "Login failed; attempting forcing login..." << std::endl;
+    std::cout << "Login failed; attempting forcing login...\n";
     location = login(true);  // Force login
   }
 
@@ -594,7 +598,7 @@ const std::vector<TraderMessage> Session::messages(const Market& market) {
   return _read_messages_html(market, body(response));
 }
 
-const ClientResponse Session::remove_messages(const Market& market) {
+const auto Session::remove_messages(const Market& market) {
   // Construct request
   const auto request = market_client_request(market, "removeMessages");
   // GET request

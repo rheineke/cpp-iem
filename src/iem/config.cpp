@@ -7,6 +7,8 @@
 
 namespace iem {
 
+using std::operator ""s;
+
 std::shared_ptr<const Json::Value> json_root;
 std::once_flag json_flag;
 
@@ -15,7 +17,7 @@ const void init_json_root(char const* filename) {
   namespace fs = boost::filesystem;
   fs::path p(filename);
   if (!fs::exists(p)) {
-    const auto msg = "Path does not exist: " + std::string(filename);
+    const auto msg = "Path does not exist: "s + std::string(filename);
     throw std::invalid_argument(msg);
   }
   // Open file in binary mode

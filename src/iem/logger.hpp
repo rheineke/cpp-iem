@@ -12,7 +12,7 @@ class Logger final {
 
   constexpr char* getBuffer() const { return buffer_; }
 
-  void log() const { std::cout << buffer_ << std::endl; }
+  void log() const { std::cout << buffer_ << '\n'; }
 
  private:
   static char buffer_[kBufferSize];

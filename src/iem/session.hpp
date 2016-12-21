@@ -75,7 +75,7 @@ class Session {
   const std::vector<TraderMessage> messages(const Market& market);
 
   // Clears the list of new trader messages for the specified market.
-  const ClientResponse remove_messages(const Market& market);
+  const auto remove_messages(const Market& market);
 
   // Returns a list of trader messages for the specified market.
   const std::vector<TraderMessage> portfolio(const Market& market);

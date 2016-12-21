@@ -35,7 +35,7 @@ int _main(int argc, char* argv[]) {
   const auto login = read_login_credentials(argc, argv);
 
   iem::Session session(login.first, login.second);
-  std::cout << "Logging in..." << std::endl;
+  std::cout << "Logging in...\n";
   session.authenticate();
   // Print session after authentication
   iem::Logger logger;
@@ -46,7 +46,7 @@ int _main(int argc, char* argv[]) {
   const iem::Market mkt("FedPolicyB");
   const auto obs = session.orderbook(mkt);
   for (const auto& ob : obs) {
-    std::cout << ob << std::endl;
+    std::cout << ob << '\n';
   }
 
   // Send a test bid order
@@ -55,7 +55,7 @@ int _main(int argc, char* argv[]) {
 //  const iem::PriceTimeLimit bid_ptl(bid_px, boost::posix_time::not_a_date_time);
 //  const iem::Single bid_o(c, iem::Side::BUY, 1, bid_ptl);
 //  const auto response = session.place_order(bid_o);
-//  std::cout << body(response) << std::endl;
+//  std::cout << body(response) << '\n';
 
   // Send a test ask order
 //  const iem::Price ask_px(1000);
@@ -64,18 +64,18 @@ int _main(int argc, char* argv[]) {
 //  const auto ask_response = session.place_order(ask_o);
 
   // For each side
-  std::cout << "Requesting outstanding orders" << std::endl;
+  std::cout << "Requesting outstanding orders\n";
   const std::vector<iem::Side> sides{iem::Side::BUY, iem::Side::SELL};
   for (const auto& side : sides) {
     // Request side outstanding orders
     const auto oos = session.outstanding_orders(c, side);
     for (const auto& oo : oos) {
-      std::cout << oo << std::endl;
+      std::cout << oo << '\n';
     }
 
     // Cancel most recent bid order
 //    const auto cxl_o = oos[oos.size() - 1];
-//    std::cout << cxl_o << std::endl;
+//    std::cout << cxl_o << '\n';
 //    const auto cxl_response = session.cancel_order(cxl_o);
   }
 
@@ -84,22 +84,22 @@ int _main(int argc, char* argv[]) {
                                iem::MonthYear(boost::gregorian::Dec, 16));
   const iem::Bundle b(cb, iem::Side::BUY, 1, iem::Counterparty::EXCHANGE);
   const auto bundle_response = session.place_order(b);
-  std::cout << body(bundle_response) << std::endl;
+  std::cout << body(bundle_response) << '\n';
 
   // Request trade messages
   const auto msgs = session.messages(mkt);
   for (const auto& msg : msgs) {
-    std::cout << msg << std::endl;
+    std::cout << msg << '\n';
   }
 
   // Request holdings
   const auto holdings_response = session.holdings(c);
 
   // Request portfolio
-  std::cout << "Requesting portfolio messages" << std::endl;
+  std::cout << "Requesting portfolio messages\n";
   const auto portfolio_trader_messages = session.portfolio(mkt);
   for (const auto& msg : msgs) {
-    std::cout << msg << std::endl;
+    std::cout << msg << '\n';
   }
 
 
@@ -110,11 +110,11 @@ int _main(int argc, char* argv[]) {
   // hb.detach();
 
   // Logout
-  std::cout << "Logging out..." << std::endl;
+  std::cout << "Logging out...\n";
   session.logout();
 
   const auto return_value = EXIT_SUCCESS;
-  // std::cout << "Starting trade" << std::endl;
+  // std::cout << "Starting trade" << '\n';
   return return_value;
 }
 
@@ -125,10 +125,10 @@ int _main2(int argc, char* argv[]) {
 
   // Logout before logging in
   const auto fst_logout_response = session.logout();
-  std::cout << status(fst_logout_response) << std::endl;
-  std::cout << body(fst_logout_response) << std::endl;
+  std::cout << status(fst_logout_response) << '\n';
+  std::cout << body(fst_logout_response) << '\n';
 
-  std::cout << "Logging in..." << std::endl;
+  std::cout << "Logging in...\n";
   session.authenticate();
   // Print session after authentication
   iem::Logger logger;
@@ -137,8 +137,8 @@ int _main2(int argc, char* argv[]) {
 
   // Logout after logging in
   const auto snd_logout_response = session.logout();
-  std::cout << status(snd_logout_response) << std::endl;
-  std::cout << body(snd_logout_response) << std::endl;
+  std::cout << status(snd_logout_response) << '\n';
+  std::cout << body(snd_logout_response) << '\n';
 
   return EXIT_SUCCESS;
 }
