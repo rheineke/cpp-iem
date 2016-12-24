@@ -6,6 +6,7 @@
 
 namespace iem {
 
+// Efficient alternative to std::cout
 class Logger final {
  public:
   static constexpr std::size_t kBufferSize = 256;
