@@ -17,10 +17,15 @@ using RequestCode = std::string;
 using OrderId = uint_fast32_t;
 using Quantity = uint_fast8_t;
 
+// Each filled order has either another market participant or the exchange as a
+// counterparty. Only fixed price bundle orders are counterparty to the
+// exchange.
 enum class Counterparty { EXCHANGE, PARTICIPANT };
 
 std::ostream& operator<<(std::ostream& os, const Counterparty& cp);
 
+// IEM order base class. There are two order classes: a single contract order
+// and a bundle of contracts order
 class Order {
  public:
   inline Side side() const noexcept { return side_; }
@@ -49,6 +54,7 @@ class Order {
 
 std::ostream& operator<<(std::ostream& os, const Order& o);
 
+// IEM single contract order
 class Single final : public Order {
  public:
   Single(const Contract& contract,
@@ -71,6 +77,7 @@ inline bool valid_id(const Single& order) {
   return order.id() == std::numeric_limits<OrderId>::lowest();
 }
 
+// IEM bundle contract order
 class Bundle final : public Order {
  public:
   Bundle(const ContractBundle& contract_bundle,
