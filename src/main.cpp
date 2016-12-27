@@ -153,7 +153,7 @@ void heartbeat(const iem::Session session) {
 }
 
 int main(int argc, char* argv[]) {
-  return _main2(argc, argv);
+  return _main(argc, argv);
 
 //  iem::Market mkt("FedPolicyB");
 //  std::cout << mkt.value() << std::endl;
