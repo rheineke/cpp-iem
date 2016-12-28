@@ -1,10 +1,6 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/orderbook.hpp"
 
-// TODO(rheineke): Replace with c++17
-// #include <variant>
-#include "boost/variant/variant.hpp"
-
 namespace iem {
 
 OrderBook::OrderBook(const Contract& contract,
@@ -13,8 +9,8 @@ OrderBook::OrderBook(const Contract& contract,
                      const Price& best_ask,
                      const bool best_ask_priority,
                      const Price& last_trade,
-                     const unsigned int num_buy_orders,
-                     const unsigned int num_sell_orders,
+                     const NumOrders num_buy_orders,
+                     const NumOrders num_sell_orders,
                      const position_t position):
     contract_(contract),
     best_bid_(best_bid),
@@ -22,61 +18,9 @@ OrderBook::OrderBook(const Contract& contract,
     best_ask_(best_ask),
     best_ask_priority_(best_ask_priority),
     last_trade_(last_trade),
-    bid_orders_(),
-    ask_orders_(),
+    num_bid_orders_(num_buy_orders),
+    num_ask_orders_(num_sell_orders),
     position_(position) {
-  bid_orders_.reserve(num_buy_orders);
-  ask_orders_.reserve(num_sell_orders);
-}
-
-bool OrderBook::best_price_priority(const Side& side) const {
-  return (side == Side::BUY) ? best_bid_priority_ : best_ask_priority_;
-}
-
-const Price OrderBook::last_trade() const { return last_trade_; }
-
-const SingleOrders OrderBook::orders(const Side& side) const {
-  return (side == Side::BUY) ? bid_orders_ : ask_orders_;
-}
-
-position_t OrderBook::position() const { return position_; }
-
-void OrderBook::update(const SingleOrders& bid_orders,
-                       const SingleOrders& ask_orders) {
-  bid_orders_ = bid_orders;
-  ask_orders_ = ask_orders;
-}
-
-class OrdersVisitor final : public boost::static_visitor<bool> {
- public:
-  explicit OrdersVisitor(std::ostream* const p_os):
-      p_os_(p_os) {
-  }
-
-  bool operator()(const NumOrders num_orders) const {
-    *p_os_ << static_cast<int>(num_orders);
-    return false;
-  }
-
-  bool operator()(const SingleOrders& orders) const {
-    *p_os_ << orders.size() << '~';
-    return false;
-  }
-
- private:
-  std::ostream* p_os_;
-};
-
-std::ostream& operator<<(std::ostream& os, const OrderInfo& orders) {
-  // TODO: Replace with C++14 generic lambda?
-  // apply_visitor_delayed_cpp14_t
-//   auto str = boost::apply_visitor(
-//       [](auto v) {
-//         return boost::lexical_cast<std::string>(v);
-//       },
-//       variant_instance);
-  boost::apply_visitor(OrdersVisitor(&os), orders);
-  return os;
 }
 
 char priority_char(const OrderBook& ob, const Side& side) {
@@ -91,8 +35,8 @@ std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
      << " bid/ask trade: " << ob.best_price(b) << priority_char(ob, b)
      << '/' << ob.best_price(s) << priority_char(ob, s)
      << ' ' << ob.last_trade()
-     << ", bid orders=" << ob.orders(b)
-     << ", ask orders=" << ob.orders(s)
+     << ", num bid orders=" << ob.num_orders(b)
+     << ", num ask orders=" << ob.num_orders(s)
      << ']'
      << ", position=" << static_cast<int>(ob.position()) << '}';
 

@@ -17,6 +17,11 @@ using NumOrders = uint_fast8_t;
 using position_t = uint_fast16_t;
 using Balance = double;
 
+// IEM OrderBook. The order book is first in/first out (FIFO), contains top of
+// book quotes only and no quantity information. If your order is first in the
+// queue at the top of book price, then IEM displays this as an asterisk. The
+// IEM orderbook also provides the last traded price, the number of outstanding
+// orders you have on each side, and your current net position.
 class OrderBook {
  public:
   OrderBook(const Contract& contract,
@@ -25,28 +30,28 @@ class OrderBook {
             const Price& best_ask,
             const bool best_ask_priority,
             const Price& last_trade,
-            const unsigned int num_buy_orders,
-            const unsigned int num_sell_orders,
+            const NumOrders num_buy_orders,
+            const NumOrders num_sell_orders,
             const position_t position);
 
-  inline const Contract contract() const { return contract_; }
+  inline const Contract contract() const noexcept { return contract_; }
 
-  inline const Price best_price(const Side& side) const {
+  inline const Price best_price(const Side& side) const noexcept {
     return (side == Side::BUY) ? best_bid_ : best_ask_;
   }
 
-  bool best_price_priority(const Side& side) const;
+  // If true, then one of your own orders is first line at the best price
+  inline bool best_price_priority(const Side& side) const noexcept {
+    return (side == Side::BUY) ? best_bid_priority_ : best_ask_priority_;
+  }
 
-  const Price last_trade() const;
+  inline const Price last_trade() const noexcept { return last_trade_; }
 
-  const SingleOrders orders(const Side& side) const;
+  inline NumOrders num_orders(const Side& side) const noexcept {
+    return (side == Side::BUY) ? num_bid_orders_ : num_ask_orders_;
+  }
 
-  position_t position() const;
-
-  void update(const SingleOrders& bid_orders,
-              const SingleOrders& ask_orders);
-
-  inline uint_fast64_t num_updates() const { return num_updates_; }
+  inline position_t position() const noexcept { return position_; }
 
  private:
   Contract contract_;
@@ -55,16 +60,10 @@ class OrderBook {
   Price best_ask_;
   bool best_ask_priority_;
   Price last_trade_;
-  SingleOrders bid_orders_;
-  SingleOrders ask_orders_;
+  NumOrders num_bid_orders_;
+  NumOrders num_ask_orders_;
   position_t position_;
-
-  uint_fast64_t num_updates_;
 };
-
-using OrderInfo = boost::variant<NumOrders, SingleOrders>;
-
-std::ostream& operator<<(std::ostream& os, const OrderInfo& orders);
 
 std::ostream& operator<<(std::ostream& os, const OrderBook& ob);
 
