@@ -69,4 +69,17 @@ const Json::Value asset_value(const Json::Value& json_root,
   return bundle_val["assets"][asset_name];
 }
 
+boost::gregorian::date from_simple_string(const std::string& s) {
+  if (s == "") {
+    return boost::gregorian::date(boost::gregorian::not_a_date_time);
+  }
+  return boost::gregorian::from_simple_string(s);
+}
+
+bool active_bundle(const Json::Value& bundle_value,
+                   const boost::posix_time::ptime& expiration) {
+
+  return false;
+}
+
 }  // namespace iem

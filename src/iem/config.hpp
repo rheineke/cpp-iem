@@ -2,6 +2,8 @@
 #ifndef CPPIEM_IEM_CONFIG_HPP_
 #define CPPIEM_IEM_CONFIG_HPP_
 
+#include "boost/date_time/posix_time/posix_time.hpp"
+
 #include "json/json.h"
 
 namespace iem {
@@ -29,6 +31,11 @@ const Json::Value bundle_value(const Json::Value& json_root,
 const Json::Value asset_value(const Json::Value& json_root,
                               const std::string& market_name,
                               const std::string& asset_name);
+
+bool active_bundle(const Json::Value& bundle_value,
+                   const boost::posix_time::ptime& expiration);
+
+boost::gregorian::date from_simple_string(const std::string& s);
 
 }  // namespace iem
 

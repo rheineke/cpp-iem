@@ -3,6 +3,8 @@
 
 #include "gtest/gtest.h"
 
+#include "boost/date_time/gregorian/gregorian.hpp"
+
 namespace iem {
 
 TEST(ConfigTest, ReadJson) {
@@ -50,6 +52,21 @@ TEST(ConfigTest, AssetValue) {
       }
     }
   }
+}
+
+TEST(ConfigTest, ValueTest) {
+  // TODO(rheineke): Ensure that each attribute is unique (bundle_id, etc)
+}
+
+TEST(ConfigTest, DateStringToPtime) {
+  // from_simple_string will return not_a_date_time date with empty string
+  const auto nad = from_simple_string("");
+  EXPECT_EQ(nad, boost::gregorian::date(boost::posix_time::not_a_date_time));
+
+  // from_simple_string should match boost::gregorian when a correctly formatted
+  // date time is provided
+  const auto s("2016-12-31");
+  EXPECT_EQ(from_simple_string(s), boost::gregorian::from_simple_string(s));
 }
 
 }  // namespace iem
