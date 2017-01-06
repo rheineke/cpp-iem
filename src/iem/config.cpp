@@ -77,9 +77,31 @@ boost::gregorian::date from_simple_string(const std::string& s) {
 }
 
 bool active_bundle(const Json::Value& bundle_value,
-                   const boost::posix_time::ptime& expiration) {
+                   const boost::gregorian::date& current_date) {
+  using boost::gregorian::date;
+  const date nad(boost::gregorian::not_a_date_time);
 
-  return false;
+  // Date is after open date
+  const auto open_date_value = bundle_value["open_date"];
+
+  date open_date(boost::gregorian::not_a_date_time);
+  if (!open_date_value.isNull()) {
+    open_date = from_simple_string(open_date_value.asString());
+  }
+
+  const bool opened_after = (open_date == nad) | (open_date <= current_date);
+
+  // Date is before liquidation date
+  const auto liquidation_date_value = bundle_value["liquidation_date"];
+
+  date liq_date(boost::gregorian::not_a_date_time);
+  if (!liquidation_date_value.isNull()) {
+    liq_date = from_simple_string(liquidation_date_value.asString());
+  }
+
+  const bool liquidated_after = (liq_date == nad) | (liq_date >= current_date);
+
+  return opened_after & liquidated_after;
 }
 
 }  // namespace iem

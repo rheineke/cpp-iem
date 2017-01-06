@@ -61,12 +61,23 @@ TEST(ConfigTest, ValueTest) {
 TEST(ConfigTest, DateStringToPtime) {
   // from_simple_string will return not_a_date_time date with empty string
   const auto nad = from_simple_string("");
-  EXPECT_EQ(nad, boost::gregorian::date(boost::posix_time::not_a_date_time));
+  EXPECT_EQ(nad, boost::gregorian::date(boost::gregorian::not_a_date_time));
 
   // from_simple_string should match boost::gregorian when a correctly formatted
   // date time is provided
   const auto s("2016-12-31");
   EXPECT_EQ(from_simple_string(s), boost::gregorian::from_simple_string(s));
+}
+
+TEST(ConfigTest, ActiveBundle) {
+  const auto& root = read_markets_json();
+  const auto dt = boost::gregorian::from_simple_string("2016-12-30");
+
+  const auto jan17_bundle_val = bundle_value(root, "FedPolicyB", "0117");
+  EXPECT_TRUE(active_bundle(jan17_bundle_val, dt));
+
+  const auto dec16_bundle_val = bundle_value(root, "FedPolicyB", "1216");
+  EXPECT_FALSE(active_bundle(dec16_bundle_val, dt));
 }
 
 }  // namespace iem

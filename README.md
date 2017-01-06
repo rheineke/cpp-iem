@@ -7,7 +7,7 @@ strategy on the [Iowa Electronic Markets] exchange.
 
 Instructions for macOS 10.12 (Sierra) using [HomeBrew]:
 * Install [HomeBrew]: `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-* Install brew packages: `brew install wget openssl cmake boost cpp-netlib`
+* Install brew packages: `brew install wget openssl cmake boost homebrew/boneyard/cpp-netlib`
 * Download cpp-iem: `git clone --recursive -j4 https://github.com/rheineke/cpp-iem.git`
 * Build cpp-iem: `cd cpp-iem & ./build-cmake.sh`
 

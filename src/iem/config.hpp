@@ -33,7 +33,7 @@ const Json::Value asset_value(const Json::Value& json_root,
                               const std::string& asset_name);
 
 bool active_bundle(const Json::Value& bundle_value,
-                   const boost::posix_time::ptime& expiration);
+                   const boost::gregorian::date& current_date);
 
 boost::gregorian::date from_simple_string(const std::string& s);
 
