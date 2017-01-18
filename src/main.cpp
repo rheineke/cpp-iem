@@ -123,19 +123,35 @@ int _main2(int argc, char* argv[]) {
 
   iem::Session session(login.first, login.second);
 
-  // Logout before logging in
-  const auto fst_logout_response = session.logout();
-  std::cout << status(fst_logout_response) << '\n';
-  std::cout << body(fst_logout_response) << '\n';
-
   std::cout << "Logging in...\n";
-  session.authenticate();
+
+  // session.authenticate();
+  std::thread t(&iem::Session::authenticate, session);
+  t.join();
+
   // Print session after authentication
   iem::Logger logger;
   iem::snprintf_session(logger.getBuffer(), session);
   logger.log();
 
+  // Find all active markets and retrieve their markets concurrently
+//  const iem::Market mkt("FedPolicyB");
+//  std::thread t(&iem::Session::orderbook, session, mkt);
+//
+//  const std::vector<iem::Market> markets = {
+//      iem::Market("FedPolicyB"),
+//      iem::Market("Congress18"),
+//      iem::Market("House18"),
+//      iem::Market("Senate18"),
+//  };
+//  const auto obs = session.orderbook(mkt);
+//  for (const auto& ob : obs) {
+//    std::cout << ob << '\n';
+//  }
+
   // Logout after logging in
+  std::cout << session.cookie() << std::endl;
+  std::cout << "Logging out..." << std::endl;
   const auto snd_logout_response = session.logout();
   std::cout << status(snd_logout_response) << '\n';
   std::cout << body(snd_logout_response) << '\n';
@@ -143,17 +159,8 @@ int _main2(int argc, char* argv[]) {
   return EXIT_SUCCESS;
 }
 
-void heartbeat(const iem::Session session) {
-  // Assume authenticated
-  while (true) {
-    // session.heartbeat();
-
-    std::this_thread::sleep_for(std::chrono::minutes(5));
-  }
-}
-
 int main(int argc, char* argv[]) {
-  return _main(argc, argv);
+  return _main2(argc, argv);
 
 //  iem::Market mkt("FedPolicyB");
 //  std::cout << mkt.value() << std::endl;

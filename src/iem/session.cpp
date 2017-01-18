@@ -253,7 +253,11 @@ const std::vector<OrderBook> Session::orderbook(const Market& market) {
   market_orderbook_request << boost::network::header("Cookie", cookie());
   // POST request
   const auto& response = client_.post(market_orderbook_request);
-  return _read_orderbooks_html(body(response), market);
+  const auto& obs = _read_orderbooks_html(body(response), market);
+  for (const auto& ob : obs) {
+    std::cout << ob << '\n';
+  }
+  return obs;
 }
 
 const HoldingMessage _read_message_html(ptree::const_assoc_iterator tr_it) {

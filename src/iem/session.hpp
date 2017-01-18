@@ -29,8 +29,8 @@ class Session {
   // IEM Session requires username and password at construction
   Session(const std::string& username, const std::string& password);
   // Session is unique and therefore cannot be copied, but moves are acceptable
-  Session(const Session&) = delete;
-  Session operator=(const Session&) = delete;
+//  Session(const Session&) = delete;
+//  Session operator=(const Session&) = delete;
 
   // Don't throw exception on destruction!
 //  ~Session() {
