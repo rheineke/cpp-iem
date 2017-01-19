@@ -1,0 +1,15 @@
+os: osx
+osx_image: xcode8.2
+# sudo: required
+
+language: cpp
+
+compiler:
+  - clang
+  - gcc
+
+before_install:
+  - brew update
+  - <brew.txt xargs brew install
+
+script: ./build-cmake.sh
