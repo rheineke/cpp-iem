@@ -1,4 +1,2 @@
-cmake
 openssl
-boost
 homebrew/boneyard/cpp-netlib

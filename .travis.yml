@@ -10,6 +10,7 @@ compiler:
 
 before_install:
   - brew update
+  - brew upgrade
   - <brew.txt xargs brew install
 
 script: ./build-cmake.sh
