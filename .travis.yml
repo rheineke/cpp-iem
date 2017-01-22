@@ -6,14 +6,18 @@ matrix:
   include:
     - os: linux
       dist: xenial
+      compiler: clang
+    - os: linux
+      dist: xenial
+      compiler: gcc
     - os: osx
       osx_image: xcode8.2
+      compiler: clang
+    - os: osx
+      osx_image: xcode8.2
+      compiler: gcc
   allow_failures:
     - os: linux
-
-compiler:
-  - clang
-  - gcc
 
 before_install:
   - ./.travis/before_install.sh
