@@ -1,6 +1,12 @@
-os: osx
-osx_image: xcode8.2
-# sudo: required
+ matrix:
+   include:
+     - os: linux
+       dist: xenial
+       sudo: required
+     - os: osx
+       osx_image: xcode8.2
+  allow_failures:
+   - os: linux
 
 language: cpp
 
@@ -9,8 +15,6 @@ compiler:
   - gcc
 
 before_install:
-  - brew update
-  - brew upgrade
-  - <brew.txt xargs brew install
+  - ./.travis/before_install.sh
 
 script: ./build-cmake.sh
