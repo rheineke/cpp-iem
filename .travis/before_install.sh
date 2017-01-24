@@ -5,5 +5,6 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
     brew upgrade
     <.travis/brew.txt xargs brew install
 else
-    apt-get install -y make
+    apt-get update && apt-get upgrade
+    apt-get install -y cmake
 fi
