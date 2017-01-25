@@ -17,9 +17,11 @@ matrix:
       osx_image: xcode8.2
       compiler: gcc
   allow_failures:
-    - os: linux
+    - os: osx
 
 before_install:
-  - ./.travis/before_install.sh
+  # - ./.travis/before_install.sh
+  - apt-get update && apt-get upgrade
+  - apt-get install -y cmake
 
 script: ./build-cmake.sh
