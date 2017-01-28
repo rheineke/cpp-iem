@@ -27,7 +27,7 @@ add_definitions(-DBOOST_TEST_DYN_LINK)
 # Always use multi-threaded Boost libraries.
 set(Boost_USE_MULTI_THREADED ON)
 
-find_package(Boost 1.62.0 REQUIRED COMPONENTS date_time filesystem system)
+find_package(Boost 1.54.0 REQUIRED COMPONENTS date_time filesystem system)
 
 if (APPLE)
     # /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/cmake/cppnetlib/cppnetlibTargets-release.cmake

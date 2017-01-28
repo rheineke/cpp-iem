@@ -22,6 +22,6 @@ matrix:
 before_install:
   # - ./.travis/before_install.sh
   - sudo apt-get update # && sudo apt-get upgrade
-  - sudo apt-get install -y cmake libboost1.62-all-dev openssl libssl-dev cpp-netlib
+  - sudo apt-get install -y cmake libboost-all-dev openssl libssl-dev cpp-netlib
 
 script: ./build-cmake.sh
