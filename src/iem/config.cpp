@@ -2,6 +2,7 @@
 #include "config.hpp"
 
 #include <fstream>
+#include <mutex>
 
 #include <boost/filesystem.hpp>
 

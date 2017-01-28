@@ -18,6 +18,9 @@ else()
     set(BUILD_SHARED_LIBS OFF)
 endif()
 
+# Find threads (for Linux)
+find_package(Threads)
+
 # Always use Boost's shared libraries.
 set(Boost_USE_STATIC_LIBS OFF)
 
@@ -45,9 +48,12 @@ elseif (UNIX)
     set(CPPNETLIB_FOUND ON)
     set(CPPNETLIB_INCLUDE_DIRS /usr/include/boost/)
     set(CPPNETLIB_LIBRARIES
-            /usr/lib/arm-linux-gnueabihf/libcppnetlib-uri.so
-            /usr/lib/arm-linux-gnueabihf/libcppnetlib-server-parsers.so
-            /usr/lib/arm-linux-gnueabihf/libcppnetlib-client-connections.so)
+            /usr/lib/x86_64-linux-gnu/libcppnetlib-uri.so
+            # /usr/lib/arm-linux-gnueabihf/libcppnetlib-uri.so
+            /usr/lib/x86_64-linux-gnu/libcppnetlib-server-parsers.so
+            # /usr/lib/arm-linux-gnueabihf/libcppnetlib-server-parsers.so
+            /usr/lib/x86_64-linux-gnu/libcppnetlib-client-connections.so
+            # /usr/lib/arm-linux-gnueabihf/libcppnetlib-client-connections.so)
 endif()
 
 if (APPLE)

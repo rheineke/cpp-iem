@@ -1,9 +1,9 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
 #include <algorithm>
 #include <chrono>
-#include <iostream>
-
 #include <fstream>
+#include <iostream>
+#include <thread>
 
 #include "iem/logger.hpp"
 #include "iem/orderbook.hpp"
