@@ -41,6 +41,8 @@ if (APPLE)
             /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-client-connections.a
             /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-server-parsers.a
             /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-uri.a)
+else()
+    find_package(cppnetlib 0.11.2 REQUIRED)
 endif()
 
 if (APPLE)
@@ -59,11 +61,14 @@ if (APPLE)
         endif()
     endif()
 endif()
-find_package(OpenSSL 1.0.2 REQUIRED)
-set(OPENSSL_INCLUDE_DIRS /usr/local/opt/openssl/include/)
-set(OPENSSL_LIBRARIES
-        /usr/local/opt/openssl/lib/libssl.dylib
-        /usr/local/opt/openssl/lib/libcrypto.dylib)
+find_package(OpenSSL 1.0.1 REQUIRED)
+if (APPLE)
+    # Hardcode because first APPLE if statement doesn't work?
+    set(OPENSSL_INCLUDE_DIRS /usr/local/opt/openssl/include/)
+    set(OPENSSL_LIBRARIES
+            /usr/local/opt/openssl/lib/libssl.dylib
+            /usr/local/opt/openssl/lib/libcrypto.dylib)
+endif()
 
 # set(CMAKE_VERBOSE_MAKEFILE on)
 
