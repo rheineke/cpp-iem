@@ -41,8 +41,13 @@ if (APPLE)
             /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-client-connections.a
             /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-server-parsers.a
             /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-uri.a)
-else()
-    find_package(cppnetlib 0.11.2 REQUIRED)
+elseif (UNIX)
+    set(CPPNETLIB_FOUND ON)
+    set(CPPNETLIB_INCLUDE_DIRS /usr/include/boost/)
+    set(CPPNETLIB_LIBRARIES
+            /usr/lib/arm-linux-gnueabihf/libcppnetlib-uri.so
+            /usr/lib/arm-linux-gnueabihf/libcppnetlib-server-parsers.so
+            /usr/lib/arm-linux-gnueabihf/libcppnetlib-client-connections.so)
 endif()
 
 if (APPLE)
