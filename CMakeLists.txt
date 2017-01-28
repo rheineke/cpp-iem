@@ -1,7 +1,7 @@
 # Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 # This project is licensed under the terms of the MIT license.
 
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.2)
 project(CPP-IEM)
 
 option(CPP-IEM_BUILD_SHARED_LIBS "Build cpp-iem with shared libraries." OFF)
