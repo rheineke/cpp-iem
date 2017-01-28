@@ -4,27 +4,36 @@ sudo: required
 
 matrix:
   include:
-    - os: linux
-      dist: xenial
-      compiler: clang
-    - os: linux
-      dist: xenial
-      compiler: gcc
-    - os: osx
-      osx_image: xcode8.2
-      compiler: clang
-    - os: osx
-      osx_image: xcode8.2
-      compiler: gcc
+  - os: linux
+    dist: xenial
+    compiler: clang
+  - os: linux
+    dist: xenial
+    compiler: gcc
+  - os: osx
+    osx_image: xcode8.2
+    compiler: clang
+  - os: osx
+    osx_image: xcode8.2
+    compiler: gcc
   allow_failures:
-    - os: osx
+  - os: osx
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-6
+    - g++-6
+    - cmake
+    - libboost-all-dev
+    - openssl
+    - libssl-dev
+    - libcppnetlib-dev
 
 before_install:
   # - ./.travis/before_install.sh
-  - sudo apt-get update
-  - sudo apt-get install -y libstdc++-4.9-dev
-  - sudo apt-get install -y cmake
-  - sudo apt-get install -y libboost-all-dev openssl libssl-dev libcppnetlib-dev
   - dpkg-query -L libcppnetlib-dev
 
 script: CMAKE_CXX_COMPILER=$CXX ./build-cmake.sh
