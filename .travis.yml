@@ -7,9 +7,32 @@ matrix:
   - os: linux
     dist: xenial
     compiler: clang
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - clang-3.6
+        - cmake
+        - libboost-all-dev
+        - openssl
+        - libssl-dev
+        - libcppnetlib-dev
   - os: linux
     dist: xenial
     compiler: gcc
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - gcc-6
+        - g++-6
+        - cmake
+        - libboost-all-dev
+        - openssl
+        - libssl-dev
+        - libcppnetlib-dev
   - os: osx
     osx_image: xcode8.2
     compiler: clang
@@ -19,21 +42,8 @@ matrix:
   allow_failures:
   - os: osx
 
-addons:
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - gcc-6
-    - g++-6
-    - cmake
-    - libboost-all-dev
-    - openssl
-    - libssl-dev
-    - libcppnetlib-dev
-
-before_install:
+# before_install:
   # - ./.travis/before_install.sh
-  - dpkg-query -L libcppnetlib-dev
+  # - dpkg-query -L libcppnetlib-dev
 
 script: CMAKE_CXX_COMPILER=$CXX ./build-cmake.sh
