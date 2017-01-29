@@ -24,3 +24,7 @@ target_link_libraries(cppiemlib
         ${OPENSSL_LIBRARIES}
         ${Boost_LIBRARIES}
         ${CPPNETLIB_LIBRARIES})
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    target_link_libraries(cppiemlib ${CMAKE_THREAD_LIBS_INIT})
+endif()

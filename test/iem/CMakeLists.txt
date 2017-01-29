@@ -17,16 +17,15 @@ set(TESTS
         session_test
         side_test)
 
-foreach ( test ${TESTS} )
+foreach (test ${TESTS})
     add_executable(cppiem-iem-${test} ${test}.cpp)
     target_link_libraries(cppiem-iem-${test} gtest_main cppiemlib)
     if (${CMAKE_CXX_COMPILER_ID} MATCHES GNU AND ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
         target_link_libraries(cppiem-iem-${test} ws2_32)
-    endif()
+    endif ()
     if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-        # target_link_libraries(cppiem-iem-${test} rt)
-        target_link_libraries (cppiem-iem-${test} ${CMAKE_THREAD_LIBS_INIT})
-    endif()
+        target_link_libraries(cppiem-iem-${test} ${CMAKE_THREAD_LIBS_INIT})
+    endif ()
     set_target_properties(cppiem-iem-${test}
             PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CPP-IEM_BINARY_DIR}/tests)
     add_test(cppiem-iem-${test}

@@ -5,34 +5,11 @@ sudo: required
 matrix:
   include:
   - os: linux
-    dist: xenial
+    dist: yakkety
     compiler: clang
-    addons:
-      apt:
-        sources:
-        - ubuntu-toolchain-r-test
-        packages:
-        - clang-3.6
-        - cmake
-        - libboost-all-dev
-        - openssl
-        - libssl-dev
-        - libcppnetlib-dev
   - os: linux
-    dist: xenial
+    dist: yakkety
     compiler: gcc
-    addons:
-      apt:
-        sources:
-        - ubuntu-toolchain-r-test
-        packages:
-        - gcc-6
-        - g++-6
-        - cmake
-        - libboost-all-dev
-        - openssl
-        - libssl-dev
-        - libcppnetlib-dev
   - os: osx
     osx_image: xcode8.2
     compiler: clang
@@ -42,8 +19,13 @@ matrix:
   allow_failures:
   - os: osx
 
-# before_install:
+before_install:
   # - ./.travis/before_install.sh
+  # - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+  - sudo apt-get update -q
+  # - sudo apt-get install -y gcc-6 g++-6
+  - sudo apt-get install -y libboost-all-dev openssl libssl-dev
+  - sudo apt-get install -y cmake libcppnetlib-dev
   # - dpkg-query -L libcppnetlib-dev
 
-script: CMAKE_CXX_COMPILER=$CXX ./build-cmake.sh
+script: CMAKE_C_COMPILER=$CC CMAKE_CXX_COMPILER=$CXX ./build-cmake.sh

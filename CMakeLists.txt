@@ -19,7 +19,9 @@ else()
 endif()
 
 # Find threads (for Linux)
-find_package(Threads)
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    find_package(Threads REQUIRED)
+endif()
 
 # Always use Boost's shared libraries.
 set(Boost_USE_STATIC_LIBS OFF)
@@ -30,7 +32,11 @@ add_definitions(-DBOOST_TEST_DYN_LINK)
 # Always use multi-threaded Boost libraries.
 set(Boost_USE_MULTI_THREADED ON)
 
-find_package(Boost 1.54.0 REQUIRED COMPONENTS date_time filesystem system)
+find_package(Boost 1.54.0 REQUIRED COMPONENTS
+        date_time
+        filesystem
+        system
+        thread)
 
 if (APPLE)
     # /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/cmake/cppnetlib/cppnetlibTargets-release.cmake
@@ -46,13 +52,12 @@ if (APPLE)
             /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-uri.a)
 elseif (UNIX)
     set(CPPNETLIB_FOUND ON)
-    set(CPPNETLIB_INCLUDE_DIRS /usr/include/boost/)
     set(CPPNETLIB_LIBRARIES
             /usr/lib/x86_64-linux-gnu/libcppnetlib-uri.so
             # /usr/lib/arm-linux-gnueabihf/libcppnetlib-uri.so
             /usr/lib/x86_64-linux-gnu/libcppnetlib-server-parsers.so
             # /usr/lib/arm-linux-gnueabihf/libcppnetlib-server-parsers.so
-            /usr/lib/x86_64-linux-gnu/libcppnetlib-client-connections.so
+            /usr/lib/x86_64-linux-gnu/libcppnetlib-client-connections.so)
             # /usr/lib/arm-linux-gnueabihf/libcppnetlib-client-connections.so)
 endif()
 
