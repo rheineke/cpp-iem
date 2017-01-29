@@ -5,10 +5,10 @@ sudo: required
 matrix:
   include:
   - os: linux
-    dist: yakkety
+    dist: xenial
     compiler: clang
   - os: linux
-    dist: yakkety
+    dist: xenial
     compiler: gcc
   - os: osx
     osx_image: xcode8.2
@@ -21,9 +21,9 @@ matrix:
 
 before_install:
   # - ./.travis/before_install.sh
-  # - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update -q
-  # - sudo apt-get install -y gcc-6 g++-6
+  - sudo apt-get install -y gcc-6 g++-6 clang
   - sudo apt-get install -y libboost-all-dev openssl libssl-dev
   - sudo apt-get install -y cmake libcppnetlib-dev
   # - dpkg-query -L libcppnetlib-dev
