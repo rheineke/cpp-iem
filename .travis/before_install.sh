@@ -5,6 +5,17 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
     brew upgrade
     <.travis/brew.txt xargs brew install
 else
-    apt-get update && apt-get upgrade
-    apt-get install -y cmake
+  sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+  sudo apt-get update -q
+  if [[ $CXX == 'clang++' ]]; then
+    sudo apt-get install -y clang-3.8
+    export CXX=clang++
+    export CC=clang
+  elif [[ $CXX == 'g++' ]]; then
+    sudo apt-get install -y gcc-6 g++-6
+    export CXX=g++-6
+    export CC=gcc-6
+  fi
+  sudo apt-get install -y libboost-all-dev openssl libssl-dev
+  sudo apt-get install -y cmake libcppnetlib-dev
 fi
