@@ -7,7 +7,7 @@
 
 namespace iem {
 
-enum class Side : int_fast8_t { BUY = 0, SELL = 1 } __attribute__((packed));
+enum class Side : int_fast8_t { BUY = 0, SELL = 1 };
 
 constexpr Side static otherSide(const Side& side) noexcept {
   return (side == Side::BUY) ? Side::SELL : Side::BUY;

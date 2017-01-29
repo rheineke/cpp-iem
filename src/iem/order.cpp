@@ -9,6 +9,8 @@ std::ostream& operator<<(std::ostream& os, const Counterparty& cp) {
       return os << "exchange";
     case Counterparty::PARTICIPANT:
       return os << "participant";
+    default:
+      throw std::invalid_argument("Unknown counterparty");
   }
 }
 

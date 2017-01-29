@@ -13,6 +13,8 @@ const std::string to_string(const MessageType& msg_type) {
       return order_cstr;
     case MessageType::ORDER_RESOLUTION:
       return order_resolution_cstr;
+    default:
+      throw std::invalid_argument("Unknown message type");
   }
 }
 
@@ -68,8 +70,8 @@ inline const std::string to_string(const Action& action) {
       return ask_order_withdrawn;
     case Action::BID_ORDER_WITHDRAWN:
       return bid_order_withdrawn;
-//    default:
-//      throw std::invalid_argument("Unknown action");
+    default:
+      throw std::invalid_argument("Unknown action");
   }
 }
 
