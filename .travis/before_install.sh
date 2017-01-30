@@ -4,7 +4,7 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
     brew update
     brew upgrade
     <.travis/brew.txt xargs brew install
-else
+elif [[ $TRAVIS_OS_NAME == 'linux' ]]; then
   sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   sudo apt-get update -q
   if [[ $CXX == 'clang++' ]]; then
