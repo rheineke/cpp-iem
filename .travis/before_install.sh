@@ -9,12 +9,12 @@ elif [[ $TRAVIS_OS_NAME == 'linux' ]]; then
   sudo apt-get update -q
   if [[ $CXX == 'clang++' ]]; then
     sudo apt-get install -y clang-3.8
-    export CXX=clang++
-    export CC=clang
+    export CXX=/usr/bin/clang++-3.8
+    export CC=/usr/bin/clang-3.8
   elif [[ $CXX == 'g++' ]]; then
     sudo apt-get install -y gcc-6 g++-6
-    export CXX=g++-6
-    export CC=gcc-6
+    export CXX=/usr/bin/g++-6
+    export CC=/usr/bin/gcc-6
   fi
   sudo apt-get install -y libboost-all-dev openssl libssl-dev
   sudo apt-get install -y cmake libcppnetlib-dev
