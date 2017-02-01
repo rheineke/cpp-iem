@@ -2,14 +2,45 @@ language: cpp
 
 sudo: required
 
+# https://genbattle.bitbucket.io/blog/2016/01/17/c++-travis-ci/?
 matrix:
   include:
   - os: linux
     dist: xenial
     compiler: clang
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - clang-3.8
+          - libboost-all-dev
+          - openssl
+          - libssl-dev
+          - cmake
+          - libcppnetlib-dev
+    env:
+      - COMPILER=clang-3.8
+      # - CXX=/usr/bin/clang++-3.8
+      # - CC=/usr/bin/clang-3.8
   - os: linux
     dist: xenial
     compiler: gcc
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - g++-6
+          - libboost-all-dev
+          - openssl
+          - libssl-dev
+          - cmake
+          - libcppnetlib-dev
+    env:
+      - COMPILER=g++-6
+      # - CXX=/usr/bin/g++-6
+      # - CC=/usr/bin/gcc-6
   - os: osx
     osx_image: xcode8.2
     compiler: clang
@@ -17,7 +48,7 @@ matrix:
     osx_image: xcode8.2
     compiler: gcc
   allow_failures:
-  - os: osx
+  - os: linux
 
 before_install:
   - ./.travis/before_install.sh
