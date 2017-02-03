@@ -9,58 +9,23 @@ matrix:
 
     dist: xenial
     compiler: clang
-#    addons:
-#      apt:
-#        sources:
-#          - ubuntu-toolchain-r-test
-#        packages:
-#          - clang-3.8
-#          - libboost-all-dev
-#          - openssl
-#          - libssl-dev
-#          - cmake
-#          - libcppnetlib-dev
-    env: COMPILER=clang++-3.8 CXX=clang++-3.8 CC=clang-3.8
+    env: CMAKE_C_COMPILER=clang-3.8 CMAKE_CXX_COMPILER=clang++-3.8
   - os: linux
     dist: xenial
     compiler: gcc
-#    addons:
-#      apt:
-#        sources:
-#          - ubuntu-toolchain-r-test
-#        packages:
-#          - g++-6
-#          - libboost-all-dev
-#          - openssl
-#          - libssl-dev
-#          - cmake
-#          - libcppnetlib-dev
-    env: COMPILER=g++-6 CXX=g++-6 CC=gcc-6
+    env: CMAKE_C_COMPILER=gcc-6 CMAKE_CXX_COMPILER=g++-6
   - os: osx
     osx_image: xcode8.2
     compiler: clang
-    # env: COMPILER=clang
+    env: CMAKE_C_COMPILER=clang CMAKE_CXX_COMPILER=clang++
   - os: osx
     osx_image: xcode8.2
     compiler: gcc
-    # env: COMPILER=gcc
+    env: CMAKE_C_COMPILER=gcc CMAKE_CXX_COMPILER=g++
   allow_failures:
   - os: linux
-
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - clang-3.8
-      - g++-6
-      - libboost-all-dev
-      - openssl
-      - libssl-dev
-      - cmake
-      - libcppnetlib-dev
 
 before_install:
   - ./.travis/before_install.sh
 
-script: CMAKE_C_COMPILER=$CC CMAKE_CXX_COMPILER=$CXX ./build-cmake.sh
+script: CMAKE_C_COMPILER=$CMAKE_C_COMPILER CMAKE_CXX_COMPILER=$CMAKE_CXX_COMPILER ./build-cmake.sh
