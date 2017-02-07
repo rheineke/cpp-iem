@@ -41,7 +41,7 @@ install:
     ln -s `which clang++-3.6` ${HOME}/bin/clang++; fi
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export BOOST_VERSION=${BOOST_VER//./_}; fi
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export PATH=${HOME}/bin:${PATH}; fi
-  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait ./.travis/install-boost.sh; fi
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait ./.travis/install_boost.sh; fi
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export BOOST_ROOT=${HOME}/${CC}-boost_${BOOST_VER//./_}; fi
   - "${CXX} --version"
 
