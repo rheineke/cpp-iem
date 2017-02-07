@@ -32,6 +32,7 @@ cache:
 before_install:
   - ./.travis/before_install.sh
 
+# https://github.com/glynos/cpp-netlib/blob/master/.travis.yml
 install:
   - mkdir -p ${HOME}/bin
   - if [[ $TRAVIS_OS_NAME == "linux" && "${CC}" == "gcc" ]]; then export TOOLSET="gcc"; ln -s `which g++-6` ${HOME}/bin/g++;
@@ -40,7 +41,7 @@ install:
     ln -s `which clang++-3.6` ${HOME}/bin/clang++; fi
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export BOOST_VERSION=${BOOST_VER//./_}; fi
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export PATH=${HOME}/bin:${PATH}; fi
-  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait ./install-boost.sh; fi
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait ./.travis/install-boost.sh; fi
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export BOOST_ROOT=${HOME}/${CC}-boost_${BOOST_VER//./_}; fi
   - "${CXX} --version"
 
