@@ -26,6 +26,22 @@ cache:
   directories:
   - "${HOME}/${CC}-boost_${BOOST_VER//./_}"
 
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise-3.6
+      - kalakris-cmake
+    packages:
+      - gcc-6
+      - g++-6
+      - clang-3.8
+      - libboost-all-dev
+      - openssl
+      - libssl-dev
+      - libcppnetlib-dev
+      - cmake
+
 before_install:
   - ./.travis/before_install.sh
 
