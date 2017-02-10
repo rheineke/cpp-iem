@@ -1,14 +1,17 @@
 language: cpp
 
+dist: trusty
 sudo: false
 
 # https://genbattle.bitbucket.io/blog/2016/01/17/c++-travis-ci/?
 matrix:
   include:
   - os: linux
+    dist: trusty
     compiler: clang
     env: BOOST_VER=1.59.0 BUILD_SHARED_LIBS="OFF" CMAKE_BUILD_TYPE="Debug" ENABLE_HTTPS="ON" Uri_BUILD_TESTS=OFF Uri_DISABLE_LIBCXX=YES CMAKE_C_COMPILER=clang-3.8 CMAKE_CXX_COMPILER=clang++-3.8
   - os: linux
+    dist: trusty
     compiler: gcc
     env: CMAKE_C_COMPILER=gcc-6 CMAKE_CXX_COMPILER=g++-6
   - os: osx
@@ -30,12 +33,12 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.6
+      - llvm-toolchain-trusty-4.0
       - kalakris-cmake
     packages:
       - gcc-6
       - g++-6
-      - clang-3.8
+      - clang-4.0
       - libboost-all-dev
       - openssl
       - libssl-dev
