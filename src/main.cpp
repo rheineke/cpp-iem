@@ -126,8 +126,8 @@ int _main2(int argc, char* argv[]) {
   std::cout << "Logging in...\n";
 
   // session.authenticate();
-  std::thread t(&iem::Session::authenticate, session);
-  t.join();
+  std::thread t(&iem::Session::authenticate, std::ref(session));
+  t.join(); // Race condition without join?
 
   // Print session after authentication
   iem::Logger logger;
