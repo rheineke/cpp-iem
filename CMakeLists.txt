@@ -79,6 +79,13 @@ if (APPLE)
 endif()
 find_package(OpenSSL 1.0.2 REQUIRED)
 
+if (APPLE)
+    set(MYSQL_CONNECTOR_FOUND ON)
+    set(MYSQL_CONNECTOR_INCLUDE_DIRS /usr/local/Cellar/mysql-connector-c++/1.1.8/include/)
+    set(MYSQL_CONNECTOR_LIBRARIES
+            /usr/local/Cellar/mysql-connector-c++/1.1.8/lib/libmysqlcppconn.dylib)
+endif()
+
 # set(CMAKE_VERBOSE_MAKEFILE on)
 
 set(CPP-IEM_VERSION_MAJOR 0) # MUST bump this whenever we make ABI-incompatible changes
@@ -120,6 +127,10 @@ if (CPPNETLIB_FOUND)
         add_subdirectory(deps/googletest)
         add_subdirectory(test)
     endif()
+endif()
+
+if (MYSQL_CONNECTOR_FOUND)
+    include_directories(${MYSQL_CONNECTOR_INCLUDE_DIRS})
 endif()
 
 include_directories("${PROJECT_SOURCE_DIR}/src")

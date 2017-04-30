@@ -23,7 +23,8 @@ add_library(cppiemlib
 target_link_libraries(cppiemlib
         ${OPENSSL_LIBRARIES}
         ${Boost_LIBRARIES}
-        ${CPPNETLIB_LIBRARIES})
+        ${CPPNETLIB_LIBRARIES}
+        ${MYSQL_CONNECTOR_LIBRARIES})
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(cppiemlib ${CMAKE_THREAD_LIBS_INIT})

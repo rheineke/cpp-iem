@@ -5,6 +5,9 @@
 #include <iostream>
 #include <thread>
 
+#include <mysql_connection.h>
+#include <mysql_driver.h>
+
 #include "iem/logger.hpp"
 #include "iem/orderbook.hpp"
 #include "iem/session.hpp"
@@ -160,8 +163,17 @@ int _main2(int argc, char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
-  return _main2(argc, argv);
+//  return _main2(argc, argv);
 
 //  iem::Market mkt("FedPolicyB");
 //  std::cout << mkt.value() << std::endl;
+  sql::mysql::MySQL_Driver* driver;
+  sql::Connection* con;
+
+  driver = sql::mysql::get_mysql_driver_instance();
+  con = driver->connect("tcp://127.0.0.1:3306", "user", "password");
+
+  delete con;
+
+  return EXIT_SUCCESS;
 }
