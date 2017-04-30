@@ -121,21 +121,21 @@ int _main(int argc, char* argv[]) {
 int _main2(int argc, char* argv[]) {
   const auto login = read_login_credentials(argc, argv);
 
-  iem::Session session(login.first, login.second);
+  auto session_p = new iem::Session(login.first, login.second);
 
   std::cout << "Logging in...\n";
 
   // session.authenticate();
-  std::thread t(&iem::Session::authenticate, std::ref(session));
-  t.join(); // Race condition without join?
+  std::thread t(&iem::Session::authenticate, std::ref(session_p));
+  t.join();  // Race condition without join?
 
   // Print session after authentication
   iem::Logger logger;
-  iem::snprintf_session(logger.getBuffer(), session);
+  iem::snprintf_session(logger.getBuffer(), *session_p);
   logger.log();
 
   // Find all active markets and retrieve their markets concurrently
-//  const iem::Market mkt("FedPolicyB");
+  const iem::Market mkt("FedPolicyB");
 //  std::thread t(&iem::Session::orderbook, session, mkt);
 //
 //  const std::vector<iem::Market> markets = {
@@ -144,15 +144,15 @@ int _main2(int argc, char* argv[]) {
 //      iem::Market("House18"),
 //      iem::Market("Senate18"),
 //  };
-//  const auto obs = session.orderbook(mkt);
-//  for (const auto& ob : obs) {
-//    std::cout << ob << '\n';
-//  }
+  const auto obs = session_p->orderbook(mkt);
+  for (const auto& ob : obs) {
+    std::cout << ob << '\n';
+  }
 
   // Logout after logging in
-  std::cout << session.cookie() << std::endl;
+  std::cout << session_p->cookie() << std::endl;
   std::cout << "Logging out..." << std::endl;
-  const auto snd_logout_response = session.logout();
+  const auto snd_logout_response = session_p->logout();
   std::cout << status(snd_logout_response) << '\n';
   std::cout << body(snd_logout_response) << '\n';
 
@@ -164,5 +164,4 @@ int main(int argc, char* argv[]) {
 
 //  iem::Market mkt("FedPolicyB");
 //  std::cout << mkt.value() << std::endl;
-//  return 0;
 }

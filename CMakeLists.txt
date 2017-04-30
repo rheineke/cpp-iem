@@ -32,7 +32,7 @@ add_definitions(-DBOOST_TEST_DYN_LINK)
 # Always use multi-threaded Boost libraries.
 set(Boost_USE_MULTI_THREADED ON)
 
-find_package(Boost 1.54.0 REQUIRED COMPONENTS
+find_package(Boost 1.64.0 REQUIRED COMPONENTS
         date_time
         filesystem
         system
@@ -77,14 +77,7 @@ if (APPLE)
         endif()
     endif()
 endif()
-find_package(OpenSSL 1.0.1 REQUIRED)
-if (APPLE)
-    # Hardcode because first APPLE if statement doesn't work?
-    set(OPENSSL_INCLUDE_DIRS /usr/local/opt/openssl/include/)
-    set(OPENSSL_LIBRARIES
-            /usr/local/opt/openssl/lib/libssl.dylib
-            /usr/local/opt/openssl/lib/libcrypto.dylib)
-endif()
+find_package(OpenSSL 1.0.2 REQUIRED)
 
 # set(CMAKE_VERBOSE_MAKEFILE on)
 

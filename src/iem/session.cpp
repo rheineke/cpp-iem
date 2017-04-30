@@ -254,9 +254,7 @@ const std::vector<OrderBook> Session::orderbook(const Market& market) {
   // POST request
   const auto& response = client_.post(market_orderbook_request);
   const auto& obs = _read_orderbooks_html(body(response), market);
-  for (const auto& ob : obs) {
-    std::cout << ob << '\n';
-  }
+
   return obs;
 }
 
