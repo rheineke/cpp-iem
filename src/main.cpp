@@ -55,7 +55,7 @@ int _main(int argc, char* argv[]) {
   //  const iem::PriceTimeLimit bid_ptl(bid_px,
   //  boost::posix_time::not_a_date_time); const iem::Single bid_o(c,
   //  iem::Side::BUY, 1, bid_ptl); const auto response =
-  //  session.place_order(bid_o); std::cout << body(response) << '\n';
+  //  session.place_order(bid_o); std::cout << response.body << '\n';
 
   // Send a test ask order
   //  const iem::Price ask_px(1000);
@@ -85,7 +85,7 @@ int _main(int argc, char* argv[]) {
                                iem::MonthYear(boost::gregorian::Dec, 16));
   const iem::Bundle b(cb, iem::Side::BUY, 1, iem::Counterparty::EXCHANGE);
   const auto bundle_response = session.place_order(b);
-  std::cout << body(bundle_response) << '\n';
+  std::cout << bundle_response.body << '\n';
 
   // Request trade messages
   const auto msgs = session.messages(mkt);
@@ -153,8 +153,8 @@ int _main2(int argc, char* argv[]) {
   std::cout << session_p->cookie() << std::endl;
   std::cout << "Logging out..." << std::endl;
   const auto snd_logout_response = session_p->logout();
-  std::cout << status(snd_logout_response) << '\n';
-  std::cout << body(snd_logout_response) << '\n';
+  std::cout << snd_logout_response.status << '\n';
+  std::cout << snd_logout_response.body << '\n';
 
   return EXIT_SUCCESS;
 }

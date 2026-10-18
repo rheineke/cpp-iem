@@ -5,14 +5,11 @@
 #include <memory>
 #include <string>
 
-#include "boost/network/protocol/http/client.hpp"
+#include "iem/http_client.hpp"
 #include "iem/message.hpp"
 #include "iem/orderbook.hpp"
 
 namespace iem {
-
-using ClientRequest = boost::network::http::client::request;
-using ClientResponse = boost::network::http::client::response;
 
 // IEM HTTP session. Session requires a username and password at construction,
 // and any account specific requests for IEM require a session object. Session
@@ -26,7 +23,9 @@ using ClientResponse = boost::network::http::client::response;
 class Session {
  public:
   // IEM Session requires username and password at construction
-  Session(const std::string& username, const std::string& password);
+  // client defaults to the live IEM site; tests pass a fake
+  Session(const std::string& username, const std::string& password,
+          std::unique_ptr<HttpClient> client = make_iem_http_client());
   // Session is unique and therefore cannot be copied, but moves are acceptable
   //  Session(const Session&) = delete;
   //  Session operator=(const Session&) = delete;
@@ -45,10 +44,10 @@ class Session {
   // Request a session cookie. This must be called before any other session
   // calls. If a valid session exists, then this method will request a session
   // that invalidates the existing one
-  const ClientResponse authenticate();
+  const HttpResponse authenticate();
 
   // Requests that the current session cookie be invalidated
-  const ClientResponse logout();
+  const HttpResponse logout();
 
   // Requests orderbook information for the specified market
   const std::vector<OrderBook> orderbook(const Market& market);
@@ -61,34 +60,34 @@ class Session {
                                         const Side& side);
 
   // Request to place a single market or limit order
-  const ClientResponse place_order(const Single& order);
+  const HttpResponse place_order(const Single& order);
 
   // Request to place a fixed or market price bundle order
-  const ClientResponse place_order(const Bundle& order);
+  const HttpResponse place_order(const Bundle& order);
 
   // Request to cancel a single limit order. Order must have its id set.
-  const ClientResponse cancel_order(const Single& order);
+  const HttpResponse cancel_order(const Single& order);
 
   // Returns a list of new trader messages for the specified market. New is
   // defined as all messages since remove_messages(...) was last called.
   const std::vector<TraderMessage> messages(const Market& market);
 
   // Clears the list of new trader messages for the specified market.
-  const auto remove_messages(const Market& market);
+  const HttpResponse remove_messages(const Market& market);
 
   // Returns a list of trader messages for the specified market.
   const std::vector<TraderMessage> portfolio(const Market& market);
 
  private:
   std::string login(const bool force_login);
-  ClientRequest market_client_request(const Market& market,
-                                      const std::string& query);
+  HttpRequest market_client_request(const Market& market,
+                                    const std::string& query);
 
   const std::string username_;
   const std::string password_;
   // TODO(rheineke): Cookie and client should be wrapped (each?) in a mutex
   std::string cookie_;
-  boost::network::http::client client_;
+  std::unique_ptr<HttpClient> client_;
 };
 
 // snprintf function for a session object
@@ -109,7 +108,7 @@ Price _parse_price(const std::string& px_str);
 
 position_t _parse_quantity(const std::string& qty_str);
 
-const ClientRequest _single_order_request(const Single& order);
+const HttpRequest _single_order_request(const Single& order);
 
 }  // namespace iem
 
