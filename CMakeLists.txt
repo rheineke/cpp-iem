@@ -43,7 +43,7 @@ if (APPLE)
     # adds openssl as part of targets and causes build to fail for some reason
     # make[2]: *** No rule to make target `/usr/local/Cellar/openssl/1.0.2g/lib/libssl.dylib', needed by `CPP-IEM'.  Stop.
     # I have: /usr/local/Cellar/openssl/1.0.2j/...
-    # find_package(cppnetlib 0.12.0 REQUIRED)
+    # find_package(cppnetlib 0.13.0 REQUIRED)
     set(CPPNETLIB_FOUND ON)
     set(CPPNETLIB_INCLUDE_DIRS /usr/local/Cellar/cpp-netlib/0.12.0_1/include/)
     set(CPPNETLIB_LIBRARIES
@@ -52,7 +52,7 @@ if (APPLE)
             /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-uri.a)
 elseif (UNIX)
     # Installed cpp-netlib exports cppnetlibConfig.cmake (any architecture)
-    find_package(cppnetlib 0.12.0 REQUIRED)
+    find_package(cppnetlib 0.13.0 REQUIRED)
     set(CPPNETLIB_FOUND ON)
 endif()
 
@@ -94,12 +94,12 @@ else()
 endif()
 
 if (${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
-    # Use C++1z when using GNU compilers.
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++1z")
+    # C++14: in C++17 mode, cpp-netlib 0.13 headers hit ambiguous boost/std make_optional.
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++14")
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
-    # We want to link in C++1z mode in Clang too, but also set a high enough
+    # We want to link in C++14 mode in Clang too, but also set a high enough
     # template depth for the template metaprogramming.
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ftemplate-depth=256 -std=c++1z")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ftemplate-depth=256 -std=c++14")
 endif()
 
 if (Boost_FOUND)
