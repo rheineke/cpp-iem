@@ -124,6 +124,7 @@ license you like.
 #ifndef JSON_CONFIG_H_INCLUDED
 #define JSON_CONFIG_H_INCLUDED
 #include <stddef.h>
+#include <stdint.h> // int64_t, uint64_t
 #include <string> //typdef String
 
 /// If defined, indicates that json library is embedded in CppTL library.

@@ -20,8 +20,11 @@ Instructions for macOS 10.12 (Sierra) using [HomeBrew]:
 [waf]: https://waf.io/
 
 ## Linux arm64 build (Docker)
-A reproducible build on a digest-pinned Ubuntu 18.04 image with pinned Boost, OpenSSL 1.0.2,
-CMake and GCC, plus cpp-netlib 0.12.0 built from a pinned commit. The build runs the tests.
+A reproducible build on a digest-pinned Debian 13 (trixie) image. Packages come from a fixed
+snapshot.debian.org date with pinned versions (Boost 1.83, OpenSSL 3, CMake, GCC 14), and
+cpp-netlib 0.13.0 is built from a pinned commit with `docker/patches/` applied for Boost 1.83.
+The build runs the tests, and CI runs it on every pull request.
 ```shell
-docker build --platform linux/arm64 -f docker/linux-arm64.Dockerfile -t cpp-iem:linux-arm64 .
+git submodule update --init --recursive
+docker build --platform linux/arm64 -f docker/debian-trixie.Dockerfile -t cpp-iem:trixie .
 ```
