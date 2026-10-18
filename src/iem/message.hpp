@@ -4,7 +4,6 @@
 #define CPPIEM_IEM_MESSAGE_HPP
 
 #include "boost/date_time/posix_time/posix_time.hpp"
-
 #include "iem/order.hpp"
 
 namespace iem {
@@ -40,12 +39,9 @@ Action action_from_string(const std::string& action_str);
 // placements, cancellations, and fulfillments
 class TraderMessage final {
  public:
-  TraderMessage(const boost::posix_time::ptime& date,
-                const MessageType& type,
-                const std::string& contract,
-                const Action& action,
-                const Quantity quantity,
-                const Price& unit_price,
+  TraderMessage(const boost::posix_time::ptime& date, const MessageType& type,
+                const std::string& contract, const Action& action,
+                const Quantity quantity, const Price& unit_price,
                 const boost::posix_time::ptime& expiration_date);
 
   inline const boost::posix_time::ptime date() const noexcept { return date_; }
@@ -57,6 +53,7 @@ class TraderMessage final {
   inline const boost::posix_time::ptime expiration_date() const noexcept {
     return expiration_date_;
   }
+
  private:
   boost::posix_time::ptime date_;
   MessageType type_;
@@ -82,10 +79,8 @@ boost::posix_time::ptime expiration_date_from_string(const std::string& str);
 class HoldingMessage final {
  public:
   HoldingMessage(const boost::posix_time::ptime& date,
-                 const std::string& market_label,
-                 const Action& action,
-                 const Quantity quantity,
-                 const Price& price);
+                 const std::string& market_label, const Action& action,
+                 const Quantity quantity, const Price& price);
 
   inline const boost::posix_time::ptime date() const { return date_; }
   inline const std::string market_label() const { return market_label_; }

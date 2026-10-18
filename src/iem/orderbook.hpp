@@ -7,9 +7,8 @@
 #include <vector>
 
 #include "boost/variant/variant_fwd.hpp"
-
-#include "iem/price.hpp"
 #include "iem/order.hpp"
+#include "iem/price.hpp"
 
 namespace iem {
 
@@ -24,14 +23,10 @@ using Balance = double;
 // orders you have on each side, and your current net position.
 class OrderBook {
  public:
-  OrderBook(const Contract& contract,
-            const Price& best_bid,
-            const bool best_bid_priority,
-            const Price& best_ask,
-            const bool best_ask_priority,
-            const Price& last_trade,
-            const NumOrders num_buy_orders,
-            const NumOrders num_sell_orders,
+  OrderBook(const Contract& contract, const Price& best_bid,
+            const bool best_bid_priority, const Price& best_ask,
+            const bool best_ask_priority, const Price& last_trade,
+            const NumOrders num_buy_orders, const NumOrders num_sell_orders,
             const position_t position);
 
   inline const Contract contract() const noexcept { return contract_; }
@@ -69,10 +64,10 @@ std::ostream& operator<<(std::ostream& os, const OrderBook& ob);
 
 int snprintf_orderbook(char* const s, const OrderBook& ob);
 
-using AssetOrderBooks = std::unordered_map<AssetId,
-                                           const std::unique_ptr<OrderBook> >;
+using AssetOrderBooks =
+    std::unordered_map<AssetId, const std::unique_ptr<OrderBook> >;
 
-template<size_t N>
+template <size_t N>
 using MarketOrderBooks = std::array<iem::OrderBook*, N>;
 
 }  // namespace iem

@@ -1,20 +1,19 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 #include "config.hpp"
 
+#include <boost/filesystem.hpp>
 #include <fstream>
 #include <mutex>
 
-#include <boost/filesystem.hpp>
-
 namespace iem {
 
-using std::operator ""s;
+using std::operator""s;
 
 std::shared_ptr<const Json::Value> json_root;
 std::once_flag json_flag;
 
 const void init_json_root(char const* filename) {
-//  namespace fs = std::experimental::filesystem;
+  //  namespace fs = std::experimental::filesystem;
   namespace fs = boost::filesystem;
   fs::path p(filename);
   if (!fs::exists(p)) {

@@ -12,8 +12,7 @@ namespace iem {
 
 using Ticks = int_fast16_t;
 
-constexpr Ticks static move_outside(const Side& side,
-                                    const Ticks ticks,
+constexpr Ticks static move_outside(const Side& side, const Ticks ticks,
                                     const Ticks tick_diff) noexcept {
   return (side == Side::BUY) ? (ticks - tick_diff) : (ticks + tick_diff);
 }
@@ -23,8 +22,7 @@ constexpr Ticks static move_outside(const Side& side,
   return move_outside(side, ticks, 1);
 }
 
-constexpr Ticks static move_inside(const Side& side,
-                                   const Ticks ticks,
+constexpr Ticks static move_inside(const Side& side, const Ticks ticks,
                                    const Ticks tick_diff) noexcept {
   return (side == Side::BUY) ? (ticks + tick_diff) : (ticks - tick_diff);
 }
@@ -34,18 +32,15 @@ constexpr Ticks static move_inside(const Side& side,
   return move_inside(side, ticks, 1);
 }
 
-template<typename T>
-constexpr Ticks static most_inside(const Side& side,
-                                   const T& lhs,
+template <typename T>
+constexpr Ticks static most_inside(const Side& side, const T& lhs,
                                    const T& rhs) {
-  return (side == Side::BUY) ?
-      static_cast<Ticks>(std::max(lhs, rhs)):
-      static_cast<Ticks>(std::min(lhs, rhs));
+  return (side == Side::BUY) ? static_cast<Ticks>(std::max(lhs, rhs))
+                             : static_cast<Ticks>(std::min(lhs, rhs));
 }
 
-template<typename T>
-constexpr Ticks static most_outside(const Side& side,
-                                    const T& lhs,
+template <typename T>
+constexpr Ticks static most_outside(const Side& side, const T& lhs,
                                     const T& rhs) {
   return (side == Side::BUY) ? std::min(lhs, rhs) : std::max(lhs, rhs);
 }
@@ -54,28 +49,24 @@ constexpr Ticks static extreme_tick(const Side& side) noexcept {
   return (side == Side::BUY) ? 1 : 999;
 }
 
-constexpr Ticks ticks_inside_of(const Side& side,
-                                const Ticks lhs,
+constexpr Ticks ticks_inside_of(const Side& side, const Ticks lhs,
                                 const Ticks rhs) noexcept {
   return (side == Side::BUY) ? lhs - rhs : rhs - lhs;
 }
 
-constexpr Ticks ticks_outside_of(const Side& side,
-                                 const Ticks lhs,
+constexpr Ticks ticks_outside_of(const Side& side, const Ticks lhs,
                                  const Ticks rhs) noexcept {
   return (side == Side::BUY) ? rhs - lhs : lhs - rhs;
 }
 
-template<typename T>
-constexpr bool is_inside_of(const Side& side,
-                            const T& lhs,
+template <typename T>
+constexpr bool is_inside_of(const Side& side, const T& lhs,
                             const T& rhs) noexcept {
   return (side == Side::BUY) ? lhs > rhs : lhs < rhs;
 }
 
-template<typename T>
-constexpr bool is_outside_of(const Side& side,
-                             const T& lhs,
+template <typename T>
+constexpr bool is_outside_of(const Side& side, const T& lhs,
                              const T& rhs) noexcept {
   return (side == Side::BUY) ? lhs < rhs : lhs > rhs;
 }

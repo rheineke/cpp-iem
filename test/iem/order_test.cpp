@@ -1,9 +1,9 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/order.hpp"
 
-#include "gtest/gtest.h"
-
 #include <typeindex>
+
+#include "gtest/gtest.h"
 
 namespace iem {
 

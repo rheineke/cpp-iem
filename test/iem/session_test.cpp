@@ -1,9 +1,8 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/session.hpp"
 
-#include "gtest/gtest.h"
-
 #include "boost/property_tree/xml_parser.hpp"
+#include "gtest/gtest.h"
 
 namespace iem {
 
@@ -38,7 +37,8 @@ TEST(SessionTest, LimitOrderRequest) {
 
 TEST(SessionTest, ReadTradeMessageHTML) {
   const auto s =
-      "<table id=\"data-table\" class=\"table table-striped form-table jumbotronTable\" aria-describedby=\"Trader activity table\">\n"
+      "<table id=\"data-table\" class=\"table table-striped form-table "
+      "jumbotronTable\" aria-describedby=\"Trader activity table\">\n"
       "<h2>Outstanding Bid: FRup1216</h2>\n"
       "<thead>\n"
       "    <tr>\n"
@@ -62,7 +62,14 @@ TEST(SessionTest, ReadTradeMessageHTML) {
       "        <td>0.001000</td>\n"
       "        <td></td>\n"
       "        <td>\n"
-      "        <a data-confirm-button=\"Yes, cancel this order\" ata-cancel-button=\"No, take me back\" data-text=\"Are you sure you wish to cancel this order?\" href=\"/iem/trader/TraderActivity.action?cancelBidOrder=&amp;market=51&amp;bidOrder=4700000&amp;asset=3054&amp;activityType=bid\" title=\"Cancel this order\" class=\"submitBtn confirm\"><img class=\"cancelOrderBtn\" src=\"/iem/images/x_icon_red.png\" alt=\"Cancel this bid order\"/>\n"
+      "        <a data-confirm-button=\"Yes, cancel this order\" "
+      "ata-cancel-button=\"No, take me back\" data-text=\"Are you sure you "
+      "wish to cancel this order?\" "
+      "href=\"/iem/trader/"
+      "TraderActivity.action?cancelBidOrder=&amp;market=51&amp;bidOrder="
+      "4700000&amp;asset=3054&amp;activityType=bid\" title=\"Cancel this "
+      "order\" class=\"submitBtn confirm\"><img class=\"cancelOrderBtn\" "
+      "src=\"/iem/images/x_icon_red.png\" alt=\"Cancel this bid order\"/>\n"
       "        </a>\n"
       "        </td>\n"
       "    </tr>\n"

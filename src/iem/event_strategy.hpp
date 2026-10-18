@@ -8,10 +8,10 @@
 #include "iem/order.hpp"
 
 namespace iem {
-  enum class Event { UP, SAME, DOWN };
+enum class Event { UP, SAME, DOWN };
 
-  // Assume FedPolicyB for now
-  Orders event_orders(const Event& event, const Quantity qty);
+// Assume FedPolicyB for now
+Orders event_orders(const Event& event, const Quantity qty);
 
 }  // namespace iem
 

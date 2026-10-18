@@ -10,15 +10,13 @@ std::ostream& operator<<(std::ostream& os, const MonthYear& my) {
   return os << "(" << my.first << ", " << static_cast<int>(my.second) << ")";
 }
 
-int _read_market_value(const std::string &name, char const *filename) {
+int _read_market_value(const std::string& name, char const* filename) {
   const auto& json_root = read_markets_json(filename);
   return market_value(json_root, name)["id"].asInt();
 }
 
-Market::Market(const std::string& name, char const* filename):
-    name_(name), value_(_read_market_value(name, filename)) {
-
-}
+Market::Market(const std::string& name, char const* filename)
+    : name_(name), value_(_read_market_value(name, filename)) {}
 
 std::ostream& operator<<(std::ostream& os, const Market& mkt) {
   os << "{\"name\":" << mkt.name() << ", \"value\":" << mkt.value() << "}";
@@ -43,12 +41,10 @@ int _read_bundle_id(const std::string& market_name,
 }
 
 ContractBundle::ContractBundle(const std::string& market_name,
-                               const MonthYear& expiration):
-    market_(market_name),
-    expiration_(expiration),
-    bundle_id_(_read_bundle_id(market_name, expiration)) {
-
-}
+                               const MonthYear& expiration)
+    : market_(market_name),
+      expiration_(expiration),
+      bundle_id_(_read_bundle_id(market_name, expiration)) {}
 
 std::ostream& operator<<(std::ostream& os, const ContractBundle& cb) {
   os << "{\"market\":" << static_cast<int>(cb.market().value())
@@ -72,16 +68,14 @@ int _read_asset_to_market_id(const std::string& market_name,
 }
 
 Contract::Contract(const std::string& market_name,
-                   const std::string& contract_name):
-    market_(market_name),
-    asset_id_(_read_asset_id(market_name, contract_name)),
-    asset_to_market_id_(_read_asset_to_market_id(market_name, contract_name)) {
-
-}
+                   const std::string& contract_name)
+    : market_(market_name),
+      asset_id_(_read_asset_id(market_name, contract_name)),
+      asset_to_market_id_(
+          _read_asset_to_market_id(market_name, contract_name)) {}
 
 std::ostream& operator<<(std::ostream& os, const Contract& c) {
-  os << "{\"market\":" << c.market()
-     << ", \"asset\":" << c.asset_id()
+  os << "{\"market\":" << c.market() << ", \"asset\":" << c.asset_id()
      << ", \"asset_to_market\":" << c.asset_to_market_id() << "}";
   return os;
 }

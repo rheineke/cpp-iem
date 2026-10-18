@@ -10,7 +10,7 @@ option(CPP-IEM_BUILD_TESTS "Build the cpp-iem project tests." ON)
 include(GNUInstallDirs)
 
 if(CPP-IEM_BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
-    message (STATUS "Linking boost testing libs dynamically...")
+    message(STATUS "Linking boost testing libs dynamically...")
     set(CPP-IEM_BUILD_SHARED_LIBS ON)
     set(BUILD_SHARED_LIBS ON)
 else()
@@ -19,7 +19,7 @@ else()
 endif()
 
 # Find threads (for Linux)
-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     find_package(Threads REQUIRED)
 endif()
 
@@ -32,43 +32,46 @@ add_definitions(-DBOOST_TEST_DYN_LINK)
 # Always use multi-threaded Boost libraries.
 set(Boost_USE_MULTI_THREADED ON)
 
-find_package(Boost 1.64.0 REQUIRED COMPONENTS
-        date_time
-        filesystem
-        system
-        thread)
+find_package(Boost 1.64.0 REQUIRED COMPONENTS date_time filesystem system
+                                              thread)
 
-if (APPLE)
-    # /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/cmake/cppnetlib/cppnetlibTargets-release.cmake
+if(APPLE)
+    # The Homebrew cppnetlibTargets-release.cmake (under
+    # /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/cmake/cppnetlib/)
     # adds openssl as part of targets and causes build to fail for some reason
-    # make[2]: *** No rule to make target `/usr/local/Cellar/openssl/1.0.2g/lib/libssl.dylib', needed by `CPP-IEM'.  Stop.
+    # make[2]: *** No rule to make target
+    #   `/usr/local/Cellar/openssl/1.0.2g/lib/libssl.dylib',
+    #   needed by `CPP-IEM'.
+    #   Stop.
     # I have: /usr/local/Cellar/openssl/1.0.2j/...
     # find_package(cppnetlib 0.13.0 REQUIRED)
     set(CPPNETLIB_FOUND ON)
-    set(CPPNETLIB_INCLUDE_DIRS /usr/local/Cellar/cpp-netlib/0.12.0_1/include/)
+    set(CPPNETLIB_PREFIX /usr/local/Cellar/cpp-netlib/0.12.0_1)
+    set(CPPNETLIB_INCLUDE_DIRS ${CPPNETLIB_PREFIX}/include/)
     set(CPPNETLIB_LIBRARIES
-            /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-client-connections.a
-            /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-server-parsers.a
-            /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-uri.a)
-elseif (UNIX)
+        ${CPPNETLIB_PREFIX}/lib/libcppnetlib-client-connections.a
+        ${CPPNETLIB_PREFIX}/lib/libcppnetlib-server-parsers.a
+        ${CPPNETLIB_PREFIX}/lib/libcppnetlib-uri.a)
+elseif(UNIX)
     # Installed cpp-netlib exports cppnetlibConfig.cmake (any architecture)
     find_package(cppnetlib 0.13.0 REQUIRED)
     set(CPPNETLIB_FOUND ON)
 endif()
 
-if (APPLE)
+if(APPLE)
     # If we're on OSX check for Homebrew's copy of OpenSSL instead of Apple's
-    if (NOT OpenSSL_DIR)
+    if(NOT OpenSSL_DIR)
         find_program(HOMEBREW brew)
-        if (HOMEBREW STREQUAL "HOMEBREW-NOTFOUND")
+        if(HOMEBREW STREQUAL "HOMEBREW-NOTFOUND")
             message(WARNING "Homebrew not found: not using Homebrew's OpenSSL")
-            if (NOT OPENSSL_ROOT_DIR)
+            if(NOT OPENSSL_ROOT_DIR)
                 message(WARNING "Use -DOPENSSL_ROOT_DIR for non-Apple OpenSSL")
             endif()
         else()
-            execute_process(COMMAND brew --prefix openssl
-                    OUTPUT_VARIABLE OPENSSL_ROOT_DIR
-                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+            execute_process(
+                COMMAND brew --prefix openssl
+                OUTPUT_VARIABLE OPENSSL_ROOT_DIR
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
         endif()
     endif()
 endif()
@@ -76,42 +79,45 @@ find_package(OpenSSL 1.0.2 REQUIRED)
 
 # set(CMAKE_VERBOSE_MAKEFILE on)
 
-set(CPP-IEM_VERSION_MAJOR 0) # MUST bump this whenever we make ABI-incompatible changes
+set(CPP-IEM_VERSION_MAJOR 0
+)# MUST bump this whenever we make ABI-incompatible changes
 set(CPP-IEM_VERSION_MINOR 1)
 set(CPP-IEM_VERSION_PATCH 1)
 set(CPP-IEM_VERSION_STRING
-        ${CPP-IEM_VERSION_MAJOR}.${CPP-IEM_VERSION_MINOR}.${CPP-IEM_VERSION_PATCH})
+    ${CPP-IEM_VERSION_MAJOR}.${CPP-IEM_VERSION_MINOR}.${CPP-IEM_VERSION_PATCH})
 
-if (CMAKE_BUILD_TYPE MATCHES Debug)
+if(CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DBOOST_NETWORK_DEBUG)
 endif()
 
-if (OPENSSL_FOUND)
+if(OPENSSL_FOUND)
     add_definitions(-DBOOST_NETWORK_ENABLE_HTTPS)
     include_directories(${OPENSSL_INCLUDE_DIR})
 else()
     message(FATAL_ERROR "OpenSSL required for https connection to cpp-iem")
 endif()
 
-if (${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
-    # C++14: in C++17 mode, cpp-netlib 0.13 headers hit ambiguous boost/std make_optional.
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++14")
-elseif (${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
+if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
+    # C++14: in C++17 mode, cpp-netlib 0.13 headers hit an ambiguous
+    # boost/std make_optional.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++14")
+elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
     # We want to link in C++14 mode in Clang too, but also set a high enough
     # template depth for the template metaprogramming.
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ftemplate-depth=256 -std=c++14")
+    set(CMAKE_CXX_FLAGS
+        "${CMAKE_CXX_FLAGS} -Wall -ftemplate-depth=256 -std=c++14")
 endif()
 
-if (Boost_FOUND)
+if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
-if (CPPNETLIB_FOUND)
+if(CPPNETLIB_FOUND)
     include_directories(${CPPNETLIB_INCLUDE_DIRS})
 
     enable_testing()
 
-    if (CPP-IEM_BUILD_TESTS)
+    if(CPP-IEM_BUILD_TESTS)
         add_subdirectory(deps/googletest)
         add_subdirectory(test)
     endif()
@@ -132,4 +138,4 @@ file(COPY conf/markets.json DESTINATION ${CPP-IEM_BINARY_DIR}/test/iem/conf)
 # ###
 # ## Export Targets
 # # (so cpp-iem can be easily used by other CMake projects)
-# # [see http://www.cmake.org/Wiki/CMake/Tutorials/How_to_create_a_ProjectConfig.cmake_file]
+# # [see https://cmake.org/cmake/help/latest/guide/importing-exporting/]

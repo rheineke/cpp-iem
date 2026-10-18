@@ -1,0 +1,2 @@
+# Google style matches the existing code: 2-space indent, 80 columns, `T& x`.
+BasedOnStyle: Google

@@ -19,50 +19,39 @@ std::ostream& operator<<(std::ostream& os, const Order& o) {
   return os;
 }
 
-Order::Order(const Side& side,
-             const Quantity quantity,
+Order::Order(const Side& side, const Quantity quantity,
              const PriceTimeLimit& price_time_limit,
-             const Counterparty& counterparty):
-    side_(side),
-    quantity_(quantity),
-    price_time_limit_(price_time_limit),
-    counterparty_(counterparty) {
-}
+             const Counterparty& counterparty)
+    : side_(side),
+      quantity_(quantity),
+      price_time_limit_(price_time_limit),
+      counterparty_(counterparty) {}
 
 void Single::print(std::ostream* const p_os) const {
   *p_os << "SingleOrder{"
-        << "side=" << side()
-        << ", quantity=" << static_cast<int>(quantity())
+        << "side=" << side() << ", quantity=" << static_cast<int>(quantity())
         << ", priceTimeLimit=" << price_time_limit()
-        << ", counterparty=" << counterparty()
-        << ", contract=" << contract()
+        << ", counterparty=" << counterparty() << ", contract=" << contract()
         << ", id=" << static_cast<int>(id()) << "}";
 }
 
-Single::Single(const Contract& contract,
-               const Side& side,
-               const Quantity quantity,
-               const PriceTimeLimit& price_time_limit):
-    Order(side, quantity, price_time_limit, Counterparty::PARTICIPANT),
-    contract_(contract),
-    id_(std::numeric_limits<OrderId>::lowest()) {
-}
+Single::Single(const Contract& contract, const Side& side,
+               const Quantity quantity, const PriceTimeLimit& price_time_limit)
+    : Order(side, quantity, price_time_limit, Counterparty::PARTICIPANT),
+      contract_(contract),
+      id_(std::numeric_limits<OrderId>::lowest()) {}
 
 void Bundle::print(std::ostream* const p_os) const {
   *p_os << "{\"name\":\"bundleOrder\""
-        << ", \"side\":" << side()
-        << ", \"quantity\":" << quantity()
+        << ", \"side\":" << side() << ", \"quantity\":" << quantity()
         << ", \"priceTimeLimit\":" << price_time_limit()
         << ", \"counterparty\":" << counterparty()
         << ", \"contractBundle\":" << contract_bundle() << "}";
 }
 
-Bundle::Bundle(const ContractBundle& contract_bundle,
-               const Side& side,
-               const Quantity quantity,
-               const Counterparty& counterparty):
-    Order(side, quantity, PriceTimeLimit(), counterparty),
-    contract_bundle_(contract_bundle) {
-}
+Bundle::Bundle(const ContractBundle& contract_bundle, const Side& side,
+               const Quantity quantity, const Counterparty& counterparty)
+    : Order(side, quantity, PriceTimeLimit(), counterparty),
+      contract_bundle_(contract_bundle) {}
 
 }  // namespace iem

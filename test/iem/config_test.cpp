@@ -1,15 +1,12 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/config.hpp"
 
-#include "gtest/gtest.h"
-
 #include "boost/date_time/gregorian/gregorian.hpp"
+#include "gtest/gtest.h"
 
 namespace iem {
 
-TEST(ConfigTest, ReadJson) {
-  EXPECT_NO_THROW(read_markets_json());
-}
+TEST(ConfigTest, ReadJson) { EXPECT_NO_THROW(read_markets_json()); }
 
 TEST(ConfigTest, MarketValue) {
   const auto& root = read_markets_json();

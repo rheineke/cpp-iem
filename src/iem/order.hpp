@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "boost/pool/pool_alloc.hpp"
-
 #include "iem/contract.hpp"
 #include "iem/pricetimelimit.hpp"
 #include "iem/side.hpp"
@@ -38,8 +37,7 @@ class Order {
   friend std::ostream& operator<<(std::ostream& os, const Order& o);
 
  protected:
-  Order(const Side& side,
-        const Quantity quantity,
+  Order(const Side& side, const Quantity quantity,
         const PriceTimeLimit& price_time_limit,
         const Counterparty& counterparty);
 
@@ -57,17 +55,14 @@ std::ostream& operator<<(std::ostream& os, const Order& o);
 // IEM single contract order
 class Single final : public Order {
  public:
-  Single(const Contract& contract,
-         const Side& side,
-         const Quantity quantity,
+  Single(const Contract& contract, const Side& side, const Quantity quantity,
          const PriceTimeLimit& price_time_limit);
 
   inline const Contract contract() const { return contract_; }
   inline OrderId id() const { return id_; }
-  inline void set_id(const OrderId id) {
-    id_ = id;
-  }
+  inline void set_id(const OrderId id) { id_ = id; }
   void print(std::ostream* const p_os) const final;
+
  private:
   Contract contract_;
   OrderId id_;
@@ -80,10 +75,8 @@ inline bool valid_id(const Single& order) {
 // IEM bundle contract order
 class Bundle final : public Order {
  public:
-  Bundle(const ContractBundle& contract_bundle,
-         const Side& side,
-         const Quantity quantity,
-         const Counterparty& counterparty);
+  Bundle(const ContractBundle& contract_bundle, const Side& side,
+         const Quantity quantity, const Counterparty& counterparty);
 
   inline const ContractBundle contract_bundle() const {
     return contract_bundle_;

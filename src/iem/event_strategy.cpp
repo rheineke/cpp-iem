@@ -18,8 +18,8 @@ Orders event_orders(const Event& event, const Quantity qty) {
 
   // Buy bundle from exchange (optional)
   const ContractBundle cb(mkt_name, MonthYear(boost::date_time::Nov, 16));
-  os.emplace_back(std::make_unique<Bundle>(cb, Side::BUY, qty,
-                                           Counterparty::EXCHANGE));
+  os.emplace_back(
+      std::make_unique<Bundle>(cb, Side::BUY, qty, Counterparty::EXCHANGE));
 
   // Sell out-of-the-money (OTM) contracts
   const std::array<std::string, 2> otm_asset_names{{"FRup1116", "FRdown1116"}};

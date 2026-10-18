@@ -10,11 +10,9 @@
 
 namespace iem {
 
-Orders fatfinger_orders(const Market& market,
-                        const std::string& expiry_date,
+Orders fatfinger_orders(const Market& market, const std::string& expiry_date,
                         const Quantity qty);
 
 }  // namespace iem
-
 
 #endif  // CPPIEM_IEM_FATFINGER_STRATEGY_HPP_
