@@ -48,7 +48,7 @@ constexpr auto sell_market_price_bundle("Sell Market Price Bundle");
 constexpr auto bid_traded("Bid traded");
 constexpr auto ask_traded("Ask traded");
 
-inline const std::string to_string(const Action& action) {
+const std::string to_string(const Action& action) {
   switch (action) {
     case Action::BUY:
       return buy;
