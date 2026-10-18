@@ -1,7 +1,7 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
-#include <string>
-
 #include "iem/contract.hpp"
+
+#include <string>
 
 #include "gtest/gtest.h"
 
@@ -45,7 +45,8 @@ TEST(ContractTest, ContractBundle) {
         const ContractBundle cb(name, exp_monthyear);
         EXPECT_EQ(cb.market().value(), expected_market.value());
         EXPECT_EQ(cb.expiration(), exp_monthyear);
-        EXPECT_EQ(cb.bundle_id(), bundles_value[bundle_exp]["bundle_id"].asInt());
+        EXPECT_EQ(cb.bundle_id(),
+                  bundles_value[bundle_exp]["bundle_id"].asInt());
       }
     } else {
       // Market has one expiration associated with it

@@ -3,7 +3,6 @@
 #define CPPIEM_IEM_CONFIG_HPP_
 
 #include "boost/date_time/posix_time/posix_time.hpp"
-
 #include "json/json.h"
 
 namespace iem {
@@ -11,7 +10,7 @@ namespace iem {
 constexpr auto kDefaultFilename = "conf/markets.json";
 
 // Returns a reference to a JSON object located at (relative) path filename
-const Json::Value& read_markets_json(char const* filename=kDefaultFilename);
+const Json::Value& read_markets_json(char const* filename = kDefaultFilename);
 
 // Returns the market node matching market_name. If market_name is not found,
 // then an exception is thrown.

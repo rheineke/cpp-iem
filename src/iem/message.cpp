@@ -85,16 +85,16 @@ Action action_from_string(const std::string& action_str) {
   } else if (action_str == bid_entered) {
     return Action::BID_ENTERED;
   } else if (action_str == fixed_bundle_purchase_executed ||
-      action_str == buy_fixed_price_bundle) {
+             action_str == buy_fixed_price_bundle) {
     return Action::FIXED_BUNDLE_PURCHASE_EXECUTED;
-  } else if (action_str == fixed_bundle_sale_executed
-      || action_str == sell_fixed_price_bundle) {
+  } else if (action_str == fixed_bundle_sale_executed ||
+             action_str == sell_fixed_price_bundle) {
     return Action::FIXED_BUNDLE_SALE_EXECUTED;
   } else if (action_str == mkt_bundle_purchase_executed ||
-      action_str == buy_market_price_bundle) {
+             action_str == buy_market_price_bundle) {
     return Action::MARKET_BUNDLE_PURCHASE_EXECUTED;
   } else if (action_str == mkt_bundle_sale_executed ||
-      action_str == sell_market_price_bundle) {
+             action_str == sell_market_price_bundle) {
     return Action::MARKET_BUNDLE_SALE_EXECUTED;
   } else if (action_str == ask_order_withdrawn) {
     return Action::ASK_ORDER_WITHDRAWN;
@@ -107,20 +107,16 @@ Action action_from_string(const std::string& action_str) {
 
 TraderMessage::TraderMessage(const boost::posix_time::ptime& date,
                              const MessageType& type,
-                             const std::string& contract,
-                             const Action& action,
-                             const Quantity quantity,
-                             const Price& unit_price,
-                             const boost::posix_time::ptime& expiration_date):
-    date_(date),
-    type_(type),
-    contract_(contract),
-    action_(action),
-    quantity_(quantity),
-    unit_price_(unit_price),
-    expiration_date_(expiration_date) {
-
-}
+                             const std::string& contract, const Action& action,
+                             const Quantity quantity, const Price& unit_price,
+                             const boost::posix_time::ptime& expiration_date)
+    : date_(date),
+      type_(type),
+      contract_(contract),
+      action_(action),
+      quantity_(quantity),
+      unit_price_(unit_price),
+      expiration_date_(expiration_date) {}
 
 std::ostream& operator<<(std::ostream& os, const TraderMessage& msg) {
   return os << "{\"name\": \"traderMessage\""
@@ -130,8 +126,7 @@ std::ostream& operator<<(std::ostream& os, const TraderMessage& msg) {
             << ", \"action\": " << to_string(msg.action())
             << ", \"quantity\": " << msg.quantity()
             << ", \"price\": " << msg.unit_price()
-            << ", \"expiration_date\": " << msg.expiration_date()
-            << '}';
+            << ", \"expiration_date\": " << msg.expiration_date() << '}';
 }
 
 boost::posix_time::ptime date_from_string(const std::string& str) {
@@ -158,14 +153,12 @@ boost::posix_time::ptime expiration_date_from_string(const std::string& str) {
 
 HoldingMessage::HoldingMessage(const boost::posix_time::ptime& date,
                                const std::string& market_label,
-                               const Action& action,
-                               const Quantity quantity,
-                               const Price& price):
-    date_(date),
-    market_label_(market_label),
-    action_(action),
-    quantity_(quantity),
-    price_(price) {
-}
+                               const Action& action, const Quantity quantity,
+                               const Price& price)
+    : date_(date),
+      market_label_(market_label),
+      action_(action),
+      quantity_(quantity),
+      price_(price) {}
 
 }  // namespace iem

@@ -2,7 +2,6 @@
 #include "iem/pricetimelimit.hpp"
 
 #include "gtest/gtest.h"
-
 #include "iem/contract.hpp"
 
 namespace iem {
@@ -19,7 +18,7 @@ TEST(PriceTimeLimitTest, ValidConstructorArguments) {
   EXPECT_NO_THROW(PriceTimeLimit(nan_px, not_a_date_time));  // IOC
   const Price px(999);
   EXPECT_NO_THROW(PriceTimeLimit(px, not_a_date_time));  // GTC limit
-  EXPECT_NO_THROW(PriceTimeLimit(px, _test_ptime()));  // Non-GTC limit
+  EXPECT_NO_THROW(PriceTimeLimit(px, _test_ptime()));    // Non-GTC limit
   EXPECT_THROW(PriceTimeLimit(nan_px, _test_ptime()), std::invalid_argument);
 }
 
@@ -49,12 +48,12 @@ TEST(PriceTimeLimitTest, ExpiryDate) {
     if (assets_value.isNull()) {
       for (const auto& bundle_name : bundle_value.getMemberNames()) {
         const auto& assets_value = bundle_value[bundle_name]["assets"];
-        for (const auto &asset_name : assets_value.getMemberNames()) {
+        for (const auto& asset_name : assets_value.getMemberNames()) {
           EXPECT_NO_THROW(read_expiration_ptime(mkt_name, asset_name));
         }
       }
     } else {
-      for (const auto &asset_name : assets_value.getMemberNames()) {
+      for (const auto& asset_name : assets_value.getMemberNames()) {
         EXPECT_NO_THROW(read_expiration_ptime(mkt_name, asset_name));
       }
     }

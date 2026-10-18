@@ -3,7 +3,6 @@
 #define CPPIEM_IEM_PRICETIMELIMIT_HPP_
 
 #include "boost/date_time/posix_time/posix_time.hpp"
-
 #include "iem/price.hpp"
 
 namespace iem {
@@ -39,6 +38,6 @@ const std::string to_string(const boost::posix_time::ptime& expiration_ptime);
 
 std::ostream& operator<<(std::ostream& os, const PriceTimeLimit& ptl);
 
-} // namespace iem
+}  // namespace iem
 
 #endif  // CPPIEM_IEM_PRICETIMELIMIT_HPP_

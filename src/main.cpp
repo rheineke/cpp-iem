@@ -24,8 +24,8 @@ LoginCreds _read_login_credentials(char const* filename = "conf/login.json") {
 }
 
 LoginCreds read_login_credentials(int argc, char* argv[]) {
-  return (argc == 2) ?
-         _read_login_credentials(argv[1]) : _read_login_credentials();
+  return (argc == 2) ? _read_login_credentials(argv[1])
+                     : _read_login_credentials();
 }
 
 int _main(int argc, char* argv[]) {
@@ -51,17 +51,18 @@ int _main(int argc, char* argv[]) {
 
   // Send a test bid order
   const iem::Contract c(mkt.name(), "FRsame1216");
-//  const iem::Price bid_px(0);
-//  const iem::PriceTimeLimit bid_ptl(bid_px, boost::posix_time::not_a_date_time);
-//  const iem::Single bid_o(c, iem::Side::BUY, 1, bid_ptl);
-//  const auto response = session.place_order(bid_o);
-//  std::cout << body(response) << '\n';
+  //  const iem::Price bid_px(0);
+  //  const iem::PriceTimeLimit bid_ptl(bid_px,
+  //  boost::posix_time::not_a_date_time); const iem::Single bid_o(c,
+  //  iem::Side::BUY, 1, bid_ptl); const auto response =
+  //  session.place_order(bid_o); std::cout << body(response) << '\n';
 
   // Send a test ask order
-//  const iem::Price ask_px(1000);
-//  const iem::PriceTimeLimit ask_ptl(ask_px, boost::posix_time::not_a_date_time);
-//  const iem::Single ask_o(c, iem::Side::SELL, 1, ask_ptl);
-//  const auto ask_response = session.place_order(ask_o);
+  //  const iem::Price ask_px(1000);
+  //  const iem::PriceTimeLimit ask_ptl(ask_px,
+  //  boost::posix_time::not_a_date_time); const iem::Single ask_o(c,
+  //  iem::Side::SELL, 1, ask_ptl); const auto ask_response =
+  //  session.place_order(ask_o);
 
   // For each side
   std::cout << "Requesting outstanding orders\n";
@@ -74,9 +75,9 @@ int _main(int argc, char* argv[]) {
     }
 
     // Cancel most recent bid order
-//    const auto cxl_o = oos[oos.size() - 1];
-//    std::cout << cxl_o << '\n';
-//    const auto cxl_response = session.cancel_order(cxl_o);
+    //    const auto cxl_o = oos[oos.size() - 1];
+    //    std::cout << cxl_o << '\n';
+    //    const auto cxl_response = session.cancel_order(cxl_o);
   }
 
   // Send a test bundle order
@@ -101,7 +102,6 @@ int _main(int argc, char* argv[]) {
   for (const auto& msg : msgs) {
     std::cout << msg << '\n';
   }
-
 
   // TODO(rheineke): Generate a heartbeat thread with a mutex around cookie
   // Make simple request every n minutes and call authenticate(...) with
@@ -136,14 +136,14 @@ int _main2(int argc, char* argv[]) {
 
   // Find all active markets and retrieve their markets concurrently
   const iem::Market mkt("FedPolicyB");
-//  std::thread t(&iem::Session::orderbook, session, mkt);
-//
-//  const std::vector<iem::Market> markets = {
-//      iem::Market("FedPolicyB"),
-//      iem::Market("Congress18"),
-//      iem::Market("House18"),
-//      iem::Market("Senate18"),
-//  };
+  //  std::thread t(&iem::Session::orderbook, session, mkt);
+  //
+  //  const std::vector<iem::Market> markets = {
+  //      iem::Market("FedPolicyB"),
+  //      iem::Market("Congress18"),
+  //      iem::Market("House18"),
+  //      iem::Market("Senate18"),
+  //  };
   const auto obs = session_p->orderbook(mkt);
   for (const auto& ob : obs) {
     std::cout << ob << '\n';
@@ -162,6 +162,6 @@ int _main2(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
   return _main2(argc, argv);
 
-//  iem::Market mkt("FedPolicyB");
-//  std::cout << mkt.value() << std::endl;
+  //  iem::Market mkt("FedPolicyB");
+  //  std::cout << mkt.value() << std::endl;
 }

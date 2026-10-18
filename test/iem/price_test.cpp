@@ -2,18 +2,18 @@
 
 #include "iem/price.hpp"
 
-#include "gtest/gtest.h"
-
 #include <map>
+
+#include "gtest/gtest.h"
 
 // #include "spacemeasure_test.hpp"
 
 namespace iem {
 
-//TEST(PriceTest, SpaceMeasure) {
-//  constexpr std::size_t price_align_size = 16;
-//  EXPECT_EQ(price_align_size, alignSize<Price>());
-//}
+// TEST(PriceTest, SpaceMeasure) {
+//   constexpr std::size_t price_align_size = 16;
+//   EXPECT_EQ(price_align_size, alignSize<Price>());
+// }
 
 TEST(PriceTest, NoThrowMovable) {
   EXPECT_TRUE(std::is_nothrow_move_constructible<Price>::value);

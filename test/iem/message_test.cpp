@@ -54,8 +54,6 @@ TEST(TraderMessageTest, TradeMessageDateFromString) {
   EXPECT_EQ(dt, expected_dt);
 }
 
-TEST(TraderMessageTest, Quantity) {
-  EXPECT_NO_THROW(std::stoi("1.000000"));
-}
+TEST(TraderMessageTest, Quantity) { EXPECT_NO_THROW(std::stoi("1.000000")); }
 
 }  // namespace iem

@@ -5,8 +5,7 @@
 
 namespace iem {
 
-Orders fatfinger_orders(const Market& market,
-                        const std::string& expiry_date,
+Orders fatfinger_orders(const Market& market, const std::string& expiry_date,
                         const Quantity qty) {
   Orders os;
 

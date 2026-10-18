@@ -2,12 +2,11 @@
 #ifndef CPPIEM_IEM_CONTRACT_HPP_
 #define CPPIEM_IEM_CONTRACT_HPP_
 
+#include <boost/date_time/date_defs.hpp>
 #include <functional>
 #include <iosfwd>
 #include <string>
 #include <utility>
-
-#include <boost/date_time/date_defs.hpp>
 
 #include "iem/config.hpp"
 
@@ -30,11 +29,12 @@ class Market final {
  public:
   // Constructor requires a valid market name, and optionally a JSON config file
   // that defines all valid markets and their attributes
-  Market(const std::string& name, char const* filename=kDefaultFilename);
+  Market(const std::string& name, char const* filename = kDefaultFilename);
 
   inline const std::string name() const noexcept { return name_; }
   // Unique numeric id provided by IEM
   inline MarketId value() const noexcept { return value_; }
+
  private:
   std::string name_;
   MarketId value_;
@@ -76,6 +76,7 @@ class Contract final {
   inline AssetToMarketId asset_to_market_id() const noexcept {
     return asset_to_market_id_;
   }
+
  private:
   Market market_;
   AssetId asset_id_;
@@ -84,7 +85,7 @@ class Contract final {
 
 std::ostream& operator<<(std::ostream& os, const Contract& c);
 
-const std::string _read_market_name(const std::string &contract_name);
+const std::string _read_market_name(const std::string& contract_name);
 
 }  // namespace iem
 

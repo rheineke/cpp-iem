@@ -18,14 +18,14 @@ const boost::posix_time::ptime PriceTimeLimit::expiration() const {
 bool PriceTimeLimit::ioc() const noexcept { return ioc_; }
 
 PriceTimeLimit::PriceTimeLimit(const Price& price,
-                               const boost::posix_time::ptime& expiration):
-    price_(price), expiration_(expiration), ioc_(is_ioc(price, expiration)) {
+                               const boost::posix_time::ptime& expiration)
+    : price_(price), expiration_(expiration), ioc_(is_ioc(price, expiration)) {
 #ifdef DEBUG
   debug::log<PriceTimeLimit>(this, "price time limit ctor");
 #endif
 }
-PriceTimeLimit::PriceTimeLimit():
-    PriceTimeLimit(Price(), boost::date_time::not_a_date_time) { }
+PriceTimeLimit::PriceTimeLimit()
+    : PriceTimeLimit(Price(), boost::date_time::not_a_date_time) {}
 
 bool PriceTimeLimit::is_ioc(const Price& price,
                             const boost::posix_time::ptime& expiration) {
@@ -92,8 +92,8 @@ std::ostream& operator<<(std::ostream& os, const PriceTimeLimit& ptl) {
   if (ptl.ioc()) {
     return os << "IOC";
   } else {
-    os << "GoodTill{price=" << ptl.price() <<
-        ", expiration=" << to_string(ptl.expiration()) << '}';
+    os << "GoodTill{price=" << ptl.price()
+       << ", expiration=" << to_string(ptl.expiration()) << '}';
     return os;
   }
 }

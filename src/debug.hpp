@@ -6,13 +6,13 @@
 
 namespace debug {
 
-template<typename T>
+template <typename T>
 void log(const Logger& logger, const T* t, const char* const msg) {
   snprintf(logger.getBuffer(), logger.kBufferSize, "[%ld] %s %ld", t, msg,
            sizeof(*t));
   logger.log();
 }
 
-}
+}  // namespace debug
 
 #endif
