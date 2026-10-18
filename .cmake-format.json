@@ -1,0 +1,16 @@
+{
+  "format": {
+    "line_width": 80,
+    "tab_size": 4
+  },
+  "lint": {
+    "_comment": "C0103: FindBoost requires mixed-case names such as Boost_USE_STATIC_LIBS. C0307: cmake-format owns indentation, and lint disagrees with its layout.",
+    "disabled_codes": [
+      "C0103",
+      "C0307"
+    ]
+  },
+  "markup": {
+    "enable_markup": false
+  }
+}

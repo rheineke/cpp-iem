@@ -19,6 +19,15 @@ Instructions for macOS 10.12 (Sierra) using [HomeBrew]:
 [Iowa Electronic Markets]: https://iem.uiowa.edu/iem/
 [waf]: https://waf.io/
 
+## Pre-commit hooks
+Whitespace and file checks, gitleaks, clang-format (Google style) and cmake-format/cmake-lint.
+Vendored code (`deps/`, jsoncpp) is excluded.
+```shell
+pip install pre-commit
+pre-commit install
+pre-commit run --all-files
+```
+
 ## Linux arm64 build (Docker)
 A reproducible build on a digest-pinned Debian 13 (trixie) image. Packages come from a fixed
 snapshot.debian.org date with pinned versions (Boost 1.83, OpenSSL 3, CMake, GCC 14), and
