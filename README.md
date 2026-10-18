@@ -18,3 +18,10 @@ Instructions for macOS 10.12 (Sierra) using [HomeBrew]:
 [HomeBrew]: http://brew.sh/
 [Iowa Electronic Markets]: https://iem.uiowa.edu/iem/
 [waf]: https://waf.io/
+
+## Linux arm64 build (Docker)
+A reproducible build on a digest-pinned Ubuntu 18.04 image with pinned Boost, OpenSSL 1.0.2,
+CMake and GCC, plus cpp-netlib 0.12.0 built from a pinned commit. The build runs the tests.
+```shell
+docker build --platform linux/arm64 -f docker/linux-arm64.Dockerfile -t cpp-iem:linux-arm64 .
+```

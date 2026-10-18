@@ -51,14 +51,9 @@ if (APPLE)
             /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-server-parsers.a
             /usr/local/Cellar/cpp-netlib/0.12.0_1/lib/libcppnetlib-uri.a)
 elseif (UNIX)
+    # Installed cpp-netlib exports cppnetlibConfig.cmake (any architecture)
+    find_package(cppnetlib 0.12.0 REQUIRED)
     set(CPPNETLIB_FOUND ON)
-    set(CPPNETLIB_LIBRARIES
-            /usr/lib/x86_64-linux-gnu/libcppnetlib-uri.so
-            # /usr/lib/arm-linux-gnueabihf/libcppnetlib-uri.so
-            /usr/lib/x86_64-linux-gnu/libcppnetlib-server-parsers.so
-            # /usr/lib/arm-linux-gnueabihf/libcppnetlib-server-parsers.so
-            /usr/lib/x86_64-linux-gnu/libcppnetlib-client-connections.so)
-            # /usr/lib/arm-linux-gnueabihf/libcppnetlib-client-connections.so)
 endif()
 
 if (APPLE)
