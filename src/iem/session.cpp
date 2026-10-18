@@ -56,7 +56,7 @@ const HttpResponse Session::authenticate() {
   // Market select request
   auto market_select_request = buildRequest(HttpMethod::GET, location);
   // Set cookie
-  market_select_request.headers.emplace_back("Set-Cookie", cookie());
+  market_select_request.headers.emplace_back("Cookie", cookie());
   // GET request
   return client_->send(market_select_request);
 }

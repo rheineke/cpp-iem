@@ -71,7 +71,9 @@ TEST(SessionTest, AuthenticatePostsLoginForm) {
   const auto& select = server.requests[1];
   EXPECT_EQ(select.method, HttpMethod::GET);
   EXPECT_EQ(select.path, kLocation);
-  EXPECT_EQ(header(select.headers, "Set-Cookie"), kCookie);
+  EXPECT_EQ(header(select.headers, "Cookie"), kCookie);
+  // Set-Cookie is a response header; it does not belong on a request
+  EXPECT_EQ(header(select.headers, "Set-Cookie"), "");
   EXPECT_EQ(response.body, "market select");
 }
 
