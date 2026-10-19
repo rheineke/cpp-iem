@@ -29,12 +29,14 @@ TEST(SessionTest, PositionParser) {
 
 // Session tests below run against FakeHttpClient: no network.
 
-constexpr auto kCookie("JSESSIONID=abc123; Path=/iem");
+constexpr auto kSetCookie("JSESSIONID=abc123; Path=/iem; Secure; HttpOnly");
+// What Session sends back: name=value only
+constexpr auto kCookie("JSESSIONID=abc123");
 constexpr auto kLocation("/iem/trader/MarketSelection.action");
 
 HttpResponse login_redirect() {
   return HttpResponse{
-      302, {{"Set-Cookie", kCookie}, {"Location", kLocation}}, ""};
+      302, {{"Set-Cookie", kSetCookie}, {"Location", kLocation}}, ""};
 }
 
 // Session that has logged in; the login requests are cleared from server
@@ -90,6 +92,50 @@ TEST(SessionTest, AuthenticateForcesLoginWhenNotRedirected) {
   EXPECT_EQ(server.requests[1].body.find("forceLogin=true"), 0u);
   EXPECT_EQ(server.requests[2].path, kLocation);
   EXPECT_EQ(s.cookie(), kCookie);
+}
+
+TEST(SessionTest, AuthenticateKeepsEveryCookie) {
+  FakeServer server;
+  // Lowercase names, as HTTP/2 servers and some proxies send them
+  server.responses = {
+      HttpResponse{302,
+                   {{"set-cookie", "JSESSIONID=abc123; Path=/iem"},
+                    {"set-cookie", "AWSALB=xyz; Expires=Wed, 21 Oct 2026"},
+                    {"location", kLocation}},
+                   ""},
+      ok("")};
+  Session s("foo", "bar", make_fake_client(&server));
+
+  s.authenticate();
+
+  EXPECT_EQ(s.cookie(), "JSESSIONID=abc123; AWSALB=xyz");
+  ASSERT_EQ(server.requests.size(), 2u);
+  EXPECT_EQ(server.requests[1].path, kLocation);
+}
+
+TEST(SessionTest, AuthenticateFollowsAbsoluteLocation) {
+  FakeServer server;
+  server.responses = {HttpResponse{302,
+                                   {{"Set-Cookie", kSetCookie},
+                                    {"Location",
+                                     "https://iem.uiowa.edu/iem/trader/"
+                                     "MarketSelection.action?a=1"}},
+                                   ""},
+                      ok("")};
+  Session s("foo", "bar", make_fake_client(&server));
+
+  s.authenticate();
+
+  ASSERT_EQ(server.requests.size(), 2u);
+  EXPECT_EQ(server.requests[1].path, "/iem/trader/MarketSelection.action?a=1");
+}
+
+TEST(SessionTest, LocationPath) {
+  EXPECT_EQ(_location_path("/iem/a.action?x=1"), "/iem/a.action?x=1");
+  EXPECT_EQ(_location_path("https://iem.uiowa.edu/iem/a.action"),
+            "/iem/a.action");
+  EXPECT_EQ(_location_path("https://iem.uiowa.edu"), "/");
+  EXPECT_EQ(_location_path(""), "");
 }
 
 TEST(SessionTest, LogoutClearsCookieOnSuccess) {

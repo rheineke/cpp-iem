@@ -6,6 +6,8 @@
 
 #include "gtest/gtest.h"
 #include "httplib.h"
+#include "iem/session.hpp"
+#include "iem_pages.hpp"
 
 namespace iem {
 
@@ -164,6 +166,49 @@ TEST(HttpClientTest, NoServerThrows) {
     url = local.url();
   }  // Server stopped: nothing listens on the port now
   EXPECT_THROW(make_http_client(url)->send(post("/", "")), std::runtime_error);
+}
+
+// Session end to end over HTTP, against a server that imitates IEM's login
+TEST(HttpClientTest, SessionLogsInAndReadsOrderBook) {
+  constexpr auto kCookie("JSESSIONID=abc123");
+  LocalServer local;
+  local.server.Post("/iem/trader/TraderLogin.action",
+                    [&](const httplib::Request& req, httplib::Response& res) {
+                      if (req.get_param_value("username") != "foo" ||
+                          req.get_param_value("password") != "bar") {
+                        res.status = 403;
+                        return;
+                      }
+                      res.status = 302;
+                      res.set_header("Set-Cookie",
+                                     std::string(kCookie) + "; Path=/iem");
+                      // Absolute, as servers often send it
+                      res.set_header("Location", local.url() +
+                                                     "/iem/trader/"
+                                                     "MarketSelection.action");
+                    });
+  local.server.Get(
+      "/iem/trader/MarketSelection.action",
+      [&](const httplib::Request& req, httplib::Response& res) {
+        res.status = (req.get_header_value("Cookie") == kCookie) ? 200 : 403;
+      });
+  local.server.Post("/iem/trader/MarketTrader.action",
+                    [&](const httplib::Request& req, httplib::Response& res) {
+                      if (req.get_header_value("Cookie") != kCookie) {
+                        res.status = 403;
+                        return;
+                      }
+                      res.set_content(pages::kOrderBook, "text/html");
+                    });
+
+  Session s("foo", "bar", make_http_client(local.url()));
+  const auto select = s.authenticate();
+  const auto obs = s.orderbook(Market("FedPolicyB"));
+
+  EXPECT_EQ(select.status, 200);
+  EXPECT_EQ(s.cookie(), kCookie);
+  ASSERT_EQ(obs.size(), 2u);
+  EXPECT_EQ(obs[0].best_price(Side::BUY), Price(12));
 }
 
 }  // namespace iem
