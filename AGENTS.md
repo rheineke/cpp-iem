@@ -19,7 +19,7 @@ Instructions for coding agents working in cpp-iem, a C++ client for the Iowa Ele
 - The macOS build (Homebrew paths in `CMakeLists.txt`) is unmaintained.
 
 ## Code
-- C++17.
+- C++20.
 - HTTP goes through `iem::HttpClient` (`src/iem/http_client.hpp`), implemented with cpp-httplib,
   a git submodule pinned to a release tag in `deps/cpp-httplib`. Session tests use
   `test/iem/fake_http_client.hpp`; `http_client_test` runs the real client against a localhost
