@@ -4,7 +4,7 @@ Instructions for coding agents working in cpp-iem, a C++ client for the Iowa Ele
 (IEM). `CLAUDE.md` is a symlink to this file.
 
 ## Communication
-- Keep summaries short: ideally 100 characters or less.
+- Keep summaries short: ideally 60 words or less, and never more than 120 words or 3 paragraphs.
 
 ## Build and test
 - The supported build is Linux arm64 in Docker. It runs the tests, as CI does:
