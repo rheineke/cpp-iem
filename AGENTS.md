@@ -31,6 +31,7 @@ Instructions for coding agents working in cpp-iem, a C++ client for the Iowa Ele
 - Tests use googletest, in `test/iem/<name>_test.cpp`; add new ones to `test/iem/CMakeLists.txt`.
 
 ## Safety
-- Never commit credentials. `conf/` is git-ignored except `conf/markets.json`; the IEM login
-  lives in `conf/login.json`. The gitleaks pre-commit hook scans each commit.
+- Never commit or log credentials. The IEM login comes from `IEM_USERNAME` and `IEM_PASSWORD`,
+  filled in by a secret store (README); never write it to a file. The gitleaks pre-commit hook
+  scans each commit.
 - Tests must not touch the live IEM site.

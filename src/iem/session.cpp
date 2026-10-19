@@ -605,13 +605,13 @@ HttpRequest Session::market_client_request(const Market& market,
   return request;
 }
 
-int snprintf_session(char* const str, const Session& s) {
-  static const auto fmt(
-      "{\"name\":\"session\", \"username\":\"%s\", "
-      "\"password\":\"%s\", \"cookie\":\"%s\"}");
-  const auto buf_size = std::min<std::size_t>(sizeof(str), 160);
-  return snprintf(str, buf_size, fmt, s.username().c_str(),
-                  s.password().c_str(), s.cookie().c_str());
+int snprintf_session(char* const str, const std::size_t size,
+                     const Session& s) {
+  // Never the password or cookie: logs are not a secret store
+  return snprintf(str, size,
+                  "{\"name\":\"session\", \"username\":\"%s\", "
+                  "\"logged_in\":%s}",
+                  s.username().c_str(), s.cookie().empty() ? "false" : "true");
 }
 
 // TODO(rheineke): Write function

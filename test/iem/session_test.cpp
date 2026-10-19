@@ -17,6 +17,28 @@ TEST(SessionTest, Session) {
   EXPECT_EQ(s.cookie(), "");
 }
 
+TEST(SessionTest, LogLineHasNoSecrets) {
+  const Session s("foo", "secret-password");
+  char buf[256];
+
+  snprintf_session(buf, sizeof(buf), s);
+
+  const std::string line(buf);
+  EXPECT_EQ(line,
+            "{\"name\":\"session\", \"username\":\"foo\", "
+            "\"logged_in\":false}");
+  EXPECT_EQ(line.find("secret-password"), std::string::npos);
+}
+
+TEST(SessionTest, LogLineTruncatesToBuffer) {
+  const Session s("foo", "bar");
+  char buf[8];
+
+  snprintf_session(buf, sizeof(buf), s);
+
+  EXPECT_EQ(std::string(buf), "{\"name\"");
+}
+
 TEST(SessionTest, PriceParser) {
   auto px = _parse_price("");
   EXPECT_EQ(px, nanPrice());
