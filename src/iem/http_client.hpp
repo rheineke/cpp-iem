@@ -36,6 +36,11 @@ class HttpClient {
   virtual HttpResponse send(const HttpRequest& request) = 0;
 };
 
+// Client for base_url, such as "https://iem.uiowa.edu" or a local test
+// server's "http://127.0.0.1:8080". Throws std::runtime_error when a request
+// gets no response (connection refused, timeout, TLS failure).
+std::unique_ptr<HttpClient> make_http_client(const std::string& base_url);
+
 // Client for https://iem.uiowa.edu
 std::unique_ptr<HttpClient> make_iem_http_client();
 

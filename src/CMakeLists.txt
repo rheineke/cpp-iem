@@ -36,8 +36,14 @@ add_library(
     iem/side.hpp
     iem/side.cpp)
 
-target_link_libraries(cppiemlib ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES}
-                      ${CPPNETLIB_LIBRARIES})
+# Header-only HTTP client; the definitions must match in every file that
+# includes httplib.h, so they are PUBLIC
+target_include_directories(cppiemlib SYSTEM
+                           PUBLIC ${CPP-IEM_SOURCE_DIR}/deps/cpp-httplib)
+target_compile_definitions(cppiemlib PUBLIC CPPHTTPLIB_OPENSSL_SUPPORT
+                                            CPPHTTPLIB_ZLIB_SUPPORT)
+target_link_libraries(cppiemlib OpenSSL::SSL OpenSSL::Crypto ZLIB::ZLIB
+                      ${Boost_LIBRARIES})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(cppiemlib ${CMAKE_THREAD_LIBS_INIT})
