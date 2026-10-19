@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/trim.hpp"
 #include "boost/property_tree/xml_parser.hpp"
 
@@ -61,6 +62,16 @@ const HttpResponse Session::authenticate() {
   return client_->send(market_select_request);
 }
 
+std::string _location_path(const std::string& location) {
+  // Absolute URL: keep the path and query, since requests go to the IEM host
+  const auto scheme_end = location.find("://");
+  if (scheme_end == std::string::npos) {
+    return location;
+  }
+  const auto path_start = location.find('/', scheme_end + 3);
+  return (path_start == std::string::npos) ? "/" : location.substr(path_start);
+}
+
 std::string Session::login(const bool force_login) {
   // Login request
   auto login_request = buildRequest(
@@ -75,13 +86,21 @@ std::string Session::login(const bool force_login) {
   // POST request
   const auto login_response = client_->send(login_request);
   // Extract important headers - IEM requests a redirect
+  std::string cookies;
   std::string location;
   for (const auto& h : login_response.headers) {
-    if (h.first == "Set-Cookie") {
-      cookie_ = h.second;
-    } else if (h.first == "Location") {
-      location = h.second;
+    // Header names are case-insensitive
+    if (boost::iequals(h.first, "Set-Cookie")) {
+      // Send back only name=value, not attributes such as Path or Secure
+      auto name_value = h.second.substr(0, h.second.find(';'));
+      boost::trim(name_value);
+      cookies += (cookies.empty() ? "" : "; ") + name_value;
+    } else if (boost::iequals(h.first, "Location")) {
+      location = _location_path(h.second);
     }
+  }
+  if (!cookies.empty()) {
+    cookie_ = cookies;
   }
   return location;
 }

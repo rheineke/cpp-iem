@@ -3,8 +3,9 @@
 
 #include <cctype>
 #include <cstdio>
+#include <stdexcept>
 
-#include "boost/network/protocol/http/client.hpp"
+#include "httplib.h"
 
 namespace iem {
 
@@ -24,37 +25,52 @@ std::string percent_encode(const std::string& s) {
   return out;
 }
 
-class NetlibHttpClient final : public HttpClient {
+class HttplibHttpClient final : public HttpClient {
  public:
+  explicit HttplibHttpClient(const std::string& base_url) : client_(base_url) {
+    // Session paths and queries are already percent-encoded
+    client_.set_path_encode(false);
+    client_.set_connection_timeout(10);
+    client_.set_read_timeout(30);
+    // Redirects are not followed: login reads the Location header itself
+    client_.set_follow_location(false);
+  }
+
   HttpResponse send(const HttpRequest& request) final {
-    using boost::network::http::client;
-    client::request netlib_request("https://iem.uiowa.edu" + request.path);
+    httplib::Request req;
+    req.method = (request.method == HttpMethod::POST) ? "POST" : "GET";
+    req.path = request.path;
     for (const auto& h : request.headers) {
-      netlib_request << boost::network::header(h.first, h.second);
+      req.headers.emplace(h.first, h.second);
     }
-    if (!request.body.empty()) {
-      netlib_request << boost::network::body(request.body);
+    req.body = request.body;
+
+    const auto result = client_.send(req);
+    if (!result) {
+      throw std::runtime_error(req.method + " " + request.path + " failed: " +
+                               httplib::to_string(result.error()));
     }
-    const client::response netlib_response =
-        (request.method == HttpMethod::POST) ? client_.post(netlib_request)
-                                             : client_.get(netlib_request);
     HttpResponse response;
-    response.status = status(netlib_response);
-    for (const auto& h : headers(netlib_response)) {
+    response.status = result->status;
+    for (const auto& h : result->headers) {
       response.headers.emplace_back(h.first, h.second);
     }
-    response.body = body(netlib_response);
+    response.body = result->body;
     return response;
   }
 
  private:
-  boost::network::http::client client_;
+  httplib::Client client_;
 };
 
 }  // namespace
 
+std::unique_ptr<HttpClient> make_http_client(const std::string& base_url) {
+  return std::make_unique<HttplibHttpClient>(base_url);
+}
+
 std::unique_ptr<HttpClient> make_iem_http_client() {
-  return std::make_unique<NetlibHttpClient>();
+  return make_http_client("https://iem.uiowa.edu");
 }
 
 std::string url_encode(const NameValuePairs& nvs) {

@@ -104,6 +104,7 @@ UniqueSession make_unique_session(const std::string& username,
 const std::vector<OrderBook> _read_orderbooks_html(const std::string& body,
                                                    const Market& market);
 
+std::string _location_path(const std::string& location);
 Price _parse_price(const std::string& px_str);
 
 position_t _parse_quantity(const std::string& qty_str);

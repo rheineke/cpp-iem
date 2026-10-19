@@ -13,16 +13,20 @@ Instructions for coding agents working in cpp-iem, a C++ client for the Iowa Ele
   git submodule update --init --recursive
   docker build --platform linux/arm64 -f docker/debian-trixie.Dockerfile -t cpp-iem:trixie .
   ```
-- The image is reproducible: base image pinned by digest, apt from a fixed snapshot.debian.org
-  date, and cpp-netlib pinned by commit with `docker/patches/` applied. Keep it that way.
+- The image is reproducible: base image pinned by digest and apt from a fixed snapshot.debian.org
+  date. Keep it that way.
 - To run a test binary by hand, use `build/test/iem` as the working directory. Tests read
   `conf/markets.json`, relative to it.
 - The macOS build (Homebrew paths in `CMakeLists.txt`) is unmaintained.
 
 ## Code
-- C++14. In C++17 mode cpp-netlib's headers hit an ambiguous `make_optional`.
+- C++17.
+- HTTP goes through `iem::HttpClient` (`src/iem/http_client.hpp`), implemented with cpp-httplib,
+  a git submodule pinned to a release tag in `deps/cpp-httplib`. Session tests use
+  `test/iem/fake_http_client.hpp`; `http_client_test` runs the real client against a localhost
+  server.
 - Google style via clang-format; CMake via cmake-format. Run `pre-commit run --all-files`.
-- Vendored code is left as upstream wrote it: `deps/` (googletest) and `src/json/`,
+- Vendored code is left as upstream wrote it: `deps/` (googletest, cpp-httplib) and `src/json/`,
   `src/jsoncpp.cpp` (jsoncpp).
 - Tests use googletest, in `test/iem/<name>_test.cpp`; add new ones to `test/iem/CMakeLists.txt`.
 
