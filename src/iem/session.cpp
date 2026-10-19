@@ -2,63 +2,51 @@
 #include "iem/session.hpp"
 
 #include <algorithm>
-#include <numeric>
+#include <iostream>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "boost/algorithm/string/trim.hpp"
 #include "boost/property_tree/xml_parser.hpp"
 
 namespace iem {
 
 using ptree = boost::property_tree::ptree;
-using StringPair = std::pair<std::string, std::string>;
-using StringPairVector = std::vector<StringPair>;
-
 constexpr auto _VAH("viewAssetHoldings");
 
-Session::Session(const std::string& username, const std::string& password)
-    : username_(username), password_(password), cookie_(""), client_() {}
+Session::Session(const std::string& username, const std::string& password,
+                 std::unique_ptr<HttpClient> client)
+    : username_(username),
+      password_(password),
+      cookie_(""),
+      client_(std::move(client)) {}
 
-const std::string url_encode(const std::vector<StringPair>& nvs) {
-  using boost::network::uri::encoded;
-  using std::operator""s;
-
-  auto op = [](const std::string& a, const StringPair& p) {
-    return a.empty() ? encoded(p.first) + '=' + encoded(p.second)
-                     : a + '&' + encoded(p.first) + '=' + encoded(p.second);
-  };
-  return std::accumulate(nvs.begin(), nvs.end(), ""s, op);
-}
-
-ClientRequest buildRequest(const std::string& path,
-                           const StringPairVector& name_value_pairs = {}) {
-  // URI
-  boost::network::uri::uri url;
-  url << boost::network::uri::scheme("https")
-      << boost::network::uri::host("iem.uiowa.edu")
-      << boost::network::uri::path(path);
-
-  ClientRequest request(url);
-
-  // Add default headers
-  using boost::network::header;
+HttpRequest buildRequest(const HttpMethod method, const std::string& path,
+                         const NameValuePairs& name_value_pairs = {}) {
+  HttpRequest request;
+  request.method = method;
+  request.path = path;
   // Python requests default headers
-  request << header("User-Agent", "python-requests/2.10.0")
-          << header("Accept-Encoding", "gzip, deflate")
-          << header("Accept", "*/*");
+  request.headers = {
+      {"User-Agent", "python-requests/2.10.0"},
+      {"Accept-Encoding", "gzip, deflate"},
+      {"Accept", "*/*"},
+  };
 
   // Optional body
   if (name_value_pairs.size()) {
-    const auto body = url_encode(name_value_pairs);
-    request << boost::network::body(body)
-            << header("Content-Length", std::to_string(body.length()))
-            << header("Content-Type", "application/x-www-form-urlencoded");
+    request.body = url_encode(name_value_pairs);
+    request.headers.emplace_back("Content-Length",
+                                 std::to_string(request.body.length()));
+    request.headers.emplace_back("Content-Type",
+                                 "application/x-www-form-urlencoded");
   }
   return request;
 }
 
-const ClientResponse Session::authenticate() {
+const HttpResponse Session::authenticate() {
   auto location = login(false);
   if (location == "") {  // If location is empty string, then login failed
     std::cout << "Login failed; attempting forcing login...\n";
@@ -66,17 +54,17 @@ const ClientResponse Session::authenticate() {
   }
 
   // Market select request
-  auto market_select_request = buildRequest(location);
+  auto market_select_request = buildRequest(HttpMethod::GET, location);
   // Set cookie
-  market_select_request << boost::network::header("Set-Cookie", cookie());
+  market_select_request.headers.emplace_back("Cookie", cookie());
   // GET request
-  return client_.get(market_select_request);
+  return client_->send(market_select_request);
 }
 
 std::string Session::login(const bool force_login) {
   // Login request
   auto login_request = buildRequest(
-      "/iem/trader/TraderLogin.action",
+      HttpMethod::POST, "/iem/trader/TraderLogin.action",
       {
           {"forceLogin", force_login ? "true" : "false"},  // Required
           {"username", this->username()},
@@ -85,10 +73,10 @@ std::string Session::login(const bool force_login) {
           {"_sourcePage", ""},         // Required
       });
   // POST request
-  const auto login_response = client_.post(login_request);
+  const auto login_response = client_->send(login_request);
   // Extract important headers - IEM requests a redirect
   std::string location;
-  for (const auto& h : login_response.headers()) {
+  for (const auto& h : login_response.headers) {
     if (h.first == "Set-Cookie") {
       cookie_ = h.second;
     } else if (h.first == "Location") {
@@ -98,15 +86,16 @@ std::string Session::login(const bool force_login) {
   return location;
 }
 
-const ClientResponse Session::logout() {
+const HttpResponse Session::logout() {
   // Construct request
-  auto logout_request = buildRequest("/iem/trader/TraderLogin.action?logout=");
+  auto logout_request =
+      buildRequest(HttpMethod::GET, "/iem/trader/TraderLogin.action?logout=");
   // Set cookie
-  logout_request << boost::network::header("Cookie", this->cookie());
+  logout_request.headers.emplace_back("Cookie", this->cookie());
   // GET request
-  const auto response = client_.get(logout_request);
+  const auto response = client_->send(logout_request);
   // Set cookie_ to empty string if successful
-  if (status(response) == 200) {
+  if (response.status == 200) {
     this->cookie_ = "";
   }
   return response;
@@ -237,13 +226,13 @@ const std::vector<OrderBook> _read_orderbooks_html(const std::string& body,
 const std::vector<OrderBook> Session::orderbook(const Market& market) {
   // Construct request
   auto market_orderbook_request =
-      buildRequest("/iem/trader/MarketTrader.action",
+      buildRequest(HttpMethod::POST, "/iem/trader/MarketTrader.action",
                    {{"market", std::to_string(market.value())}});
   // Set cookie
-  market_orderbook_request << boost::network::header("Cookie", cookie());
+  market_orderbook_request.headers.emplace_back("Cookie", cookie());
   // POST request
-  const auto& response = client_.post(market_orderbook_request);
-  const auto& obs = _read_orderbooks_html(body(response), market);
+  const auto& response = client_->send(market_orderbook_request);
+  const auto& obs = _read_orderbooks_html(response.body, market);
 
   return obs;
 }
@@ -294,7 +283,7 @@ const std::vector<HoldingMessage> _read_messages_html(const std::string& body) {
 const std::vector<HoldingMessage> Session::holdings(const Contract& contract) {
   // Construct request
   auto asset_holdings_request = buildRequest(
-      "/iem/trader/TraderActivity.action",
+      HttpMethod::POST, "/iem/trader/TraderActivity.action",
       {
           {"market", "contract.market"},
           {"asset", std::to_string(contract.asset_id())},
@@ -302,10 +291,10 @@ const std::vector<HoldingMessage> Session::holdings(const Contract& contract) {
           {_VAH, std::to_string(25)}  // Number of transactions? Required?
       });
   // Set cookie
-  asset_holdings_request << boost::network::header("Cookie", cookie());
+  asset_holdings_request.headers.emplace_back("Cookie", cookie());
   // POST request
-  const auto& response = client_.post(asset_holdings_request);
-  return _read_messages_html(body(response));
+  const auto& response = client_->send(asset_holdings_request);
+  return _read_messages_html(response.body);
 }
 
 const std::string _activity_type(Side side) {
@@ -388,25 +377,25 @@ const SingleOrders Session::outstanding_orders(const Contract& contract,
                                                const Side& side) {
   // Construct request
   auto outstanding_order_request =
-      buildRequest("/iem/trader/TraderActivity.action",
+      buildRequest(HttpMethod::POST, "/iem/trader/TraderActivity.action",
                    {
                        {"market", std::to_string(contract.market().value())},
                        {"asset", std::to_string(contract.asset_id())},
                        {"activityType", _activity_type(side)},
                    });
   // Set cookie
-  outstanding_order_request << boost::network::header("Cookie", cookie());
+  outstanding_order_request.headers.emplace_back("Cookie", cookie());
   // POST request
-  const auto& response = client_.post(outstanding_order_request);
-  return _read_orders_html(body(response));
+  const auto& response = client_->send(outstanding_order_request);
+  return _read_orders_html(response.body);
 }
 
-const ClientRequest limit_order_request(const Single& order) {
+const HttpRequest limit_order_request(const Single& order) {
   using boost::gregorian::to_iso_extended_string;
   // Construct request
   const auto& c = order.contract();
   auto order_request = buildRequest(
-      "/iem/trader/order/LimitOrder.action",
+      HttpMethod::POST, "/iem/trader/order/LimitOrder.action",
       {
           {"limitOrderAssetToMarket", std::to_string(c.asset_to_market_id())},
           {"orderType", _activity_type(order.side())},
@@ -424,11 +413,11 @@ const std::string _market_order_type(Side side) {
   return (side == Side::BUY) ? "buy" : "sell";
 }
 
-const ClientRequest market_order_request(const Single& order) {
+const HttpRequest market_order_request(const Single& order) {
   // Construct request
   const auto& c = order.contract();
   auto order_request = buildRequest(
-      "/iem/trader/order/MarketOrder.action",
+      HttpMethod::POST, "/iem/trader/order/MarketOrder.action",
       {{"limitOrderAssetToMarket", std::to_string(c.asset_to_market_id())},
        {"orderType", _market_order_type(order.side())},
        {"marketOrderQuantity", std::to_string(order.quantity())},
@@ -437,7 +426,7 @@ const ClientRequest market_order_request(const Single& order) {
   return order_request;
 }
 
-const ClientRequest _single_order_request(const Single& order) {
+const HttpRequest _single_order_request(const Single& order) {
   if (order.price_time_limit().ioc()) {
     return market_order_request(order);
   } else {
@@ -445,13 +434,13 @@ const ClientRequest _single_order_request(const Single& order) {
   }
 }
 
-const ClientResponse Session::place_order(const Single& order) {
+const HttpResponse Session::place_order(const Single& order) {
   // Construct request
-  ClientRequest order_request = _single_order_request(order);
+  HttpRequest order_request = _single_order_request(order);
   // Set cookie
-  order_request << boost::network::header("Cookie", cookie());
+  order_request.headers.emplace_back("Cookie", cookie());
   // POST request
-  const auto& response = client_.post(order_request);
+  const auto& response = client_->send(order_request);
   return response;
 }
 
@@ -461,11 +450,11 @@ const std::string _bundle_order_type(const Side& side, const Counterparty& cp) {
   return action_str + "At" + cp_str;
 }
 
-const ClientRequest _bundle_order_request(const Bundle& order) {
+const HttpRequest _bundle_order_request(const Bundle& order) {
   // Construct request
   const auto& cb = order.contract_bundle();
   auto order_request = buildRequest(
-      "/iem/trader/order/BundleOrder.action",
+      HttpMethod::POST, "/iem/trader/order/BundleOrder.action",
       {{"bundle", std::to_string(cb.bundle_id())},
        {"orderType", _bundle_order_type(order.side(), order.counterparty())},
        {"bundleOrderQuantity", std::to_string(order.quantity())},
@@ -474,13 +463,13 @@ const ClientRequest _bundle_order_request(const Bundle& order) {
   return order_request;
 }
 
-const ClientResponse Session::place_order(const Bundle& order) {
+const HttpResponse Session::place_order(const Bundle& order) {
   // Construct request
-  ClientRequest order_request = _bundle_order_request(order);
+  HttpRequest order_request = _bundle_order_request(order);
   // Set cookie
-  order_request << boost::network::header("Cookie", cookie());
+  order_request.headers.emplace_back("Cookie", cookie());
   // POST request
-  const auto& response = client_.post(order_request);
+  const auto& response = client_->send(order_request);
   return response;
 }
 
@@ -488,11 +477,11 @@ const std::string _action(const Side& side) {
   return (side == Side::BUY) ? "cancelBidOrder" : "cancelAskOrder";
 }
 
-const ClientResponse Session::cancel_order(const Single& order) {
+const HttpResponse Session::cancel_order(const Single& order) {
   // Construct request
   if (valid_id(order)) {
     // Return something useful
-    return ClientResponse();
+    return HttpResponse{};
   }
 
   const auto oid = (order.side() == Side::BUY) ? "bidOrder" : "askOrder";
@@ -502,11 +491,12 @@ const ClientResponse Session::cancel_order(const Single& order) {
                   {oid, std::to_string(order.id())},
                   {"asset", std::to_string(order.contract().asset_id())},
                   {"activityType", _activity_type(order.side())}});
-  auto cxl_request = buildRequest("/iem/trader/TraderActivity.action?" + cxl);
+  auto cxl_request =
+      buildRequest(HttpMethod::GET, "/iem/trader/TraderActivity.action?" + cxl);
   // Set cookie
-  cxl_request << boost::network::header("Cookie", this->cookie());
+  cxl_request.headers.emplace_back("Cookie", this->cookie());
   // POST request
-  const auto& response = client_.get(cxl_request);
+  const auto& response = client_->send(cxl_request);
   return response;
 }
 
@@ -565,15 +555,15 @@ const std::vector<TraderMessage> Session::messages(const Market& market) {
   // Construct request
   const auto request = market_client_request(market, "home");
   // GET request
-  const auto& response = client_.get(request);
-  return _read_messages_html(market, body(response));
+  const auto& response = client_->send(request);
+  return _read_messages_html(market, response.body);
 }
 
-const auto Session::remove_messages(const Market& market) {
+const HttpResponse Session::remove_messages(const Market& market) {
   // Construct request
   const auto request = market_client_request(market, "removeMessages");
   // GET request
-  const auto& response = client_.get(request);
+  const auto& response = client_->send(request);
   return response;
 }
 
@@ -581,17 +571,18 @@ const std::vector<TraderMessage> Session::portfolio(const Market& market) {
   // Construct request
   const auto request = market_client_request(market, "viewPortfolio");
   // GET request
-  const auto& response = client_.get(request);
-  return _read_messages_html(market, body(response));
+  const auto& response = client_->send(request);
+  return _read_messages_html(market, response.body);
 }
 
-ClientRequest Session::market_client_request(const Market& market,
-                                             const std::string& query) {
+HttpRequest Session::market_client_request(const Market& market,
+                                           const std::string& query) {
   // Construct request
   const auto msg =
       url_encode({{query, ""}, {"market", std::to_string(market.value())}});
-  auto request = buildRequest("/iem/trader/TraderMessages.action?" + msg);
-  request << boost::network::header("Cookie", this->cookie());
+  auto request =
+      buildRequest(HttpMethod::GET, "/iem/trader/TraderMessages.action?" + msg);
+  request.headers.emplace_back("Cookie", this->cookie());
   return request;
 }
 

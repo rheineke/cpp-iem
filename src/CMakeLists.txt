@@ -17,6 +17,8 @@ add_library(
     iem/event_strategy.cpp
     iem/fatfinger_strategy.hpp
     iem/fatfinger_strategy.cpp
+    iem/http_client.hpp
+    iem/http_client.cpp
     iem/logger.hpp
     iem/logger.cpp
     iem/message.hpp
