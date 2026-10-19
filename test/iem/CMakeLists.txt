@@ -7,6 +7,7 @@ include_directories(${OPENSSL_INCLUDE_DIR} ${CPP-IEM_SOURCE_DIR}/src
 set(TESTS
     config_test
     contract_test
+    credentials_test
     event_strategy_test
     http_client_test
     message_test

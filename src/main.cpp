@@ -1,40 +1,21 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
 #include <algorithm>
 #include <chrono>
-#include <fstream>
 #include <iostream>
 #include <thread>
 
+#include "iem/credentials.hpp"
 #include "iem/logger.hpp"
 #include "iem/orderbook.hpp"
 #include "iem/session.hpp"
-
-using LoginCreds = std::pair<std::string, std::string>;
-
-LoginCreds _read_login_credentials(char const* filename = "conf/login.json") {
-  // Open file in binary mode
-  Json::Value root;
-  std::ifstream config_doc(filename, std::ifstream::binary);
-  config_doc >> root;
-  // Read username and password
-  const auto username = root.get("username", "").asString();
-  const auto password = root.get("password", "").asString();
-  // Return as pair
-  return {username, password};
-}
-
-LoginCreds read_login_credentials(int argc, char* argv[]) {
-  return (argc == 2) ? _read_login_credentials(argv[1])
-                     : _read_login_credentials();
-}
 
 int _main(int argc, char* argv[]) {
   using std::chrono::duration_cast;
   using std::chrono::high_resolution_clock;
 
-  const auto login = read_login_credentials(argc, argv);
+  const auto login = iem::credentials_from_env();
 
-  iem::Session session(login.first, login.second);
+  iem::Session session(login.username, login.password);
   std::cout << "Logging in...\n";
   session.authenticate();
   // Print session after authentication
@@ -119,9 +100,9 @@ int _main(int argc, char* argv[]) {
 }
 
 int _main2(int argc, char* argv[]) {
-  const auto login = read_login_credentials(argc, argv);
+  const auto login = iem::credentials_from_env();
 
-  auto session_p = new iem::Session(login.first, login.second);
+  auto session_p = new iem::Session(login.username, login.password);
 
   std::cout << "Logging in...\n";
 
@@ -161,7 +142,12 @@ int _main2(int argc, char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
-  return _main2(argc, argv);
+  try {
+    return _main2(argc, argv);
+  } catch (const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    return EXIT_FAILURE;
+  }
 
   //  iem::Market mkt("FedPolicyB");
   //  std::cout << mkt.value() << std::endl;

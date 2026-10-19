@@ -13,6 +13,8 @@ add_library(
     iem/config.cpp
     iem/contract.hpp
     iem/contract.cpp
+    iem/credentials.hpp
+    iem/credentials.cpp
     iem/event_strategy.hpp
     iem/event_strategy.cpp
     iem/fatfinger_strategy.hpp

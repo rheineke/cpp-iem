@@ -20,6 +20,19 @@ Instructions for macOS 10.12 (Sierra) using [HomeBrew]:
 [Iowa Electronic Markets]: https://iem.uiowa.edu/iem/
 [waf]: https://waf.io/
 
+## IEM login
+`CPP-IEM` reads the login from `IEM_USERNAME` and `IEM_PASSWORD`. Keep the password in a secret
+store, not a file. With the macOS Keychain:
+```shell
+security add-generic-password -s cpp-iem -a "<username>" -w   # prompts for the password
+IEM_USERNAME="<username>" \
+IEM_PASSWORD="$(security find-generic-password -s cpp-iem -w)" ./CPP-IEM
+```
+Or with the 1Password CLI, from an item called IEM:
+```shell
+IEM_USERNAME=op://Private/IEM/username IEM_PASSWORD=op://Private/IEM/password op run -- ./CPP-IEM
+```
+
 ## Pre-commit hooks
 Whitespace and file checks, gitleaks, clang-format (Google style) and cmake-format/cmake-lint.
 Vendored code (`deps/`, jsoncpp) is excluded.
