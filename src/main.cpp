@@ -39,7 +39,7 @@ int _main(int argc, char* argv[]) {
   session.authenticate();
   // Print session after authentication
   iem::Logger logger;
-  iem::snprintf_session(logger.getBuffer(), session);
+  iem::snprintf_session(logger.getBuffer(), iem::Logger::kBufferSize, session);
   logger.log();
 
   // FedPolicyB market
@@ -131,7 +131,8 @@ int _main2(int argc, char* argv[]) {
 
   // Print session after authentication
   iem::Logger logger;
-  iem::snprintf_session(logger.getBuffer(), *session_p);
+  iem::snprintf_session(logger.getBuffer(), iem::Logger::kBufferSize,
+                        *session_p);
   logger.log();
 
   // Find all active markets and retrieve their markets concurrently

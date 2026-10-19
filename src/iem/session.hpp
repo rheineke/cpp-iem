@@ -91,7 +91,9 @@ class Session {
 };
 
 // snprintf function for a session object
-int snprintf_session(char* const str, const Session& s);
+// Writes the username and whether the session is logged in, as JSON, into
+// str (size bytes). The password and cookie are never written.
+int snprintf_session(char* const str, const std::size_t size, const Session& s);
 
 // Unique session with a custom deleter to automatically log out
 using UniqueSession =
