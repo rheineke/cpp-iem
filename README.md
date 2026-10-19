@@ -7,7 +7,8 @@ strategy on the [Iowa Electronic Markets] exchange.
 
 Instructions for macOS 10.12 (Sierra) using [HomeBrew]:
 * Install [HomeBrew]: `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-* Install brew packages: `brew install wget openssl cmake boost homebrew/boneyard/cpp-netlib`
+* Install brew packages: `brew install wget openssl@3 cmake boost` (untested since the move to
+  cpp-httplib; the Docker build below is the supported one)
 * Download cpp-iem: `git clone --recursive -j4 https://github.com/rheineke/cpp-iem.git`
 * Build cpp-iem: `cd cpp-iem & CMAKE_C_COMPILER=clang CMAKE_CXX_COMPILER=clang++ ./build-cmake.sh`
 
@@ -30,9 +31,9 @@ pre-commit run --all-files
 
 ## Linux arm64 build (Docker)
 A reproducible build on a digest-pinned Debian 13 (trixie) image. Packages come from a fixed
-snapshot.debian.org date with pinned versions (Boost 1.83, OpenSSL 3, CMake, GCC 14), and
-cpp-netlib 0.13.0 is built from a pinned commit with `docker/patches/` applied for Boost 1.83.
-The build runs the tests, and CI runs it on every pull request.
+snapshot.debian.org date with pinned versions (Boost 1.83, OpenSSL 3, zlib, CMake, GCC 14).
+The HTTP client, [cpp-httplib](https://github.com/yhirose/cpp-httplib), is a git submodule pinned
+to a release tag. The build runs the tests, and CI runs it on every pull request.
 ```shell
 git submodule update --init --recursive
 docker build --platform linux/arm64 -f docker/debian-trixie.Dockerfile -t cpp-iem:trixie .
