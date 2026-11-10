@@ -144,7 +144,7 @@ boost::posix_time::ptime date_from_string(const std::string& str) {
 }
 
 boost::posix_time::ptime expiration_date_from_string(const std::string& str) {
-  if (str == "") {  // No expiration
+  if (str.empty()) {  // No expiration
     return boost::posix_time::not_a_date_time;
   }
 

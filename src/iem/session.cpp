@@ -3,7 +3,10 @@
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
+#include <optional>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -15,14 +18,11 @@
 namespace iem {
 
 using ptree = boost::property_tree::ptree;
-constexpr auto _VAH("viewAssetHoldings");
+constexpr auto kViewAssetHoldings("viewAssetHoldings");
 
 Session::Session(const std::string& username, const std::string& password,
                  std::unique_ptr<HttpClient> client)
-    : username_(username),
-      password_(password),
-      cookie_(""),
-      client_(std::move(client)) {}
+    : username_(username), password_(password), client_(std::move(client)) {}
 
 HttpRequest buildRequest(const HttpMethod method, const std::string& path,
                          const NameValuePairs& name_value_pairs = {}) {
@@ -37,7 +37,7 @@ HttpRequest buildRequest(const HttpMethod method, const std::string& path,
   };
 
   // Optional body
-  if (name_value_pairs.size()) {
+  if (!name_value_pairs.empty()) {
     request.body = url_encode(name_value_pairs);
     request.headers.emplace_back("Content-Length",
                                  std::to_string(request.body.length()));
@@ -49,7 +49,7 @@ HttpRequest buildRequest(const HttpMethod method, const std::string& path,
 
 const HttpResponse Session::authenticate() {
   auto location = login(false);
-  if (location == "") {  // If location is empty string, then login failed
+  if (location.empty()) {  // If location is empty string, then login failed
     std::cout << "Login failed; attempting forcing login...\n";
     location = login(true);  // Force login
   }
@@ -121,7 +121,7 @@ const HttpResponse Session::logout() {
 }
 
 Price _parse_price(const std::string& px_str) {
-  if (px_str.size()) {
+  if (!px_str.empty()) {
     std::istringstream iss(px_str);
     Price p;
     iss >> p;
@@ -131,7 +131,7 @@ Price _parse_price(const std::string& px_str) {
 }
 
 position_t _parse_quantity(const std::string& qty_str) {
-  if (qty_str.size()) {
+  if (!qty_str.empty()) {
     return std::stoi(qty_str);
   }
   return 0;
@@ -151,7 +151,7 @@ unsigned int num_open_orders(ptree::const_assoc_iterator it) {
     // viewAssetHoldings input
     auto input_its = obo_form.equal_range("input");
     for (auto it = input_its.first; it != input_its.second; it++) {
-      if (it->second.get<std::string>("<xmlattr>.name") == _VAH) {
+      if (it->second.get<std::string>("<xmlattr>.name") == kViewAssetHoldings) {
         value = it->second.get<std::string>("<xmlattr>.value");
       }
     }
@@ -162,16 +162,16 @@ unsigned int num_open_orders(ptree::const_assoc_iterator it) {
 
 const OrderBook _read_orderbook_html(ptree::const_assoc_iterator tr_it,
                                      const Market& market) {
-  // Orderbook values
+  // Orderbook values. A missing cell means no price, priority or orders.
   std::string contract_name;
   Price best_bid_px;
-  bool best_bid_priority;
+  bool best_bid_priority = false;
   Price best_ask_px;
-  bool best_ask_priority;
+  bool best_ask_priority = false;
   Price last_trade_px;
-  position_t position;
-  unsigned int num_open_bid_orders;
-  unsigned int num_open_ask_orders;
+  position_t position = 0;
+  unsigned int num_open_bid_orders = 0;
+  unsigned int num_open_ask_orders = 0;
 
   auto td_its = tr_it->second.equal_range("td");
   constexpr auto c("contract");
@@ -185,12 +185,12 @@ const OrderBook _read_orderbook_html(ptree::const_assoc_iterator tr_it,
       auto data = it->second.get_child("p").data();
       boost::trim(data);
       best_bid_px = _parse_price(data);
-      best_bid_priority = data.find("*") != std::string::npos;
+      best_bid_priority = data.find('*') != std::string::npos;
     } else if (klass == "change-cell bestAskPrice") {  // Best ask price
       auto data = it->second.get_child("p").data();
       boost::trim(data);
       best_ask_px = _parse_price(data);
-      best_ask_priority = data.find("*") != std::string::npos;
+      best_ask_priority = data.find('*') != std::string::npos;
     } else if (klass == "change-cell lastPrice") {  // Last trade price
       auto data = it->second.get_child("p").data();
       boost::trim(data);
@@ -260,7 +260,7 @@ const HoldingMessage _read_message_html(ptree::const_assoc_iterator tr_it) {
   // Trader message values
   boost::posix_time::ptime date;
   std::string market_label;
-  Action action;
+  std::optional<Action> action;
   Quantity quantity = 0;
   Price price;
 
@@ -285,7 +285,10 @@ const HoldingMessage _read_message_html(ptree::const_assoc_iterator tr_it) {
     i++;
   }
 
-  return HoldingMessage(date, market_label, action, quantity, price);
+  if (!action) {
+    throw std::invalid_argument("Holdings row has no action");
+  }
+  return HoldingMessage(date, market_label, *action, quantity, price);
 }
 
 const std::vector<HoldingMessage> _read_messages_html(const std::string& body) {
@@ -301,14 +304,13 @@ const std::vector<HoldingMessage> _read_messages_html(const std::string& body) {
 
 const std::vector<HoldingMessage> Session::holdings(const Contract& contract) {
   // Construct request
-  auto asset_holdings_request = buildRequest(
-      HttpMethod::POST, "/iem/trader/TraderActivity.action",
-      {
-          {"market", "contract.market"},
-          {"asset", std::to_string(contract.asset_id())},
-          {"activityType", "holdings"},
-          {_VAH, std::to_string(25)}  // Number of transactions? Required?
-      });
+  auto asset_holdings_request =
+      buildRequest(HttpMethod::POST, "/iem/trader/TraderActivity.action",
+                   {{"market", "contract.market"},
+                    {"asset", std::to_string(contract.asset_id())},
+                    {"activityType", "holdings"},
+                    // Number of transactions? Required?
+                    {kViewAssetHoldings, std::to_string(25)}});
   // Set cookie
   asset_holdings_request.headers.emplace_back("Cookie", cookie());
   // POST request
@@ -333,7 +335,7 @@ const Side _side_from_string(const std::string& side_str) {
 OrderId _order_id(const std::string& href_str, const Side& side) {
   const std::string& key = (side == Side::BUY) ? "bidOrder=" : "askOrder=";
   const size_t pos = href_str.find(key) + key.size();
-  const size_t len = href_str.find("&", pos) - pos;
+  const size_t len = href_str.find('&', pos) - pos;
   return std::stoi(href_str.substr(pos, len));
 }
 
@@ -346,7 +348,7 @@ const Single _read_order_html(const ptree::const_assoc_iterator tr_it) {
   Quantity quantity = 0;
   Price price;
   boost::posix_time::ptime expiration;
-  OrderId order_id;
+  OrderId order_id = std::numeric_limits<OrderId>::lowest();
 
   auto td_its = tr_it->second.equal_range("td");
   int i = 0;
@@ -523,9 +525,9 @@ const TraderMessage _read_message_html(const std::string& market_name,
                                        ptree::const_assoc_iterator tr_it) {
   // Trader message values
   boost::posix_time::ptime date;
-  MessageType msg_type;
+  std::optional<MessageType> msg_type;
   std::string contract_name;
-  Action action;
+  std::optional<Action> action;
   Quantity quantity = 0;
   Price price;
   boost::posix_time::ptime expiration_date;
@@ -554,7 +556,10 @@ const TraderMessage _read_message_html(const std::string& market_name,
     i++;
   }
 
-  return TraderMessage(date, msg_type, contract_name, action, quantity, price,
+  if (!msg_type || !action) {
+    throw std::invalid_argument("Trader message row has no type or action");
+  }
+  return TraderMessage(date, *msg_type, contract_name, *action, quantity, price,
                        expiration_date);
 }
 

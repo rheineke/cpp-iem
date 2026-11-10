@@ -70,7 +70,7 @@ const Json::Value asset_value(const Json::Value& json_root,
 }
 
 boost::gregorian::date from_simple_string(const std::string& s) {
-  if (s == "") {
+  if (s.empty()) {
     return boost::gregorian::date(boost::gregorian::not_a_date_time);
   }
   return boost::gregorian::from_simple_string(s);
@@ -82,26 +82,26 @@ bool active_bundle(const Json::Value& bundle_value,
   const date nad(boost::gregorian::not_a_date_time);
 
   // Date is after open date
-  const auto open_date_value = bundle_value["open_date"];
+  const auto& open_date_value = bundle_value["open_date"];
 
   date open_date(boost::gregorian::not_a_date_time);
   if (!open_date_value.isNull()) {
     open_date = from_simple_string(open_date_value.asString());
   }
 
-  const bool opened_after = (open_date == nad) | (open_date <= current_date);
+  const bool opened_after = (open_date == nad) || (open_date <= current_date);
 
   // Date is before liquidation date
-  const auto liquidation_date_value = bundle_value["liquidation_date"];
+  const auto& liquidation_date_value = bundle_value["liquidation_date"];
 
   date liq_date(boost::gregorian::not_a_date_time);
   if (!liquidation_date_value.isNull()) {
     liq_date = from_simple_string(liquidation_date_value.asString());
   }
 
-  const bool liquidated_after = (liq_date == nad) | (liq_date >= current_date);
+  const bool liquidated_after = (liq_date == nad) || (liq_date >= current_date);
 
-  return opened_after & liquidated_after;
+  return opened_after && liquidated_after;
 }
 
 }  // namespace iem

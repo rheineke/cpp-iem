@@ -1,6 +1,7 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/order.hpp"
 
+#include <type_traits>
 #include <typeindex>
 
 #include "gtest/gtest.h"
@@ -25,6 +26,14 @@ TEST(OrderTest, Constructor) {
 
   const ContractBundle cb(mkt_name, MonthYear(boost::date_time::Nov, 16));
   EXPECT_NO_THROW(Bundle(cb, Side::BUY, 1, Counterparty::EXCHANGE));
+}
+
+TEST(OrderTest, DestroyedThroughBase) {
+  // Orders holds Single and Bundle as std::unique_ptr<Order>
+  EXPECT_TRUE(std::has_virtual_destructor_v<Order>);
+  // The virtual destructor keeps the defaulted moves
+  EXPECT_TRUE(std::is_nothrow_move_constructible_v<Single>);
+  EXPECT_TRUE(std::is_nothrow_move_assignable_v<Single>);
 }
 
 }  // namespace iem
