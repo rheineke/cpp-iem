@@ -5,6 +5,7 @@ include_directories(${OPENSSL_INCLUDE_DIR} ${CPP-IEM_SOURCE_DIR}/src
                     ${gtest_SOURCE_DIR}/include)
 
 set(TESTS
+    build_test
     config_test
     contract_test
     credentials_test
