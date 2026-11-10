@@ -46,8 +46,11 @@ pre-commit run --all-files
 A reproducible build on a digest-pinned Debian 13 (trixie) image. Packages come from a fixed
 snapshot.debian.org date with pinned versions (Boost 1.83, OpenSSL 3, zlib, CMake, GCC 14).
 The HTTP client, [cpp-httplib](https://github.com/yhirose/cpp-httplib), is a git submodule pinned
-to a release tag. The build runs the tests, and CI runs it on every pull request.
+to a release tag. The build runs the tests, then the static analysis: clang-tidy (checks in
+`.clang-tidy`) and cppcheck, where any finding fails the build. CI runs it on every pull request.
 ```shell
 git submodule update --init --recursive
 docker build --platform linux/arm64 -f docker/debian-trixie.Dockerfile -t cpp-iem:trixie .
+# Tests only
+docker build --platform linux/arm64 -f docker/debian-trixie.Dockerfile --target test .
 ```

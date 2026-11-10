@@ -29,9 +29,10 @@ class Market final {
  public:
   // Constructor requires a valid market name, and optionally a JSON config file
   // that defines all valid markets and their attributes
-  Market(const std::string& name, char const* filename = kDefaultFilename);
+  explicit Market(const std::string& name,
+                  char const* filename = kDefaultFilename);
 
-  inline const std::string name() const noexcept { return name_; }
+  inline const std::string& name() const noexcept { return name_; }
   // Unique numeric id provided by IEM
   inline MarketId value() const noexcept { return value_; }
 

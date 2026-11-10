@@ -7,7 +7,6 @@ Orders event_orders(const Event& event, const Quantity qty) {
   Orders os;
 
   const std::string mkt_name("FedPolicyB");
-  const std::string expiry_str("1116");
   const auto itm_asset_name = "FRsame1116";
   const auto exp_ptime(read_expiration_ptime(mkt_name, itm_asset_name));
 

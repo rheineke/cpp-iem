@@ -1,6 +1,12 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/session.hpp"
 
+#include <limits>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <utility>
+
 #include "boost/property_tree/xml_parser.hpp"
 #include "fake_http_client.hpp"
 #include "gtest/gtest.h"
@@ -455,6 +461,73 @@ TEST(SessionTest, ReadTradeMessageHTML) {
   const auto tbody = pt.get_child("table.tbody");
   const auto tr_its = tbody.equal_range("tr");
   EXPECT_EQ(std::distance(tr_its.first, tr_its.second), 1);
+}
+
+TEST(SessionTest, StringsAreNotCopied) {
+  const Session s("foo", "bar");
+  EXPECT_TRUE((std::is_same_v<decltype(s.username()), const std::string&>));
+  EXPECT_TRUE((std::is_same_v<decltype(s.password()), const std::string&>));
+  EXPECT_TRUE((std::is_same_v<decltype(s.cookie()), const std::string&>));
+}
+
+// A table with one row and the given cells
+std::string one_row_page(const std::string& cells) {
+  return "<html><body><table class=\"table\"><tbody><tr>" + cells +
+         "</tr></tbody></table></body></html>";
+}
+
+TEST(SessionTest, OrderBookRowWithMissingCells) {
+  FakeServer server;
+  auto s = logged_in_session(&server);
+  server.responses = {
+      ok(one_row_page(R"(<td class="contract">FRup1216</td>)"))};
+
+  const auto obs = s.orderbook(Market("FedPolicyB"));
+
+  // Missing cells read as no price, no priority and no orders
+  ASSERT_EQ(obs.size(), 1u);
+  EXPECT_EQ(obs[0].best_price(Side::BUY), nanPrice());
+  EXPECT_FALSE(obs[0].best_price_priority(Side::BUY));
+  EXPECT_EQ(obs[0].best_price(Side::SELL), nanPrice());
+  EXPECT_FALSE(obs[0].best_price_priority(Side::SELL));
+  EXPECT_EQ(obs[0].last_trade(), nanPrice());
+  EXPECT_EQ(obs[0].position(), 0);
+  EXPECT_EQ(obs[0].num_orders(Side::BUY), 0u);
+  EXPECT_EQ(obs[0].num_orders(Side::SELL), 0u);
+}
+
+TEST(SessionTest, OutstandingOrderWithoutIdCell) {
+  FakeServer server;
+  auto s = logged_in_session(&server);
+  server.responses = {
+      ok(one_row_page("<td>2016-11-02 20:30:54.257</td><td>FedPolicyB</td>"
+                      "<td>FRup1216</td><td>bid</td><td>1.000000</td>"
+                      "<td>0.001000</td><td></td>"))};
+
+  const auto orders =
+      s.outstanding_orders(Contract("FedPolicyB", "FRup1216"), Side::BUY);
+
+  ASSERT_EQ(orders.size(), 1u);
+  EXPECT_EQ(orders[0].id(), std::numeric_limits<OrderId>::lowest());
+}
+
+TEST(SessionTest, HoldingsRowWithoutActionThrows) {
+  FakeServer server;
+  auto s = logged_in_session(&server);
+  server.responses = {
+      ok(one_row_page("<td>2016-11-03 10:15:00.000</td><td>FedPolicyB</td>"))};
+
+  EXPECT_THROW(s.holdings(Contract("FedPolicyB", "FRsame1216")),
+               std::invalid_argument);
+}
+
+TEST(SessionTest, MessagesRowWithoutActionThrows) {
+  FakeServer server;
+  auto s = logged_in_session(&server);
+  server.responses = {
+      ok(one_row_page("<td>2016-11-04 09:00:00.000</td><td>Order</td>"))};
+
+  EXPECT_THROW(s.messages(Market("FedPolicyB")), std::invalid_argument);
 }
 
 }  // namespace iem

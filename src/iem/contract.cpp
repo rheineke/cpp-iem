@@ -6,8 +6,9 @@
 
 namespace iem {
 
-std::ostream& operator<<(std::ostream& os, const MonthYear& my) {
-  return os << "(" << my.first << ", " << static_cast<int>(my.second) << ")";
+std::ostream& operator<<(std::ostream& os, const MonthYear& month_year) {
+  return os << "(" << month_year.first << ", "
+            << static_cast<int>(month_year.second) << ")";
 }
 
 int _read_market_value(const std::string& name, char const* filename) {

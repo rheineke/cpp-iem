@@ -9,7 +9,7 @@
 #include "iem/orderbook.hpp"
 #include "iem/session.hpp"
 
-int _main(int argc, char* argv[]) {
+int messages_example(int argc, char* argv[]) {
   using std::chrono::duration_cast;
   using std::chrono::high_resolution_clock;
 
@@ -99,7 +99,7 @@ int _main(int argc, char* argv[]) {
   return return_value;
 }
 
-int _main2(int argc, char* argv[]) {
+int orderbook_example(int argc, char* argv[]) {
   const auto login = iem::credentials_from_env();
 
   auto session_p = new iem::Session(login.username, login.password);
@@ -132,8 +132,7 @@ int _main2(int argc, char* argv[]) {
   }
 
   // Logout after logging in
-  std::cout << session_p->cookie() << std::endl;
-  std::cout << "Logging out..." << std::endl;
+  std::cout << "Logging out...\n";
   const auto snd_logout_response = session_p->logout();
   std::cout << snd_logout_response.status << '\n';
   std::cout << snd_logout_response.body << '\n';
@@ -143,7 +142,7 @@ int _main2(int argc, char* argv[]) {
 
 int main(int argc, char* argv[]) {
   try {
-    return _main2(argc, argv);
+    return orderbook_example(argc, argv);
   } catch (const std::exception& e) {
     std::cerr << e.what() << '\n';
     return EXIT_FAILURE;

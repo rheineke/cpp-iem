@@ -37,9 +37,9 @@ class Session {
   //    }
   //  }
 
-  inline const std::string username() const { return username_; }
-  inline const std::string password() const { return password_; }
-  inline const std::string cookie() const { return cookie_; }
+  inline const std::string& username() const { return username_; }
+  inline const std::string& password() const { return password_; }
+  inline const std::string& cookie() const { return cookie_; }
 
   // Request a session cookie. This must be called before any other session
   // calls. If a valid session exists, then this method will request a session

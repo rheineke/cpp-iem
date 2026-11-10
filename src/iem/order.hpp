@@ -27,6 +27,9 @@ std::ostream& operator<<(std::ostream& os, const Counterparty& cp);
 // and a bundle of contracts order
 class Order {
  public:
+  // Virtual: Orders hold Single and Bundle through std::unique_ptr<Order>
+  virtual ~Order() = default;
+
   inline Side side() const noexcept { return side_; }
   inline Quantity quantity() const noexcept { return quantity_; }
   inline const PriceTimeLimit price_time_limit() const {
@@ -40,6 +43,11 @@ class Order {
   Order(const Side& side, const Quantity quantity,
         const PriceTimeLimit& price_time_limit,
         const Counterparty& counterparty);
+  // Copy and move only as part of a Single or Bundle, never sliced
+  Order(const Order&) = default;
+  Order(Order&&) = default;
+  Order& operator=(const Order&) = default;
+  Order& operator=(Order&&) = default;
 
  private:
   Side side_;

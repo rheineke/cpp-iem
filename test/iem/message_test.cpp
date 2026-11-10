@@ -2,6 +2,9 @@
 
 #include "iem/message.hpp"
 
+#include <string>
+#include <type_traits>
+
 #include "gtest/gtest.h"
 
 namespace iem {
@@ -54,6 +57,24 @@ TEST(TraderMessageTest, TradeMessageDateFromString) {
   EXPECT_EQ(dt, expected_dt);
 }
 
-TEST(TraderMessageTest, Quantity) { EXPECT_NO_THROW(std::stoi("1.000000")); }
+TEST(TraderMessageTest, Quantity) { EXPECT_EQ(std::stoi("1.000000"), 1); }
+
+TEST(TraderMessageTest, NoExpiration) {
+  EXPECT_TRUE(expiration_date_from_string("").is_not_a_date_time());
+}
+
+TEST(TraderMessageTest, StringsAreNotCopied) {
+  const auto date = date_from_string("2016-11-04 09:00:00.000");
+  const TraderMessage tm(date, MessageType::ORDER, "FRsame1216",
+                         Action::BID_ENTERED, 2, Price(500),
+                         boost::posix_time::not_a_date_time);
+  EXPECT_TRUE((std::is_same_v<decltype(tm.contract()), const std::string&>));
+  EXPECT_EQ(tm.contract(), "FRsame1216");
+
+  const HoldingMessage hm(date, "FedPolicyB", Action::BUY, 5, Price(950));
+  EXPECT_TRUE(
+      (std::is_same_v<decltype(hm.market_label()), const std::string&>));
+  EXPECT_EQ(hm.market_label(), "FedPolicyB");
+}
 
 }  // namespace iem

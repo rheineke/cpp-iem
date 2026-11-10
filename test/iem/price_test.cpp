@@ -3,6 +3,9 @@
 #include "iem/price.hpp"
 
 #include <map>
+#include <sstream>
+#include <stdexcept>
+#include <string>
 
 #include "gtest/gtest.h"
 
@@ -21,6 +24,17 @@ TEST(PriceTest, NoThrowMovable) {
 
 TEST(PriceTest, ConstructorException) {
   ASSERT_THROW(Price(NanTick - 1), std::invalid_argument);
+}
+
+TEST(PriceTest, ConstructorExceptionMessage) {
+  try {
+    Price(1001);
+    FAIL() << "Expected std::invalid_argument";
+  } catch (const std::invalid_argument& e) {
+    EXPECT_EQ(std::string(e.what()), "Expected price in ticks [" +
+                                         std::to_string(NanTick) +
+                                         ", 1000] but received 1001");
+  }
 }
 
 TEST(PriceTest, MethodTicksSetsCorrectly) {
@@ -52,6 +66,28 @@ TEST(PriceTest, SessionStringFormat) {
     // Test to_string
     EXPECT_EQ(to_string(it.first), it.second);
   }
+}
+
+TEST(PriceTest, StreamOutput) {
+  std::ostringstream os;
+  os << Price(12) << ' ' << Price();
+  EXPECT_EQ(os.str(), "0.012 ----");
+}
+
+TEST(PriceTest, StreamInput) {
+  Price p;
+  std::istringstream("0.250") >> p;
+  EXPECT_EQ(p, Price(250));
+  std::istringstream("-") >> p;
+  EXPECT_EQ(p, nanPrice());
+}
+
+TEST(PriceTest, StreamInputFromEmptyStream) {
+  Price p(5);
+  std::istringstream is("");
+  is >> p;
+  EXPECT_TRUE(is.fail());
+  EXPECT_EQ(p, Price(5));
 }
 
 }  // namespace iem

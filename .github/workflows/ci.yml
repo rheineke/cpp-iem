@@ -14,4 +14,7 @@ jobs:
         with:
           submodules: recursive
       - name: Build and test in Debian trixie
+        run: docker build --platform linux/arm64 -f docker/debian-trixie.Dockerfile --target test .
+      # Reuses the build above: clang-tidy and cppcheck
+      - name: Static analysis
         run: docker build --platform linux/arm64 -f docker/debian-trixie.Dockerfile -t cpp-iem:trixie .

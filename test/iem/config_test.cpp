@@ -77,4 +77,14 @@ TEST(ConfigTest, ActiveBundle) {
   EXPECT_FALSE(active_bundle(dec16_bundle_val, dt));
 }
 
+TEST(ConfigTest, ActiveBundleWithoutDates) {
+  // No open or liquidation date: active on any date
+  const Json::Value bundle(Json::objectValue);
+  EXPECT_TRUE(active_bundle(bundle, boost::gregorian::date(2016, 12, 30)));
+}
+
+TEST(ConfigTest, EmptyDateString) {
+  EXPECT_TRUE(from_simple_string("").is_not_a_date());
+}
+
 }  // namespace iem

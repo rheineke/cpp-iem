@@ -8,7 +8,8 @@ Instructions for coding agents working in cpp-iem, a C++ client for the Iowa Ele
   never more than 120 words or 3 paragraphs.
 
 ## Build and test
-- The supported build is Linux arm64 in Docker. It runs the tests, as CI does:
+- The supported build is Linux arm64 in Docker. It runs the tests, then the static analysis
+  (`lint` stage), as CI does. Add `--target test` to skip the static analysis.
   ```shell
   git submodule update --init --recursive
   docker build --platform linux/arm64 -f docker/debian-trixie.Dockerfile -t cpp-iem:trixie .
@@ -26,6 +27,9 @@ Instructions for coding agents working in cpp-iem, a C++ client for the Iowa Ele
   `test/iem/fake_http_client.hpp`; `http_client_test` runs the real client against a localhost
   server.
 - Google style via clang-format; CMake via cmake-format. Run `pre-commit run --all-files`.
+- Static analysis: clang-tidy (checks in `.clang-tidy`, compiler warnings included) and cppcheck.
+  Fix findings rather than suppressing them. A needed suppression goes on the line, with the
+  reason: `// NOLINT(<check>): <why>` or `// cppcheck-suppress <id>`.
 - Vendored code is left as upstream wrote it: `deps/` (googletest, cpp-httplib) and `src/json/`,
   `src/jsoncpp.cpp` (jsoncpp).
 - Tests use googletest, in `test/iem/<name>_test.cpp`; add new ones to `test/iem/CMakeLists.txt`.

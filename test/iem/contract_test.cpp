@@ -1,7 +1,9 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/contract.hpp"
 
+#include <sstream>
 #include <string>
+#include <type_traits>
 
 #include "gtest/gtest.h"
 
@@ -37,7 +39,7 @@ TEST(ContractTest, ContractBundle) {
     // Expected market object
     const auto expected_market = Market(name);
 
-    const auto bundle_id_value = bundles_value["bundle_id"];
+    const auto& bundle_id_value = bundles_value["bundle_id"];
     if (bundle_id_value.isNull()) {
       // Market has at least one expiration; iterate through all
       for (const auto& bundle_exp : bundles_value.getMemberNames()) {
@@ -72,6 +74,23 @@ TEST(ContractTest, Contract) {
       EXPECT_EQ(c.asset_id(), assets_value[contract_name]["id"].asInt());
     }
   }
+}
+
+TEST(ContractTest, MarketIsExplicit) {
+  EXPECT_FALSE((std::is_convertible_v<std::string, Market>));
+  EXPECT_TRUE((std::is_constructible_v<Market, std::string>));
+}
+
+TEST(ContractTest, MarketNameIsNotCopied) {
+  const Market m("FedPolicyB");
+  EXPECT_TRUE((std::is_same_v<decltype(m.name()), const std::string&>));
+  EXPECT_EQ(m.name(), "FedPolicyB");
+}
+
+TEST(ContractTest, MonthYearOutput) {
+  std::ostringstream os;
+  os << MonthYear(boost::date_time::Nov, 16);
+  EXPECT_EQ(os.str(), "(11, 16)");
 }
 
 }  // namespace iem

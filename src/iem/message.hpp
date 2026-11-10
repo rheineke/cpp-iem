@@ -46,7 +46,7 @@ class TraderMessage final {
 
   inline const boost::posix_time::ptime date() const noexcept { return date_; }
   inline const MessageType type() const noexcept { return type_; }
-  inline const std::string contract() const noexcept { return contract_; }
+  inline const std::string& contract() const noexcept { return contract_; }
   inline const Action action() const noexcept { return action_; }
   inline const Quantity quantity() const noexcept { return quantity_; }
   inline const Price unit_price() const noexcept { return unit_price_; }
@@ -83,7 +83,7 @@ class HoldingMessage final {
                  const Quantity quantity, const Price& price);
 
   inline const boost::posix_time::ptime date() const { return date_; }
-  inline const std::string market_label() const { return market_label_; }
+  inline const std::string& market_label() const { return market_label_; }
   inline const Action action() const { return action_; }
   inline const Quantity quantity() const { return quantity_; }
   inline const Price price() const { return price_; }
