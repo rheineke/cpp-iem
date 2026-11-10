@@ -73,13 +73,13 @@ else()
 endif()
 
 if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
-    # Use C++17 when using GNU compilers.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17")
+    # Use C++20 when using GNU compilers.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++20")
 elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
-    # We want to link in C++17 mode in Clang too, but also set a high enough
+    # We want to link in C++20 mode in Clang too, but also set a high enough
     # template depth for the template metaprogramming.
     set(CMAKE_CXX_FLAGS
-        "${CMAKE_CXX_FLAGS} -Wall -ftemplate-depth=256 -std=c++17")
+        "${CMAKE_CXX_FLAGS} -Wall -ftemplate-depth=256 -std=c++20")
 endif()
 
 if(Boost_FOUND)
