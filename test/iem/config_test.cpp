@@ -105,6 +105,7 @@ TEST(ConfigTest, LookupRejectsTemporaryRoot) {
   // The result refers into the root, so a temporary root would dangle
   EXPECT_TRUE(LookupAccepts<const nlohmann::json&>);
   EXPECT_FALSE(LookupAccepts<nlohmann::json>);
+  EXPECT_FALSE(LookupAccepts<const nlohmann::json>);
 }
 
 TEST(ConfigTest, AssetExpiry) {

@@ -24,7 +24,7 @@ const nlohmann::json& read_markets_json(
 // then an exception is thrown.
 const nlohmann::json& market_value(const nlohmann::json& json_root,
                                    const std::string& market_name);
-const nlohmann::json& market_value(nlohmann::json&& json_root,
+const nlohmann::json& market_value(const nlohmann::json&& json_root,
                                    const std::string& market_name) = delete;
 
 // Returns the bundle node matching market_name and expiry_date_str. If the
@@ -34,7 +34,7 @@ const nlohmann::json& market_value(nlohmann::json&& json_root,
 const nlohmann::json& bundle_value(const nlohmann::json& json_root,
                                    const std::string& market_name,
                                    const std::string& expiry_date_str);
-const nlohmann::json& bundle_value(nlohmann::json&& json_root,
+const nlohmann::json& bundle_value(const nlohmann::json&& json_root,
                                    const std::string& market_name,
                                    const std::string& expiry_date_str) = delete;
 
@@ -47,7 +47,7 @@ std::string asset_expiry(const std::string& asset_name);
 const nlohmann::json& asset_value(const nlohmann::json& json_root,
                                   const std::string& market_name,
                                   const std::string& asset_name);
-const nlohmann::json& asset_value(nlohmann::json&& json_root,
+const nlohmann::json& asset_value(const nlohmann::json&& json_root,
                                   const std::string& market_name,
                                   const std::string& asset_name) = delete;
 
