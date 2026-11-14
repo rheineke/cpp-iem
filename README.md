@@ -31,8 +31,8 @@ IEM_USERNAME=op://Private/IEM/username IEM_PASSWORD=op://Private/IEM/password op
 ```
 
 ## Pre-commit hooks
-Whitespace and file checks, gitleaks, clang-format (Google style) and cmake-format/cmake-lint.
-Vendored code (`deps/`) is excluded.
+Whitespace and file checks, codespell, gitleaks, clang-format (Google style) and
+cmake-format/cmake-lint. Vendored code (`deps/`) is excluded. CI runs them on every pull request.
 ```shell
 pip install pre-commit
 pre-commit install

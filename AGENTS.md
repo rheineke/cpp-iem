@@ -26,7 +26,8 @@ Instructions for coding agents working in cpp-iem, a C++ client for the Iowa Ele
   a git submodule pinned to a release tag in `deps/cpp-httplib`. Session tests use
   `test/iem/fake_http_client.hpp`; `http_client_test` runs the real client against a localhost
   server.
-- Google style via clang-format; CMake via cmake-format. Run `pre-commit run --all-files`.
+- Google style via clang-format; CMake via cmake-format; spelling via codespell. Run
+  `pre-commit run --all-files` (CI runs it too).
 - Static analysis: clang-tidy (checks in `.clang-tidy`, compiler warnings included) and cppcheck.
   Fix findings rather than suppressing them. A needed suppression goes on the line, with the
   reason: `// NOLINT(<check>): <why>` or `// cppcheck-suppress <id>`.
