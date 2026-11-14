@@ -42,22 +42,28 @@ TEST(PriceTimeLimitTest, SessionStringFormat) {
 TEST(PriceTimeLimitTest, ExpiryDate) {
   const auto& markets_dict = read_markets_json();
 
-  for (const auto& mkt_name : markets_dict.getMemberNames()) {
-    const auto& bundle_value = markets_dict[mkt_name]["bundle"];
-    const auto& assets_value = bundle_value["assets"];
-    if (assets_value.isNull()) {
-      for (const auto& bundle_name : bundle_value.getMemberNames()) {
-        const auto& assets_value = bundle_value[bundle_name]["assets"];
-        for (const auto& asset_name : assets_value.getMemberNames()) {
-          EXPECT_NO_THROW(read_expiration_ptime(mkt_name, asset_name));
+  for (const auto& market : markets_dict.items()) {
+    const auto& mkt_name = market.key();
+    const auto& bundle_value = market.value().at("bundle");
+    if (!bundle_value.contains("assets")) {
+      for (const auto& bundle : bundle_value) {
+        for (const auto& asset : bundle.at("assets").items()) {
+          EXPECT_NO_THROW(read_expiration_ptime(mkt_name, asset.key()));
         }
       }
     } else {
-      for (const auto& asset_name : assets_value.getMemberNames()) {
-        EXPECT_NO_THROW(read_expiration_ptime(mkt_name, asset_name));
+      for (const auto& asset : bundle_value.at("assets").items()) {
+        EXPECT_NO_THROW(read_expiration_ptime(mkt_name, asset.key()));
       }
     }
   }
+}
+
+TEST(PriceTimeLimitTest, ExpiryDateValue) {
+  // FedPolicyB's 0616 bundle expires 2016-06-15, at the end of the day
+  EXPECT_EQ(boost::posix_time::to_iso_extended_string(
+                read_expiration_ptime("FedPolicyB", "FRup0616")),
+            "2016-06-15T23:59:59");
 }
 
 }  // namespace iem

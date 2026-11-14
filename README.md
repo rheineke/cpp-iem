@@ -32,7 +32,7 @@ IEM_USERNAME=op://Private/IEM/username IEM_PASSWORD=op://Private/IEM/password op
 
 ## Pre-commit hooks
 Whitespace and file checks, gitleaks, clang-format (Google style) and cmake-format/cmake-lint.
-Vendored code (`deps/`, jsoncpp) is excluded.
+Vendored code (`deps/`) is excluded.
 ```shell
 pip install pre-commit
 pre-commit install
@@ -42,8 +42,9 @@ pre-commit run --all-files
 ## Linux arm64 build (Docker)
 A reproducible build on a digest-pinned Debian 13 (trixie) image. Packages come from a fixed
 snapshot.debian.org date with pinned versions (Boost 1.83, OpenSSL 3, zlib, CMake, GCC 14).
-The HTTP client, [cpp-httplib](https://github.com/yhirose/cpp-httplib), is a git submodule pinned
-to a release tag. The build runs the tests, then the static analysis: clang-tidy (checks in
+The HTTP client ([cpp-httplib](https://github.com/yhirose/cpp-httplib)), the JSON parser
+([nlohmann/json](https://github.com/nlohmann/json)) and googletest are git submodules pinned to
+release tags. The build runs the tests, then the static analysis: clang-tidy (checks in
 `.clang-tidy`) and cppcheck, where any finding fails the build. CI runs it on every pull request.
 ```shell
 git submodule update --init --recursive

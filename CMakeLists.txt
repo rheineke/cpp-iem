@@ -32,6 +32,7 @@ add_library(cppiem_warnings INTERFACE)
 target_compile_options(cppiem_warnings
                        INTERFACE $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>)
 
+add_subdirectory(deps/json SYSTEM)
 add_subdirectory(src)
 
 add_executable(CPP-IEM src/main.cpp)

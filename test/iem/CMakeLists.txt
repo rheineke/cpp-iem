@@ -9,6 +9,7 @@ set(TESTS
     contract_test
     credentials_test
     event_strategy_test
+    fatfinger_strategy_test
     http_client_test
     message_test
     order_test

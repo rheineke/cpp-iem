@@ -1,6 +1,6 @@
 # Install: pre-commit install. Run on everything: pre-commit run --all-files
-# Vendored code (googletest submodule, amalgamated jsoncpp) is left as upstream wrote it.
-exclude: ^(deps/|src/json/|src/jsoncpp\.cpp$)
+# Vendored code (git submodules in deps/) is left as upstream wrote it.
+exclude: ^deps/
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

@@ -65,7 +65,7 @@ boost::gregorian::date _read_expiration_date(const std::string& market_name,
   const auto& json_root = read_markets_json();
   const auto& expiry_str = asset_name.substr(asset_name.length() - 4);
   const auto& bundle_val = bundle_value(json_root, market_name, expiry_str);
-  const auto& expiry_dt_str = bundle_val["expiry_date"].asString();
+  const auto& expiry_dt_str = bundle_val.at("expiry_date").get<std::string>();
   return boost::gregorian::from_simple_string(expiry_dt_str);
 }
 

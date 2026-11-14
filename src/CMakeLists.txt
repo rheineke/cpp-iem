@@ -3,9 +3,6 @@
 
 add_library(
     cppiemlib
-    json/json.h
-    json/json-forwards.h
-    jsoncpp.cpp
     iem/config.hpp
     iem/config.cpp
     iem/contract.hpp
@@ -44,6 +41,6 @@ target_compile_definitions(cppiemlib PUBLIC CPPHTTPLIB_OPENSSL_SUPPORT
                                             CPPHTTPLIB_ZLIB_SUPPORT)
 target_link_libraries(
     cppiemlib
-    PUBLIC Boost::headers OpenSSL::SSL OpenSSL::Crypto ZLIB::ZLIB
-           Threads::Threads
+    PUBLIC Boost::headers nlohmann_json::nlohmann_json OpenSSL::SSL
+           OpenSSL::Crypto ZLIB::ZLIB Threads::Threads
     PRIVATE cppiem_warnings)

@@ -29,5 +29,5 @@ Checks: >
   readability-redundant-string-cstr,
   readability-redundant-string-init
 WarningsAsErrors: "*"
-# Own headers only; vendored ones (deps/, src/json/) are skipped
+# Own headers only; vendored ones (deps/) are skipped
 HeaderFilterRegex: "(src|test)/iem/"

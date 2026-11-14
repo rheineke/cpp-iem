@@ -30,8 +30,9 @@ Instructions for coding agents working in cpp-iem, a C++ client for the Iowa Ele
 - Static analysis: clang-tidy (checks in `.clang-tidy`, compiler warnings included) and cppcheck.
   Fix findings rather than suppressing them. A needed suppression goes on the line, with the
   reason: `// NOLINT(<check>): <why>` or `// cppcheck-suppress <id>`.
-- Vendored code is left as upstream wrote it: `deps/` (googletest, cpp-httplib) and `src/json/`,
-  `src/jsoncpp.cpp` (jsoncpp).
+- JSON (`conf/markets.json`) is parsed with nlohmann/json.
+- Vendored code is left as upstream wrote it: the git submodules in `deps/` (cpp-httplib,
+  googletest, nlohmann/json), each pinned to a release tag.
 - Tests use googletest, in `test/iem/<name>_test.cpp`; add new ones to `test/iem/CMakeLists.txt`.
 
 ## Safety

@@ -1,69 +1,73 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 #include "config.hpp"
 
-#include <filesystem>
 #include <fstream>
-#include <mutex>
+#include <stdexcept>
 
 namespace iem {
 
-using std::operator""s;
+namespace {
 
-std::shared_ptr<const Json::Value> json_root;
-std::once_flag json_flag;
-
-const void init_json_root(char const* filename) {
-  if (!std::filesystem::exists(filename)) {
-    const auto msg = "Path does not exist: "s + std::string(filename);
-    throw std::invalid_argument(msg);
+nlohmann::json parse_file(char const* filename) {
+  std::ifstream file(filename);
+  if (!file) {
+    throw std::invalid_argument("Cannot read " + std::string(filename));
   }
-  // Open file in binary mode
-  auto p_root = new Json::Value;
-  if (p_root->isNull()) {
-    std::ifstream config_doc(filename, std::ifstream::binary);
-    config_doc >> *p_root;
-  }
-
-  json_root.reset(p_root);
+  return nlohmann::json::parse(file);
 }
 
-const Json::Value& read_markets_json(char const* filename) {
-  std::call_once(json_flag, init_json_root, filename);
-  return json_root.operator*();
-}
-
-const Json::Value market_value(const Json::Value& json_root,
-                               const std::string& market_name) {
-  const auto& mkt_value = json_root[market_name];
-  if (mkt_value.isNull()) {
-    throw std::invalid_argument("Unknown market name" + market_name);
+// Returns object[key], or throws std::invalid_argument naming the missing key
+const nlohmann::json& member(const nlohmann::json& object,
+                             const std::string& key, const std::string& what) {
+  const auto it = object.find(key);
+  if (it == object.end()) {
+    throw std::invalid_argument("Unknown " + what + ": " + key);
   }
-  return mkt_value;
+  return *it;
 }
 
-const Json::Value bundle_value(const Json::Value& json_root,
-                               const std::string& market_name,
-                               const std::string& expiry_date_str) {
-  const auto& mkt_value = market_value(json_root, market_name);
-  const auto& bundle_val = mkt_value["bundle"];
+// Returns the date stored at key, or not_a_date_time if the key is missing
+boost::gregorian::date date_member(const nlohmann::json& object,
+                                   const std::string& key) {
+  const auto it = object.find(key);
+  if (it == object.end() || it->is_null()) {
+    return boost::gregorian::date(boost::gregorian::not_a_date_time);
+  }
+  return from_simple_string(it->get<std::string>());
+}
 
-  if (!bundle_val["bundle_id"].isNull()) {  // Market has one bundle
+}  // namespace
+
+const nlohmann::json& read_markets_json(char const* filename) {
+  // Thread-safe; a throw leaves it unset, so the next call tries again
+  static const nlohmann::json root = parse_file(filename);
+  return root;
+}
+
+const nlohmann::json& market_value(const nlohmann::json& json_root,
+                                   const std::string& market_name) {
+  return member(json_root, market_name, "market name");
+}
+
+const nlohmann::json& bundle_value(const nlohmann::json& json_root,
+                                   const std::string& market_name,
+                                   const std::string& expiry_date_str) {
+  const auto& bundle_val = market_value(json_root, market_name).at("bundle");
+  if (bundle_val.contains("bundle_id")) {  // Market has one bundle
     return bundle_val;
   }
-
-  const auto& expiry_bundle_value = bundle_val[expiry_date_str];
-  if (expiry_bundle_value.isNull()) {
-    throw std::invalid_argument("Unknown bundle expiration " + expiry_date_str);
-  }
-  return expiry_bundle_value;
+  return member(bundle_val, expiry_date_str, "bundle expiration");
 }
 
-const Json::Value asset_value(const Json::Value& json_root,
-                              const std::string& market_name,
-                              const std::string& asset_name) {
-  const auto& expiry_str = asset_name.substr(asset_name.length() - 4);
+const nlohmann::json& asset_value(const nlohmann::json& json_root,
+                                  const std::string& market_name,
+                                  const std::string& asset_name) {
+  // Assets end in their bundle's expiry, such as FRup0616
+  const auto expiry_str = asset_name.size() < 4
+                              ? std::string()
+                              : asset_name.substr(asset_name.size() - 4);
   const auto& bundle_val = bundle_value(json_root, market_name, expiry_str);
-  return bundle_val["assets"][asset_name];
+  return member(bundle_val.at("assets"), asset_name, "asset name");
 }
 
 boost::gregorian::date from_simple_string(const std::string& s) {
@@ -73,30 +77,17 @@ boost::gregorian::date from_simple_string(const std::string& s) {
   return boost::gregorian::from_simple_string(s);
 }
 
-bool active_bundle(const Json::Value& bundle_value,
+bool active_bundle(const nlohmann::json& bundle_value,
                    const boost::gregorian::date& current_date) {
-  using boost::gregorian::date;
-  const date nad(boost::gregorian::not_a_date_time);
-
   // Date is after open date
-  const auto& open_date_value = bundle_value["open_date"];
-
-  date open_date(boost::gregorian::not_a_date_time);
-  if (!open_date_value.isNull()) {
-    open_date = from_simple_string(open_date_value.asString());
-  }
-
-  const bool opened_after = (open_date == nad) || (open_date <= current_date);
+  const auto open_date = date_member(bundle_value, "open_date");
+  const bool opened_after =
+      open_date.is_not_a_date() || (open_date <= current_date);
 
   // Date is before liquidation date
-  const auto& liquidation_date_value = bundle_value["liquidation_date"];
-
-  date liq_date(boost::gregorian::not_a_date_time);
-  if (!liquidation_date_value.isNull()) {
-    liq_date = from_simple_string(liquidation_date_value.asString());
-  }
-
-  const bool liquidated_after = (liq_date == nad) || (liq_date >= current_date);
+  const auto liq_date = date_member(bundle_value, "liquidation_date");
+  const bool liquidated_after =
+      liq_date.is_not_a_date() || (liq_date >= current_date);
 
   return opened_after && liquidated_after;
 }

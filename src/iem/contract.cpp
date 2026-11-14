@@ -13,7 +13,7 @@ std::ostream& operator<<(std::ostream& os, const MonthYear& month_year) {
 
 int _read_market_value(const std::string& name, char const* filename) {
   const auto& json_root = read_markets_json(filename);
-  return market_value(json_root, name)["id"].asInt();
+  return market_value(json_root, name).at("id").get<int>();
 }
 
 Market::Market(const std::string& name, char const* filename)
@@ -35,10 +35,11 @@ std::string _expiration_string(const MonthYear& expiration) {
 
 int _read_bundle_id(const std::string& market_name,
                     const MonthYear& expiration) {
-  const auto json_root = read_markets_json();
+  const auto& json_root = read_markets_json();
   const auto expiry_date_str = _expiration_string(expiration);
-  const auto bundle_val = bundle_value(json_root, market_name, expiry_date_str);
-  return bundle_val["bundle_id"].asInt();
+  const auto& bundle_val =
+      bundle_value(json_root, market_name, expiry_date_str);
+  return bundle_val.at("bundle_id").get<int>();
 }
 
 ContractBundle::ContractBundle(const std::string& market_name,
@@ -58,14 +59,14 @@ int _read_asset_id(const std::string& market_name,
                    const std::string& contract_name) {
   const auto& json_root = read_markets_json();
   const auto& asset_val = asset_value(json_root, market_name, contract_name);
-  return asset_val["id"].asInt();
+  return asset_val.at("id").get<int>();
 }
 
 int _read_asset_to_market_id(const std::string& market_name,
                              const std::string& contract_name) {
   const auto& json_root = read_markets_json();
   const auto& asset_val = asset_value(json_root, market_name, contract_name);
-  return asset_val["order"].asInt();
+  return asset_val.at("order").get<int>();
 }
 
 Contract::Contract(const std::string& market_name,
