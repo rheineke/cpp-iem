@@ -6,7 +6,7 @@ strategy on the [Iowa Electronic Markets] exchange.
 ### How do I get set up? ###
 
 The supported build is Linux arm64 in Docker (below). A native build needs CMake 3.25+, a C++20
-compiler, Boost, OpenSSL 3 and zlib; on macOS (untested): `brew install cmake boost openssl@3`.
+compiler, Boost 1.83+, OpenSSL 3 and zlib; on macOS (untested): `brew install cmake boost openssl@3`.
 ```shell
 git clone --recursive https://github.com/rheineke/cpp-iem.git
 cd cpp-iem
@@ -32,7 +32,8 @@ IEM_USERNAME=op://Private/IEM/username IEM_PASSWORD=op://Private/IEM/password op
 
 ## Pre-commit hooks
 Whitespace and file checks, codespell, gitleaks, clang-format (Google style) and
-cmake-format/cmake-lint. Vendored code (`deps/`) is excluded. CI runs them on every pull request.
+cmake-format/cmake-lint. Vendored code (`deps/`) is excluded. CI runs them on every pull request;
+since the gitleaks hook checks only staged changes, CI also scans the whole git history.
 ```shell
 pip install pre-commit
 pre-commit install

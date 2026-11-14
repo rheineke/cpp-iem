@@ -2,6 +2,8 @@
 #include "iem/config.hpp"
 
 #include <stdexcept>
+#include <string>
+#include <utility>
 
 #include "boost/date_time/gregorian/gregorian.hpp"
 #include "gtest/gtest.h"
@@ -43,7 +45,8 @@ TEST(ConfigTest, MarketValue) {
 
 TEST(ConfigTest, UnknownMarketThrows) {
   EXPECT_THROW(market_value(test_markets(), "Missing"), std::invalid_argument);
-  EXPECT_THROW(market_value(nlohmann::json(), "Multi"), std::invalid_argument);
+  const nlohmann::json empty;
+  EXPECT_THROW(market_value(empty, "Multi"), std::invalid_argument);
 }
 
 TEST(ConfigTest, BundleValue) {
@@ -90,6 +93,27 @@ TEST(ConfigTest, AssetValue) {
   }
 }
 
+// Whether a lookup accepts Root as its JSON root
+template <typename Root>
+concept LookupAccepts = requires(Root&& root, const std::string& name) {
+  market_value(std::forward<Root>(root), name);
+  bundle_value(std::forward<Root>(root), name, name);
+  asset_value(std::forward<Root>(root), name, name);
+};
+
+TEST(ConfigTest, LookupRejectsTemporaryRoot) {
+  // The result refers into the root, so a temporary root would dangle
+  EXPECT_TRUE(LookupAccepts<const nlohmann::json&>);
+  EXPECT_FALSE(LookupAccepts<nlohmann::json>);
+}
+
+TEST(ConfigTest, AssetExpiry) {
+  EXPECT_EQ(asset_expiry("FRup0616"), "0616");
+  EXPECT_EQ(asset_expiry("0616"), "0616");
+  EXPECT_EQ(asset_expiry("Yes"), "");
+  EXPECT_EQ(asset_expiry(""), "");
+}
+
 TEST(ConfigTest, AssetValueByName) {
   const auto& root = test_markets();
   // The last four characters pick the bundle
@@ -115,7 +139,8 @@ TEST(ConfigTest, ActiveBundle) {
   const auto& root = read_markets_json();
   const auto dt = boost::gregorian::from_simple_string("2016-12-30");
 
-  // Copies: the string literals are temporaries
+  // Copies, not references: GCC's -Wdangling-reference misfires when a call
+  // returning a reference has temporary arguments (the string literals)
   const auto jan17_bundle_val = bundle_value(root, "FedPolicyB", "0117");
   EXPECT_TRUE(active_bundle(jan17_bundle_val, dt));
 

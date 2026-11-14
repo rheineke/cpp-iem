@@ -32,6 +32,7 @@ add_library(
     iem/side.hpp
     iem/side.cpp)
 
+target_compile_features(cppiemlib PUBLIC cxx_std_20)
 target_include_directories(cppiemlib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # Header-only HTTP client; the definitions must match in every file that
 # includes httplib.h, so they are PUBLIC

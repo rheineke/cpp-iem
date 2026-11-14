@@ -59,13 +59,18 @@ const nlohmann::json& bundle_value(const nlohmann::json& json_root,
   return member(bundle_val, expiry_date_str, "bundle expiration");
 }
 
+std::string asset_expiry(const std::string& asset_name) {
+  constexpr std::size_t kExpiryLength = 4;  // MMYY
+  if (asset_name.size() < kExpiryLength) {
+    return std::string();
+  }
+  return asset_name.substr(asset_name.size() - kExpiryLength);
+}
+
 const nlohmann::json& asset_value(const nlohmann::json& json_root,
                                   const std::string& market_name,
                                   const std::string& asset_name) {
-  // Assets end in their bundle's expiry, such as FRup0616
-  const auto expiry_str = asset_name.size() < 4
-                              ? std::string()
-                              : asset_name.substr(asset_name.size() - 4);
+  const auto expiry_str = asset_expiry(asset_name);
   const auto& bundle_val = bundle_value(json_root, market_name, expiry_str);
   return member(bundle_val.at("assets"), asset_name, "asset name");
 }

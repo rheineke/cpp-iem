@@ -1,6 +1,8 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/pricetimelimit.hpp"
 
+#include <stdexcept>
+
 #include "gtest/gtest.h"
 #include "iem/contract.hpp"
 
@@ -64,6 +66,12 @@ TEST(PriceTimeLimitTest, ExpiryDateValue) {
   EXPECT_EQ(boost::posix_time::to_iso_extended_string(
                 read_expiration_ptime("FedPolicyB", "FRup0616")),
             "2016-06-15T23:59:59");
+}
+
+TEST(PriceTimeLimitTest, ExpiryDateShortAssetName) {
+  // Too short to end in an expiry: no such bundle, rather than out_of_range
+  EXPECT_THROW(read_expiration_ptime("FedPolicyB", "Up"),
+               std::invalid_argument);
 }
 
 }  // namespace iem
