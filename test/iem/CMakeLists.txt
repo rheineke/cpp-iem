@@ -1,8 +1,7 @@
 # Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 # This project is licensed under the terms of the MIT license.
 
-include_directories(${OPENSSL_INCLUDE_DIR} ${CPP-IEM_SOURCE_DIR}/src
-                    ${gtest_SOURCE_DIR}/include)
+include(GoogleTest)
 
 set(TESTS
     build_test
@@ -18,19 +17,14 @@ set(TESTS
     session_test
     side_test)
 
-foreach(test ${TESTS})
+# The tests read conf/markets.json relative to their working directory
+configure_file(${PROJECT_SOURCE_DIR}/conf/markets.json conf/markets.json
+               COPYONLY)
+
+foreach(test IN LISTS TESTS)
     add_executable(cppiem-iem-${test} ${test}.cpp)
-    target_link_libraries(cppiem-iem-${test} gtest_main cppiemlib)
-    if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU AND ${CMAKE_SYSTEM_NAME} MATCHES
-                                                "Windows")
-        target_link_libraries(cppiem-iem-${test} ws2_32)
-    endif()
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-        target_link_libraries(cppiem-iem-${test} ${CMAKE_THREAD_LIBS_INIT})
-    endif()
-    set_target_properties(
-        cppiem-iem-${test} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
-                                      ${CPP-IEM_BINARY_DIR}/tests)
-    add_test(cppiem-iem-${test} ${CPP-IEM_BINARY_DIR}/tests/cppiem-iem-${test}
-             WORKING_DIRECTORY ${CPP-IEM_BINARY_DIR})
-endforeach(test)
+    target_link_libraries(cppiem-iem-${test} PRIVATE cppiemlib cppiem_warnings
+                                                     GTest::gtest_main)
+    gtest_discover_tests(cppiem-iem-${test}
+                         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+endforeach()

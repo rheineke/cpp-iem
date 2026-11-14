@@ -1,7 +1,7 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 #include "config.hpp"
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fstream>
 #include <mutex>
 
@@ -13,10 +13,7 @@ std::shared_ptr<const Json::Value> json_root;
 std::once_flag json_flag;
 
 const void init_json_root(char const* filename) {
-  //  namespace fs = std::experimental::filesystem;
-  namespace fs = boost::filesystem;
-  fs::path p(filename);
-  if (!fs::exists(p)) {
+  if (!std::filesystem::exists(filename)) {
     const auto msg = "Path does not exist: "s + std::string(filename);
     throw std::invalid_argument(msg);
   }
