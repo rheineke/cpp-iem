@@ -10,11 +10,11 @@ Orders fatfinger_orders(const Market& market, const std::string& expiry_date,
   Orders os;
 
   const auto& root = read_markets_json();
-  const auto& assets_val = asset_value(root, market.name(), expiry_date);
+  const auto& bundle_val = bundle_value(root, market.name(), expiry_date);
 
   // TODO(rheineke): Compare against orderbook for existing orders
-  for (const auto& asset_name : assets_val.getMemberNames()) {
-    Contract c(market.name(), asset_name);
+  for (const auto& asset : bundle_val.at("assets").items()) {
+    const Contract c(market.name(), asset.key());
 
     // Buy order
     PriceTimeLimit buy_ptl(Price(1), boost::date_time::not_a_date_time);

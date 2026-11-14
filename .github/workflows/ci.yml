@@ -5,16 +5,53 @@ on:
     branches: [main]
   pull_request:
 
+# Read-only token: the jobs run third-party code
+permissions:
+  contents: read
+
 jobs:
   test:
     # Native arm64 runner, matching the Docker build's linux/arm64 target
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
+          persist-credentials: false
       - name: Build and test in Debian trixie
         run: docker build --platform linux/arm64 -f docker/debian-trixie.Dockerfile --target test .
       # Reuses the build above: clang-tidy and cppcheck
       - name: Static analysis
         run: docker build --platform linux/arm64 -f docker/debian-trixie.Dockerfile -t cpp-iem:trixie .
+
+  # The hooks in .pre-commit-config.yaml: formatting, spelling, file checks.
+  # The gitleaks hook scans staged changes only, so a separate step scans the
+  # whole git history.
+  pre-commit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+        with:
+          enable-cache: false  # no lock file to key on; pre-commit is cached below
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Run pre-commit on all files
+        run: uvx pre-commit@4.7.0 run --all-files --show-diff-on-failure
+        env:
+          SKIP: gitleaks
+      - name: Scan git history for secrets
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${tarball}"
+          echo "${GITLEAKS_SHA256}  ${tarball}" | sha256sum --check
+          tar -xzf "${tarball}" gitleaks
+          ./gitleaks git --redact --no-banner .

@@ -31,7 +31,8 @@ RUN printf '%s\n' \
         zlib1g-dev=1:1.3.dfsg+really1.3.1-1+b1 \
     && rm -rf /var/lib/apt/lists/*
 
-# cpp-httplib and googletest are git submodules under deps/, copied in with the source
+# cpp-httplib, googletest and nlohmann/json are git submodules under deps/, copied in
+# with the source
 WORKDIR /src
 COPY . .
 RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
@@ -39,8 +40,7 @@ RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMAN
     && cd build && ctest --output-on-failure
 
 # clang-tidy (checks in .clang-tidy), then cppcheck; any finding fails the build.
-# Both read build/compile_commands.json and skip vendored code: deps/ and jsoncpp
-# (src/json/, src/jsoncpp.cpp).
+# Both read build/compile_commands.json and skip vendored code in deps/.
 FROM test AS lint
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get -o Acquire::Check-Valid-Until=false update \
@@ -52,6 +52,6 @@ RUN run-clang-tidy-19 -p build -quiet -j"$(nproc)" \
         '^/src/src/(main\.cpp|iem/)' '^/src/test/iem/' \
     && cppcheck --project=build/compile_commands.json \
         --enable=warning,performance,portability --check-level=exhaustive \
-        --inline-suppr --error-exitcode=1 --quiet -j"$(nproc)" \
+        --inline-suppr --error-exitcode=1 --quiet -j"$(nproc)" --library=googletest \
         --file-filter='src/iem/*' --file-filter=src/main.cpp \
-        --file-filter='test/iem/*' --suppress='*:deps/*' --suppress='*:src/json/*'
+        --file-filter='test/iem/*' --suppress='*:deps/*'

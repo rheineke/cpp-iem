@@ -1,14 +1,8 @@
-project(cppiemlib)
+# Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
+# This project is licensed under the terms of the MIT license.
 
-# Ordering may matter
-include_directories(iem json)
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} iem)
 add_library(
     cppiemlib
-    json/json.h
-    json/json-forwards.h
-    jsoncpp.cpp
     iem/config.hpp
     iem/config.cpp
     iem/contract.hpp
@@ -38,15 +32,21 @@ add_library(
     iem/side.hpp
     iem/side.cpp)
 
+target_compile_features(cppiemlib PUBLIC cxx_std_20)
+target_include_directories(cppiemlib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # Header-only HTTP client; the definitions must match in every file that
 # includes httplib.h, so they are PUBLIC
 target_include_directories(cppiemlib SYSTEM
-                           PUBLIC ${CPP-IEM_SOURCE_DIR}/deps/cpp-httplib)
+                           PUBLIC ${PROJECT_SOURCE_DIR}/deps/cpp-httplib)
 target_compile_definitions(cppiemlib PUBLIC CPPHTTPLIB_OPENSSL_SUPPORT
                                             CPPHTTPLIB_ZLIB_SUPPORT)
-target_link_libraries(cppiemlib OpenSSL::SSL OpenSSL::Crypto ZLIB::ZLIB
-                      ${Boost_LIBRARIES})
-
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    target_link_libraries(cppiemlib ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(
+    cppiemlib
+    PUBLIC Boost::headers nlohmann_json::nlohmann_json OpenSSL::SSL
+           OpenSSL::Crypto ZLIB::ZLIB Threads::Threads
+    PRIVATE cppiem_warnings)
+# cpp-httplib reads root certificates from the macOS Keychain
+if(APPLE)
+    target_link_libraries(cppiemlib PUBLIC "-framework CoreFoundation"
+                                           "-framework Security")
 endif()

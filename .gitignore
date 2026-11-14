@@ -41,7 +41,6 @@ CMakeFiles
 Makefile
 
 # macOS specific files
-.lock-waf_darwin_build
 .DS_Store
 
 # Build location

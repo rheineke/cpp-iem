@@ -2,6 +2,7 @@
 #include "iem/contract.hpp"
 
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 
@@ -11,10 +12,10 @@ namespace iem {
 
 TEST(ContractTest, MarketMembers) {
   const auto& markets_dict = read_markets_json();
-  for (const auto& name : markets_dict.getMemberNames()) {
-    const Market m(name);
-    EXPECT_EQ(m.name(), name);
-    EXPECT_EQ(m.value(), markets_dict[name]["id"].asInt());
+  for (const auto& market : markets_dict.items()) {
+    const Market m(market.key());
+    EXPECT_EQ(m.name(), market.key());
+    EXPECT_EQ(m.value(), market.value().at("id").get<int>());
   }
 }
 
@@ -31,28 +32,27 @@ const MonthYear expiration_monthyear(const std::string& expiration_str) {
 }
 
 TEST(ContractTest, ContractBundle) {
-  const auto markets_dict = read_markets_json();
+  const auto& markets_dict = read_markets_json();
 
-  for (const auto& name : markets_dict.getMemberNames()) {
-    const auto bundles_value = markets_dict[name]["bundle"];
+  for (const auto& market : markets_dict.items()) {
+    const auto& name = market.key();
+    const auto& bundles_value = market.value().at("bundle");
 
     // Expected market object
     const auto expected_market = Market(name);
 
-    const auto& bundle_id_value = bundles_value["bundle_id"];
-    if (bundle_id_value.isNull()) {
+    if (!bundles_value.contains("bundle_id")) {
       // Market has at least one expiration; iterate through all
-      for (const auto& bundle_exp : bundles_value.getMemberNames()) {
-        const auto exp_monthyear = expiration_monthyear(bundle_exp);
+      for (const auto& bundle : bundles_value.items()) {
+        const auto exp_monthyear = expiration_monthyear(bundle.key());
         const ContractBundle cb(name, exp_monthyear);
         EXPECT_EQ(cb.market().value(), expected_market.value());
         EXPECT_EQ(cb.expiration(), exp_monthyear);
-        EXPECT_EQ(cb.bundle_id(),
-                  bundles_value[bundle_exp]["bundle_id"].asInt());
+        EXPECT_EQ(cb.bundle_id(), bundle.value().at("bundle_id").get<int>());
       }
     } else {
       // Market has one expiration associated with it
-      const auto expected_bundle_id = bundle_id_value.asInt();
+      const auto expected_bundle_id = bundles_value.at("bundle_id").get<int>();
       const MonthYear null_exp(boost::date_time::months_of_year::NotAMonth, 0);
       const ContractBundle cb(name, null_exp);
       EXPECT_EQ(cb.market().value(), expected_market.value());
@@ -63,17 +63,31 @@ TEST(ContractTest, ContractBundle) {
 }
 
 TEST(ContractTest, Contract) {
-  const auto markets_dict = read_markets_json();
+  const auto& markets_dict = read_markets_json();
 
-  for (const auto& mkt_name : markets_dict.getMemberNames()) {
-    const auto& mkt_dict = markets_dict[mkt_name];
-    const auto& assets_value = mkt_dict["assets"];
-    for (const auto& contract_name : assets_value.getMemberNames()) {
-      Contract c(mkt_name, contract_name);
-      EXPECT_EQ(c.market().value(), mkt_dict["id"].asInt());
-      EXPECT_EQ(c.asset_id(), assets_value[contract_name]["id"].asInt());
+  int contracts = 0;
+  for (const auto& market : markets_dict.items()) {
+    const auto& bundles_value = market.value().at("bundle");
+    // A market's bundle node is either one bundle or a map of them
+    const auto bundles = bundles_value.contains("bundle_id")
+                             ? nlohmann::json::array({bundles_value})
+                             : bundles_value;
+    for (const auto& bundle : bundles) {
+      for (const auto& asset : bundle.at("assets").items()) {
+        const Contract c(market.key(), asset.key());
+        EXPECT_EQ(c.market().value(), market.value().at("id").get<int>());
+        EXPECT_EQ(c.asset_id(), asset.value().at("id").get<int>());
+        EXPECT_EQ(c.asset_to_market_id(), asset.value().at("order").get<int>());
+        ++contracts;
+      }
     }
   }
+  EXPECT_GT(contracts, 0);
+}
+
+TEST(ContractTest, UnknownContractThrows) {
+  EXPECT_THROW(Contract("FedPolicyB", "FRup0199"), std::invalid_argument);
+  EXPECT_THROW(Contract("FedPolicyB", "FRmissing0616"), std::invalid_argument);
 }
 
 TEST(ContractTest, MarketIsExplicit) {
