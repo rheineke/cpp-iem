@@ -18,16 +18,17 @@ ctest --test-dir build --output-on-failure
 [Iowa Electronic Markets]: https://iem.uiowa.edu/iem/
 
 ## IEM login
-`CPP-IEM` reads the login from `IEM_USERNAME` and `IEM_PASSWORD`. Keep the password in a secret
-store, not a file. With the macOS Keychain:
+`CPP-IEM` reads the login from `IEM_USERNAME` and `IEM_PASSWORD`, and `conf/markets.json` from
+the working directory, so run it from the repo root. Keep the password in a secret store, not a
+file. With the macOS Keychain:
 ```shell
 security add-generic-password -s cpp-iem -a "<username>" -w   # prompts for the password
 IEM_USERNAME="<username>" \
-IEM_PASSWORD="$(security find-generic-password -s cpp-iem -w)" ./CPP-IEM
+IEM_PASSWORD="$(security find-generic-password -s cpp-iem -w)" build/CPP-IEM
 ```
 Or with the 1Password CLI, from an item called IEM:
 ```shell
-IEM_USERNAME=op://Private/IEM/username IEM_PASSWORD=op://Private/IEM/password op run -- ./CPP-IEM
+IEM_USERNAME=op://Private/IEM/username IEM_PASSWORD=op://Private/IEM/password op run -- build/CPP-IEM
 ```
 
 ## Pre-commit hooks

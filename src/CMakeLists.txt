@@ -45,3 +45,8 @@ target_link_libraries(
     PUBLIC Boost::headers nlohmann_json::nlohmann_json OpenSSL::SSL
            OpenSSL::Crypto ZLIB::ZLIB Threads::Threads
     PRIVATE cppiem_warnings)
+# cpp-httplib reads root certificates from the macOS Keychain
+if(APPLE)
+    target_link_libraries(cppiemlib PUBLIC "-framework CoreFoundation"
+                                           "-framework Security")
+endif()

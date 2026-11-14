@@ -93,19 +93,33 @@ TEST(ConfigTest, AssetValue) {
   }
 }
 
-// Whether a lookup accepts Root as its JSON root
+// Whether each lookup accepts Root as its JSON root
 template <typename Root>
-concept LookupAccepts = requires(Root&& root, const std::string& name) {
+concept MarketAccepts = requires(Root&& root, const std::string& name) {
   market_value(std::forward<Root>(root), name);
+};
+template <typename Root>
+concept BundleAccepts = requires(Root&& root, const std::string& name) {
   bundle_value(std::forward<Root>(root), name, name);
+};
+template <typename Root>
+concept AssetAccepts = requires(Root&& root, const std::string& name) {
   asset_value(std::forward<Root>(root), name, name);
 };
 
+template <typename Root>
+void ExpectLookups(bool accepted) {
+  EXPECT_EQ(MarketAccepts<Root>, accepted);
+  EXPECT_EQ(BundleAccepts<Root>, accepted);
+  EXPECT_EQ(AssetAccepts<Root>, accepted);
+}
+
 TEST(ConfigTest, LookupRejectsTemporaryRoot) {
   // The result refers into the root, so a temporary root would dangle
-  EXPECT_TRUE(LookupAccepts<const nlohmann::json&>);
-  EXPECT_FALSE(LookupAccepts<nlohmann::json>);
-  EXPECT_FALSE(LookupAccepts<const nlohmann::json>);
+  ExpectLookups<const nlohmann::json&>(true);
+  ExpectLookups<nlohmann::json&>(true);
+  ExpectLookups<nlohmann::json>(false);
+  ExpectLookups<const nlohmann::json>(false);
 }
 
 TEST(ConfigTest, AssetExpiry) {
