@@ -14,7 +14,12 @@ namespace iem {
 
 using RequestCode = std::string;
 using OrderId = uint_fast32_t;
-using Quantity = uint_fast8_t;
+// Signed and wide: IEM orders run to tens of thousands of contracts, and a
+// computed size below one must be caught, not wrap to a large order.
+using Quantity = int32_t;
+// The most contracts one order may send: above it is a mistake. Orders read
+// back from IEM aren't capped.
+constexpr Quantity kMaxOrderQuantity = 100000;
 
 // Each filled order has either another market participant or the exchange as a
 // counterparty. Only fixed price bundle orders are counterparty to the
@@ -76,8 +81,10 @@ class Single final : public Order {
   OrderId id_;
 };
 
+// Whether the order has an IEM order id (outstanding orders read from IEM do;
+// orders built here don't until IEM reports them).
 inline bool valid_id(const Single& order) {
-  return order.id() == std::numeric_limits<OrderId>::lowest();
+  return order.id() != std::numeric_limits<OrderId>::lowest();
 }
 
 // IEM bundle contract order

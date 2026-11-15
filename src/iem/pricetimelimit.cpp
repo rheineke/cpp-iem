@@ -20,13 +20,20 @@ bool PriceTimeLimit::ioc() const noexcept { return ioc_; }
 
 PriceTimeLimit::PriceTimeLimit(const Price& price,
                                const boost::posix_time::ptime& expiration)
-    : price_(price), expiration_(expiration), ioc_(is_ioc(price, expiration)) {
+    : price_(price), expiration_(expiration), ioc_(false) {
+  is_ioc(price, expiration);  // checks the combination
 #ifdef DEBUG
   debug::log<PriceTimeLimit>(this, "price time limit ctor");
 #endif
 }
 PriceTimeLimit::PriceTimeLimit()
     : PriceTimeLimit(Price(), boost::date_time::not_a_date_time) {}
+
+PriceTimeLimit PriceTimeLimit::market() {
+  PriceTimeLimit ptl;
+  ptl.ioc_ = true;
+  return ptl;
+}
 
 bool PriceTimeLimit::is_ioc(const Price& price,
                             const boost::posix_time::ptime& expiration) {

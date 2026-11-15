@@ -1,7 +1,10 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/price.hpp"
 
-#include <iomanip>
+#include <algorithm>
+#include <cctype>
+#include <istream>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 
@@ -22,49 +25,75 @@ const Price& nanPrice() {
 }
 
 std::ostream& operator<<(std::ostream& os, const Price& p) {
-  if (p == nanPrice()) {
-    return os << "----";
-  } else {
-    return os << std::setiosflags(std::ios::fixed) << std::setprecision(3)
-              << (static_cast<double>(p.ticks()) /
-                  static_cast<double>(p.ticks_per_point()));
-  }
+  // Through to_string: no locale, and the stream's format is left alone
+  return os << to_string(p);
 }
 
+namespace {
+
+// "0.512", "1", ".5", "0.50*" (IEM marks priority with '*'), "0.001000":
+// whole points and three decimals (more only if zeros), nothing else. Integer
+// arithmetic, so no locale and no rounding.
+Ticks parse_ticks(const std::string& text) {
+  std::string s = text;
+  while (!s.empty() && s.back() == '*') {
+    s.pop_back();
+  }
+  const auto dot = s.find('.');
+  const std::string whole = s.substr(0, dot);
+  std::string frac = (dot == std::string::npos) ? "" : s.substr(dot + 1);
+  // IEM writes "0.001000": digits past the third must be zeros
+  if (frac.size() > 3 && frac.find_first_not_of('0', 3) == std::string::npos) {
+    frac.resize(3);
+  }
+  const auto digits = [](const std::string& d) {
+    return std::all_of(d.begin(), d.end(),
+                       [](unsigned char ch) { return std::isdigit(ch); });
+  };
+  if ((whole.empty() && frac.empty()) || !digits(whole) || !digits(frac) ||
+      frac.size() > 3 || whole.size() > 1) {
+    throw std::invalid_argument("Not a price: \"" + text + "\"");
+  }
+  int ticks = whole.empty() ? 0 : (whole[0] - '0') * 1000;
+  int scale = 100;
+  for (const char ch : frac) {
+    ticks += (ch - '0') * scale;
+    scale /= 10;
+  }
+  return static_cast<Ticks>(ticks);
+}
+
+}  // namespace
+
 std::istream& operator>>(std::istream& is, Price& p) {
-  char c = '\0';
-  if (!(is >> c)) {  // Nothing to read: leave p as it was
+  std::string text;
+  if (!(is >> text)) {  // Nothing to read: leave p as it was
     return is;
   }
-  if (c == '-') {
+  if (text.find_first_not_of('-') == std::string::npos) {  // "-" or "----"
     p.set(NanTick);
   } else {
-    std::string px_str(1, c);
-    while (is.get(c)) {
-      px_str += c;
-    }
-    p.set(static_cast<Ticks>(std::stod(px_str) * 1000));
+    p = Price(parse_ticks(text));  // the constructor checks the range
   }
   return is;
 }
 
 int snprintf_price(char* const s, std::size_t n, const Price& p) {
-  if (p == nanPrice()) {
-    return snprintf(s, n, "----");
-  } else {
-    const auto px = static_cast<double>(p.ticks()) /
-                    static_cast<double>(p.ticks_per_point());
-    return snprintf(s, n, "%.3f", px);
-  }
+  return snprintf(s, n, "%s", to_string(p).c_str());
 }
 
 const std::string to_string(const Price& px) {
-  // Longest output is "0.999" or "1.000": 5 characters and a NUL
-  constexpr std::size_t kBufferSize = 6;
-  const std::size_t len = (px == nanPrice()) ? 5 : kBufferSize;
-  char c_str[kBufferSize];
-  snprintf_price(c_str, len, px);
-  return std::string(c_str, len - 1);
+  if (px == nanPrice()) {
+    return "----";
+  }
+  // Integer arithmetic: no locale (never "0,500") and no truncated negatives
+  const long ticks = px.ticks();
+  const long per_point = px.ticks_per_point();
+  const long magnitude = (ticks < 0) ? -ticks : ticks;
+  std::string frac = std::to_string(magnitude % per_point);
+  frac.insert(0, 3 - frac.size(), '0');
+  return std::string(ticks < 0 ? "-" : "") +
+         std::to_string(magnitude / per_point) + "." + frac;
 }
 
 }  // namespace iem

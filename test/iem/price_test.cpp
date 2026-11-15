@@ -6,6 +6,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "gtest/gtest.h"
 
@@ -51,7 +53,8 @@ TEST(PriceTest, TicksPerPoint) {
 
 TEST(PriceTest, SessionStringFormat) {
   std::map<Price, std::string> price_expected_str_map{
-      {Price(999), "0.999"},
+      {Price(999), "0.999"}, {Price(1000), "1.000"},
+      {Price(5), "0.005"},   {Price(-1), "-0.001"},  // was truncated to "-0.00"
       {Price(), "----"},
   };
 
@@ -88,6 +91,39 @@ TEST(PriceTest, StreamInputFromEmptyStream) {
   is >> p;
   EXPECT_TRUE(is.fail());
   EXPECT_EQ(p, Price(5));
+}
+
+TEST(PriceTest, StreamInputAcceptsIemPricesOnly) {
+  const std::vector<std::pair<std::string, Ticks>> good{
+      {"0.512", 512}, {"1", 1000},     {".5", 500},
+      {"0.50*", 500}, {"1.000", 1000}, {"0.001000", 1}};
+  for (const auto& [text, ticks] : good) {
+    Price p;
+    std::istringstream(text) >> p;
+    EXPECT_EQ(p, Price(ticks)) << text;
+  }
+  for (const auto* bad :
+       {"inf", "nan", "0.5x", "1.5", "0.1234", "2", "0,5", "."}) {
+    Price p;
+    EXPECT_THROW(std::istringstream(bad) >> p, std::invalid_argument) << bad;
+  }
+}
+
+TEST(PriceTest, StreamInputReadsOnePriceAtATime) {
+  // Like any other >>: one word each, and the stream stays good
+  std::istringstream is("0.5 0.6");
+  Price first;
+  Price second;
+  is >> first >> second;
+  EXPECT_EQ(first, Price(500));
+  EXPECT_EQ(second, Price(600));
+  EXPECT_FALSE(is.fail());
+}
+
+TEST(PriceTest, StreamOutputLeavesTheStreamFormatAlone) {
+  std::ostringstream os;
+  os << Price(12) << ' ' << 2.5;
+  EXPECT_EQ(os.str(), "0.012 2.5");
 }
 
 }  // namespace iem

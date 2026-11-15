@@ -24,6 +24,39 @@ Session::Session(const std::string& username, const std::string& password,
                  std::unique_ptr<HttpClient> client)
     : username_(username), password_(password), client_(std::move(client)) {}
 
+// A response that can't be what was asked for: an error status, or a
+// redirect to the login page (the session expired), which IEM sends as a
+// redirect that would otherwise look like success.
+HttpResponse _checked(const HttpResponse& response, const std::string& path) {
+  const auto what = redact_session(path.substr(0, path.find('?')));
+  if (response.status >= 500) {
+    // A gateway or server error may come after the request was handled: an
+    // order may have been placed, so read before sending it again.
+    throw HttpOutcomeUnknown(what + " failed: HTTP " +
+                             std::to_string(response.status));
+  }
+  if (response.status >= 400) {
+    throw std::runtime_error(what + " refused: HTTP " +
+                             std::to_string(response.status));
+  }
+  for (const auto& h : response.headers) {
+    if (boost::iequals(h.first, "Location") &&
+        h.second.find("TraderLogin") != std::string::npos) {
+      throw SessionExpired(what + " failed: the IEM session expired");
+    }
+  }
+  return response;
+}
+
+void _check_size(const Quantity quantity) {
+  // Orders read back from IEM may be any size; only what is sent is capped.
+  if (quantity > kMaxOrderQuantity) {
+    throw std::invalid_argument("Order quantity over " +
+                                std::to_string(kMaxOrderQuantity) + ": " +
+                                std::to_string(quantity));
+  }
+}
+
 HttpRequest buildRequest(const HttpMethod method, const std::string& path,
                          const NameValuePairs& name_value_pairs = {}) {
   HttpRequest request;
@@ -52,6 +85,10 @@ const HttpResponse Session::authenticate() {
   if (location.empty()) {  // If location is empty string, then login failed
     std::cout << "Login failed; attempting forcing login...\n";
     location = login(true);  // Force login
+  }
+  if (location.empty()) {  // Even a forced login wasn't redirected
+    throw std::runtime_error(
+        "IEM login failed: check IEM_USERNAME and IEM_PASSWORD");
   }
 
   // Market select request
@@ -121,20 +158,49 @@ const HttpResponse Session::logout() {
 }
 
 Price _parse_price(const std::string& px_str) {
-  if (!px_str.empty()) {
-    std::istringstream iss(px_str);
-    Price p;
-    iss >> p;
-    return p;
+  // One price, perhaps with IEM's priority mark: "0.512", "0.512*", "0.512 *"
+  auto text = boost::trim_copy(px_str);
+  if (!text.empty() && text.back() == '*') {
+    text.pop_back();
+    boost::trim_right(text);
   }
-  return nanPrice();
+  if (text.empty()) {
+    return nanPrice();
+  }
+  std::istringstream iss(text);
+  Price p;
+  iss >> p;
+  if (!(iss >> std::ws).eof()) {
+    throw std::invalid_argument("Not a price: \"" + px_str + "\"");
+  }
+  return p;
 }
 
 position_t _parse_quantity(const std::string& qty_str) {
-  if (!qty_str.empty()) {
-    return std::stoi(qty_str);
+  // IEM writes whole numbers, sometimes as "1.000000": any decimals must be 0
+  const auto text = boost::trim_copy(qty_str);
+  if (text.empty()) {
+    return 0;
   }
-  return 0;
+  const auto dot = text.find('.');
+  const auto whole = text.substr(0, dot);
+  const auto frac = (dot == std::string::npos) ? "" : text.substr(dot + 1);
+  std::size_t used = 0;
+  const auto value = std::stoll(whole, &used);  // throws on no digits
+  if (used != whole.size() ||
+      frac.find_first_not_of('0') != std::string::npos) {
+    throw std::invalid_argument("Not a quantity: \"" + qty_str + "\"");
+  }
+  return value;
+}
+
+// An order or trade size read from IEM: a whole number from 1 up.
+Quantity _parse_order_quantity(const std::string& qty_str) {
+  const auto value = _parse_quantity(qty_str);
+  if (value < 1 || value > std::numeric_limits<Quantity>::max()) {
+    throw std::out_of_range("Order quantity out of range: " + qty_str);
+  }
+  return static_cast<Quantity>(value);
 }
 
 const ptree& empty_ptree() {
@@ -142,7 +208,7 @@ const ptree& empty_ptree() {
   return t;
 }
 
-unsigned int num_open_orders(ptree::const_assoc_iterator it) {
+NumOrders num_open_orders(ptree::const_assoc_iterator it) {
   auto obo_form = it->second.get_child("form", empty_ptree());
   std::string value;
   if (obo_form == empty_ptree()) {
@@ -170,8 +236,8 @@ const OrderBook _read_orderbook_html(ptree::const_assoc_iterator tr_it,
   bool best_ask_priority = false;
   Price last_trade_px;
   position_t position = 0;
-  unsigned int num_open_bid_orders = 0;
-  unsigned int num_open_ask_orders = 0;
+  NumOrders num_open_bid_orders = 0;
+  NumOrders num_open_ask_orders = 0;
 
   auto td_its = tr_it->second.equal_range("td");
   constexpr auto c("contract");
@@ -196,8 +262,8 @@ const OrderBook _read_orderbook_html(ptree::const_assoc_iterator tr_it,
       boost::trim(data);
       last_trade_px = _parse_price(data);
     } else if (klass == "change-cell quantity") {  // Position
-      auto data = it->second.get<std::string>("<xmlattr>.value");
-      position = _parse_quantity(data);
+      position =
+          _parse_quantity(it->second.get<std::string>("<xmlattr>.value"));
     } else if (klass == "yourBidsCell") {  // Number of open bid orders
       num_open_bid_orders = num_open_orders(it);
     } else if (klass == "yourAsksCell") {  // Number of open ask orders
@@ -214,9 +280,16 @@ const OrderBook _read_orderbook_html(ptree::const_assoc_iterator tr_it,
 const std::string _table_html_string(const std::string& body) {
   // In order to increase likelihood of parsing valid XML, find substring that
   // covers all html tables
+  // The first table, up to its own end tag: later markup and scripts that
+  // happen to contain "table" must not be swept in.
   const size_t pos = body.find("<table");
-  const size_t len = body.rfind("table") - pos + 6;  // 6 is length of "<table"
-  return body.substr(pos, len);
+  const size_t end =
+      (pos == std::string::npos) ? pos : body.find("</table>", pos);
+  if (end == std::string::npos) {
+    throw std::runtime_error("No table in the page (logged out?)");
+  }
+  constexpr size_t kEndTag = 8;  // "</table>"
+  return body.substr(pos, end + kEndTag - pos);
 }
 
 ptree _tbody_ptree(const std::string& body) {
@@ -236,8 +309,19 @@ const std::vector<OrderBook> _read_orderbooks_html(const std::string& body,
   const auto tr_its = tbody.equal_range("tr");
 
   std::vector<OrderBook> obs;
+  std::string skipped;
   for (auto it = tr_its.first; it != tr_its.second; it++) {
-    obs.push_back(_read_orderbook_html(it, market));
+    try {
+      obs.push_back(_read_orderbook_html(it, market));
+    } catch (const UnknownContract& e) {
+      // A contract markets.json doesn't list yet: skip it, keep the rest
+      std::cerr << "Skipping an order book row: " << e.what() << '\n';
+      skipped += std::string(skipped.empty() ? "" : "; ") + e.what();
+    }
+  }
+  if (obs.empty() && !skipped.empty()) {
+    // Not one row read: the page or the parser changed, not markets.json
+    throw std::runtime_error("No order book row could be read: " + skipped);
   }
   return obs;
 }
@@ -250,7 +334,8 @@ const std::vector<OrderBook> Session::orderbook(const Market& market) {
   // Set cookie
   market_orderbook_request.headers.emplace_back("Cookie", cookie());
   // POST request
-  const auto& response = client_->send(market_orderbook_request);
+  const auto response = _checked(client_->send(market_orderbook_request),
+                                 market_orderbook_request.path);
   const auto& obs = _read_orderbooks_html(response.body, market);
 
   return obs;
@@ -277,7 +362,7 @@ const HoldingMessage _read_message_html(ptree::const_assoc_iterator tr_it) {
       data_str = it->second.get_child("a").data();
       action = action_from_string(data_str);
     } else if (i == 4) {  // quantity
-      quantity = _parse_quantity(data_str);
+      quantity = _parse_order_quantity(data_str);
     } else if (i == 5) {  // price
       price = _parse_price(data_str);
     }
@@ -306,7 +391,7 @@ const std::vector<HoldingMessage> Session::holdings(const Contract& contract) {
   // Construct request
   auto asset_holdings_request =
       buildRequest(HttpMethod::POST, "/iem/trader/TraderActivity.action",
-                   {{"market", "contract.market"},
+                   {{"market", std::to_string(contract.market().value())},
                     {"asset", std::to_string(contract.asset_id())},
                     {"activityType", "holdings"},
                     // Number of transactions? Required?
@@ -314,7 +399,8 @@ const std::vector<HoldingMessage> Session::holdings(const Contract& contract) {
   // Set cookie
   asset_holdings_request.headers.emplace_back("Cookie", cookie());
   // POST request
-  const auto& response = client_->send(asset_holdings_request);
+  const auto response = _checked(client_->send(asset_holdings_request),
+                                 asset_holdings_request.path);
   return _read_messages_html(response.body);
 }
 
@@ -364,7 +450,7 @@ const Single _read_order_html(const ptree::const_assoc_iterator tr_it) {
     } else if (i == 3) {  // order type
       order_type = data_str;
     } else if (i == 4) {  // quantity
-      quantity = _parse_quantity(data_str);
+      quantity = _parse_order_quantity(data_str);
     } else if (i == 5) {  // price
       price = _parse_price(data_str);
     } else if (i == 6) {  // expiration date
@@ -407,12 +493,18 @@ const SingleOrders Session::outstanding_orders(const Contract& contract,
   // Set cookie
   outstanding_order_request.headers.emplace_back("Cookie", cookie());
   // POST request
-  const auto& response = client_->send(outstanding_order_request);
+  const auto response = _checked(client_->send(outstanding_order_request),
+                                 outstanding_order_request.path);
   return _read_orders_html(response.body);
 }
 
 const HttpRequest limit_order_request(const Single& order) {
   using boost::gregorian::to_iso_extended_string;
+  const auto& price = order.price_time_limit().price();
+  if (price.ticks() < 1 || price.ticks() > price.ticks_per_point()) {
+    throw std::invalid_argument("A limit price must be 0.001 to 1.000, not " +
+                                to_string(price));
+  }
   // Construct request
   const auto& c = order.contract();
   auto order_request = buildRequest(
@@ -456,12 +548,14 @@ const HttpRequest _single_order_request(const Single& order) {
 }
 
 const HttpResponse Session::place_order(const Single& order) {
+  _check_size(order.quantity());
   // Construct request
   HttpRequest order_request = _single_order_request(order);
   // Set cookie
   order_request.headers.emplace_back("Cookie", cookie());
   // POST request
-  const auto& response = client_->send(order_request);
+  const auto response =
+      _checked(client_->send(order_request), order_request.path);
   return response;
 }
 
@@ -485,12 +579,14 @@ const HttpRequest _bundle_order_request(const Bundle& order) {
 }
 
 const HttpResponse Session::place_order(const Bundle& order) {
+  _check_size(order.quantity());
   // Construct request
   HttpRequest order_request = _bundle_order_request(order);
   // Set cookie
   order_request.headers.emplace_back("Cookie", cookie());
   // POST request
-  const auto& response = client_->send(order_request);
+  const auto response =
+      _checked(client_->send(order_request), order_request.path);
   return response;
 }
 
@@ -499,10 +595,10 @@ const std::string _action(const Side& side) {
 }
 
 const HttpResponse Session::cancel_order(const Single& order) {
-  // Construct request
-  if (valid_id(order)) {
-    // Return something useful
-    return HttpResponse{};
+  if (!valid_id(order)) {
+    throw std::invalid_argument(
+        "Can't cancel an order without an IEM order id (read it with "
+        "outstanding_orders first)");
   }
 
   const auto oid = (order.side() == Side::BUY) ? "bidOrder" : "askOrder";
@@ -517,7 +613,7 @@ const HttpResponse Session::cancel_order(const Single& order) {
   // Set cookie
   cxl_request.headers.emplace_back("Cookie", this->cookie());
   // POST request
-  const auto& response = client_->send(cxl_request);
+  const auto response = _checked(client_->send(cxl_request), cxl_request.path);
   return response;
 }
 
@@ -546,7 +642,7 @@ const TraderMessage _read_message_html(const std::string& market_name,
     } else if (i == 3) {  // action
       action = action_from_string(data_str);
     } else if (i == 4) {  // quantity
-      quantity = std::stoi(data_str);
+      quantity = _parse_order_quantity(data_str);
     } else if (i == 5) {  // price
       price = _parse_price(data_str);
     } else if (i == 6) {  // expiration_date
@@ -579,7 +675,7 @@ const std::vector<TraderMessage> Session::messages(const Market& market) {
   // Construct request
   const auto request = market_client_request(market, "home");
   // GET request
-  const auto& response = client_->send(request);
+  const auto response = _checked(client_->send(request), request.path);
   return _read_messages_html(market, response.body);
 }
 
@@ -587,7 +683,7 @@ const HttpResponse Session::remove_messages(const Market& market) {
   // Construct request
   const auto request = market_client_request(market, "removeMessages");
   // GET request
-  const auto& response = client_->send(request);
+  const auto response = _checked(client_->send(request), request.path);
   return response;
 }
 
@@ -595,7 +691,7 @@ const std::vector<TraderMessage> Session::portfolio(const Market& market) {
   // Construct request
   const auto request = market_client_request(market, "viewPortfolio");
   // GET request
-  const auto& response = client_->send(request);
+  const auto response = _checked(client_->send(request), request.path);
   return _read_messages_html(market, response.body);
 }
 
@@ -619,11 +715,15 @@ int snprintf_session(char* const str, const std::size_t size,
                   s.username().c_str(), s.cookie().empty() ? "false" : "true");
 }
 
-// TODO(rheineke): Write function
-// UniqueSession make_unique_session(const std::string& username,
-//                                  const std::string& password) {
-//  return std::unique_ptr(new Session(username, password),
-//                         decltype(&Session::logout));
-//}
+LogoutOnExit::~LogoutOnExit() {
+  if (session_->cookie().empty()) {  // never logged in, or already out
+    return;
+  }
+  try {
+    session_->logout();
+  } catch (const std::exception& e) {
+    std::cerr << "Logout failed: " << e.what() << '\n';
+  }
+}
 
 }  // namespace iem

@@ -1,6 +1,9 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/order.hpp"
 
+#include <stdexcept>
+#include <string>
+
 namespace iem {
 
 std::ostream& operator<<(std::ostream& os, const Counterparty& cp) {
@@ -25,11 +28,16 @@ Order::Order(const Side& side, const Quantity quantity,
     : side_(side),
       quantity_(quantity),
       price_time_limit_(price_time_limit),
-      counterparty_(counterparty) {}
+      counterparty_(counterparty) {
+  if (quantity_ < 1) {  // the upper cap is checked when an order is sent
+    throw std::invalid_argument("Order quantity must be 1 or more but was " +
+                                std::to_string(quantity_));
+  }
+}
 
 void Single::print(std::ostream* const p_os) const {
   *p_os << "SingleOrder{"
-        << "side=" << side() << ", quantity=" << static_cast<int>(quantity())
+        << "side=" << side() << ", quantity=" << quantity()
         << ", priceTimeLimit=" << price_time_limit()
         << ", counterparty=" << counterparty() << ", contract=" << contract()
         << ", id=" << static_cast<int>(id()) << "}";

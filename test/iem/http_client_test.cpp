@@ -1,6 +1,7 @@
 // Copyright 2026 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/http_client.hpp"
 
+#include <chrono>
 #include <string>
 #include <thread>
 
@@ -19,6 +20,11 @@ TEST(HttpClientTest, UrlEncodeEscapesEverythingElse) {
   EXPECT_EQ(url_encode({{"a b", "x&y=z"}, {"loginSubmit", "Sign in"}}),
             "a%20b=x%26y%3Dz&loginSubmit=Sign%20in");
   EXPECT_EQ(url_encode({{"p", "100%/?#+"}}), "p=100%25%2F%3F%23%2B");
+}
+
+TEST(HttpClientTest, UrlEncodeEscapesEveryNonAsciiByte) {
+  // "é" in UTF-8, whatever the locale calls a letter
+  EXPECT_EQ(url_encode({{"n", "\xC3\xA9"}}), "n=%C3%A9");
 }
 
 TEST(HttpClientTest, UrlEncodeEmptyValues) {
@@ -165,7 +171,26 @@ TEST(HttpClientTest, NoServerThrows) {
     LocalServer local;
     url = local.url();
   }  // Server stopped: nothing listens on the port now
-  EXPECT_THROW(make_http_client(url)->send(post("/", "")), std::runtime_error);
+  // Nothing listened: the request certainly wasn't sent
+  EXPECT_THROW(make_http_client(url)->send(post("/", "")), HttpNotSent);
+}
+
+TEST(HttpClientTest, NoAnswerInTimeMeansTheOutcomeIsUnknown) {
+  LocalServer local;
+  local.server.Post("/slow", [](const httplib::Request&, httplib::Response&) {
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+  });
+  // The request was sent: the server may have acted on it
+  EXPECT_THROW(make_http_client(local.url(), std::chrono::seconds(1))
+                   ->send(post("/slow", "")),
+               HttpOutcomeUnknown);
+}
+
+TEST(HttpClientTest, SessionIdsAreRedacted) {
+  EXPECT_EQ(redact_session("/iem/x.action;jsessionid=ABC123?a=1"),
+            "/iem/x.action?a=1");
+  EXPECT_EQ(redact_session("/iem/x.action;jsessionid=ABC123"), "/iem/x.action");
+  EXPECT_EQ(redact_session("/iem/x.action?a=1"), "/iem/x.action?a=1");
 }
 
 // Session end to end over HTTP, against a server that imitates IEM's login

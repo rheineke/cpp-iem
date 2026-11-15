@@ -3,6 +3,7 @@
 #define CPPIEM_IEM_SESSION_HPP_
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include "iem/http_client.hpp"
@@ -10,6 +11,13 @@
 #include "iem/orderbook.hpp"
 
 namespace iem {
+
+// The IEM session expired (requests redirect to the login page): log in
+// again. Nothing was done.
+class SessionExpired : public std::runtime_error {
+ public:
+  using std::runtime_error::runtime_error;
+};
 
 // IEM HTTP session. Session requires a username and password at construction,
 // and any account specific requests for IEM require a session object. Session
@@ -95,12 +103,21 @@ class Session {
 // str (size bytes). The password and cookie are never written.
 int snprintf_session(char* const str, const std::size_t size, const Session& s);
 
-// Unique session with a custom deleter to automatically log out
-using UniqueSession =
-    std::unique_ptr<const Session, void (*)(const Session* const)>;
+// Logs a session out when it goes out of scope, error or not. A session left
+// open makes the next login force its way in, which ends any other live
+// session. Never throws: a failed logout is printed to stderr.
+class LogoutOnExit {
+ public:
+  explicit LogoutOnExit(Session* session) noexcept : session_(session) {}
+  ~LogoutOnExit();
+  LogoutOnExit(const LogoutOnExit&) = delete;
+  LogoutOnExit& operator=(const LogoutOnExit&) = delete;
+  LogoutOnExit(LogoutOnExit&&) = delete;
+  LogoutOnExit& operator=(LogoutOnExit&&) = delete;
 
-UniqueSession make_unique_session(const std::string& username,
-                                  const std::string& password);
+ private:
+  Session* const session_;
+};
 
 // Private functions exposed for unit testing
 const std::vector<OrderBook> _read_orderbooks_html(const std::string& body,
@@ -110,6 +127,10 @@ std::string _location_path(const std::string& location);
 Price _parse_price(const std::string& px_str);
 
 position_t _parse_quantity(const std::string& qty_str);
+
+Quantity _parse_order_quantity(const std::string& qty_str);
+
+const std::string _table_html_string(const std::string& body);
 
 const HttpRequest _single_order_request(const Single& order);
 

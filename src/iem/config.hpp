@@ -2,6 +2,7 @@
 #ifndef CPPIEM_IEM_CONFIG_HPP_
 #define CPPIEM_IEM_CONFIG_HPP_
 
+#include <stdexcept>
 #include <string>
 
 #include "boost/date_time/posix_time/posix_time.hpp"
@@ -9,11 +10,17 @@
 
 namespace iem {
 
+// A market, contract or bundle the markets file doesn't list.
+class UnknownContract : public std::invalid_argument {
+ public:
+  using std::invalid_argument::invalid_argument;
+};
+
 constexpr auto kDefaultFilename = "conf/markets.json";
 
 // Returns the JSON document at (relative) path filename, which must be strict
-// JSON (no comments). The first call reads the file; later calls return the
-// same document and ignore filename.
+// JSON (no comments). Each file is read once; later calls with the same
+// filename return the same document.
 const nlohmann::json& read_markets_json(
     char const* filename = kDefaultFilename);
 
