@@ -4,8 +4,10 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "boost/property_tree/xml_parser.hpp"
 #include "fake_http_client.hpp"
@@ -51,8 +53,24 @@ TEST(SessionTest, PriceParser) {
 }
 
 TEST(SessionTest, PositionParser) {
-  auto qty = _parse_quantity("");
-  EXPECT_EQ(qty, 0);
+  EXPECT_EQ(_parse_quantity(""), 0);
+  EXPECT_EQ(_parse_quantity("300"), 300);  // was read as 44
+  EXPECT_EQ(_parse_quantity("-12"), -12);  // a short position
+  EXPECT_THROW(_parse_quantity("12abc"), std::invalid_argument);
+  EXPECT_EQ(_parse_quantity("37.000000"), 37);  // how IEM writes it
+  EXPECT_THROW(_parse_quantity("1.5"), std::invalid_argument);
+  EXPECT_EQ(_parse_order_quantity("50000"), 50000);
+  EXPECT_THROW(_parse_order_quantity("-1"), std::out_of_range);  // was 255
+  EXPECT_THROW(_parse_order_quantity("0"), std::out_of_range);
+}
+
+TEST(SessionTest, TableEndsAtItsOwnEndTag) {
+  const std::string body =
+      "<html><table><tbody></tbody></table><script>var table = 1;</script>"
+      "</html>";
+  EXPECT_EQ(_table_html_string(body), "<table><tbody></tbody></table>");
+  EXPECT_THROW(_table_html_string("<html>logged out</html>"),
+               std::runtime_error);
 }
 
 // Session tests below run against FakeHttpClient: no network.
@@ -267,7 +285,7 @@ TEST(SessionTest, Holdings) {
 
   ASSERT_EQ(server.requests.size(), 1u);
   EXPECT_EQ(server.requests[0].body,
-            url_encode({{"market", "contract.market"},
+            url_encode({{"market", std::to_string(c.market().value())},
                         {"asset", std::to_string(c.asset_id())},
                         {"activityType", "holdings"},
                         {"viewAssetHoldings", "25"}}));
@@ -383,10 +401,8 @@ TEST(SessionTest, CancelOrderWithoutIdSendsNothing) {
   const Single o(c, Side::BUY, 1,
                  PriceTimeLimit(Price(1), boost::posix_time::not_a_date_time));
 
-  const auto response = s.cancel_order(o);
-
+  EXPECT_THROW(s.cancel_order(o), std::invalid_argument);
   EXPECT_TRUE(server.requests.empty());
-  EXPECT_EQ(response.status, 0);
 }
 
 TEST(SessionTest, CancelOrder) {
@@ -410,6 +426,123 @@ TEST(SessionTest, CancelOrder) {
                             {"asset", std::to_string(c.asset_id())},
                             {"activityType", "bid"}}));
   EXPECT_EQ(header(server.requests[0].headers, "Cookie"), kCookie);
+}
+
+struct LimitCase {
+  Side side;
+  Quantity quantity;
+  std::string expiration;  // "" for none
+  std::string order_type;
+};
+
+TEST(SessionTest, LimitOrdersCarrySideQuantityAndExpiry) {
+  const Contract c("FedPolicyB", "FRsame1216");
+  for (const auto& lc :
+       std::vector<LimitCase>{{Side::BUY, 1, "", "bid"},
+                              {Side::SELL, 37, "", "ask"},
+                              {Side::BUY, 37, "2016-12-14 23:59:00", "bid"},
+                              {Side::SELL, 1, "2016-12-14 23:59:00", "ask"}}) {
+    FakeServer server;
+    auto s = logged_in_session(&server);
+    server.responses = {ok("")};
+    const auto expiry =
+        lc.expiration.empty()
+            ? boost::posix_time::ptime(boost::posix_time::not_a_date_time)
+            : boost::posix_time::time_from_string(lc.expiration);
+    const PriceTimeLimit ptl(Price(512), expiry);
+    s.place_order(Single(c, lc.side, lc.quantity, ptl));
+
+    ASSERT_EQ(server.requests.size(), 1u);
+    const auto& body = server.requests[0].body;
+    EXPECT_NE(body.find("orderType=" + lc.order_type), std::string::npos);
+    EXPECT_NE(body.find("limitOrderQuantity=" + std::to_string(lc.quantity)),
+              std::string::npos);
+    EXPECT_NE(body.find("price=0.512"), std::string::npos);
+    EXPECT_NE(body.find("expirationDate=" +
+                        url_encode({{"", to_string(expiry)}}).substr(1)),
+              std::string::npos)
+        << body;
+  }
+}
+
+TEST(SessionTest, MarketBuyIsSentAsBuy) {
+  FakeServer server;
+  auto s = logged_in_session(&server);
+  server.responses = {ok("")};
+  const Contract c("FedPolicyB", "FRsame1216");
+  const PriceTimeLimit ioc(nanPrice(), boost::posix_time::not_a_date_time);
+  s.place_order(Single(c, Side::BUY, 37, ioc));
+  const auto& body = server.requests[0].body;
+  EXPECT_NE(body.find("orderType=buy"), std::string::npos);
+  EXPECT_NE(body.find("marketOrderQuantity=37"), std::string::npos);
+}
+
+TEST(SessionTest, BundleOrdersNameSideAndCounterparty) {
+  const ContractBundle cb("FedPolicyB", MonthYear(boost::gregorian::Dec, 16));
+  for (const auto& [side, cp, type] :
+       std::vector<std::tuple<Side, Counterparty, std::string>>{
+           {Side::BUY, Counterparty::EXCHANGE, "buyAtFixed"},
+           {Side::SELL, Counterparty::EXCHANGE, "sellAtFixed"},
+           {Side::BUY, Counterparty::PARTICIPANT, "buyAtMarket"},
+           {Side::SELL, Counterparty::PARTICIPANT, "sellAtMarket"}}) {
+    FakeServer server;
+    auto s = logged_in_session(&server);
+    server.responses = {ok("")};
+    s.place_order(Bundle(cb, side, 12, cp));
+    const auto& body = server.requests[0].body;
+    EXPECT_NE(body.find("orderType=" + type), std::string::npos) << type;
+    EXPECT_NE(body.find("bundleOrderQuantity=12"), std::string::npos);
+  }
+}
+
+TEST(SessionTest, AskCancelUsesTheAskFields) {
+  FakeServer server;
+  auto s = logged_in_session(&server);
+  server.responses = {ok("")};
+  const Contract c("FedPolicyB", "FRup1216");
+  Single o(c, Side::SELL, 1,
+           PriceTimeLimit(Price(1), boost::posix_time::not_a_date_time));
+  o.set_id(4700001);
+  s.cancel_order(o);
+  const auto& path = server.requests[0].path;
+  EXPECT_NE(path.find("cancelAskOrder="), std::string::npos);
+  EXPECT_NE(path.find("askOrder=4700001"), std::string::npos);
+  EXPECT_NE(path.find("activityType=ask"), std::string::npos);
+}
+
+TEST(SessionTest, LimitPricesOutsideTheMarketAreRefused) {
+  FakeServer server;
+  auto s = logged_in_session(&server);
+  const Contract c("FedPolicyB", "FRsame1216");
+  for (const Ticks bad : {Ticks{0}, Ticks{-1}}) {
+    const PriceTimeLimit ptl(Price(bad), boost::posix_time::not_a_date_time);
+    EXPECT_THROW(s.place_order(Single(c, Side::BUY, 1, ptl)),
+                 std::invalid_argument);
+  }
+  EXPECT_TRUE(server.requests.empty());
+}
+
+TEST(SessionTest, FailedOrExpiredResponsesThrow) {
+  const Contract c("FedPolicyB", "FRsame1216");
+  const PriceTimeLimit ptl(Price(512), boost::posix_time::not_a_date_time);
+  for (const auto& response :
+       {HttpResponse{500, {}, "error"},
+        HttpResponse{
+            302, {{"Location", "/iem/trader/TraderLogin.action"}}, ""}}) {
+    FakeServer server;
+    auto s = logged_in_session(&server);
+    server.responses = {response};
+    EXPECT_THROW(s.place_order(Single(c, Side::BUY, 1, ptl)),
+                 std::runtime_error);
+  }
+}
+
+TEST(SessionTest, AuthenticateFailsWhenEvenAForcedLoginIsRefused) {
+  FakeServer server;
+  server.responses = {ok("bad password"), ok("bad password")};
+  Session s("foo", "wrong", make_fake_client(&server));
+  EXPECT_THROW(s.authenticate(), std::runtime_error);
+  EXPECT_EQ(server.requests.size(), 2u);
 }
 
 TEST(SessionTest, ReadTradeMessageHTML) {

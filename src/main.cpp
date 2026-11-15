@@ -1,6 +1,7 @@
 // Copyright 2014 Reece Heineke<reece.heineke@gmail.com>
 #include <algorithm>
 #include <chrono>
+#include <exception>
 #include <iostream>
 #include <thread>
 
@@ -61,12 +62,11 @@ int messages_example(int argc, char* argv[]) {
     //    const auto cxl_response = session.cancel_order(cxl_o);
   }
 
-  // Send a test bundle order
-  const iem::ContractBundle cb(mkt.name(),
-                               iem::MonthYear(boost::gregorian::Dec, 16));
-  const iem::Bundle b(cb, iem::Side::BUY, 1, iem::Counterparty::EXCHANGE);
-  const auto bundle_response = session.place_order(b);
-  std::cout << bundle_response.body << '\n';
+  // An example that reads only: build orders here, but don't send them
+  //  const iem::ContractBundle cb(mkt.name(),
+  //                               iem::MonthYear(boost::gregorian::Dec, 16));
+  //  const iem::Bundle b(cb, iem::Side::BUY, 1, iem::Counterparty::EXCHANGE);
+  //  session.place_order(b);
 
   // Request trade messages
   const auto msgs = session.messages(mkt);
@@ -107,8 +107,19 @@ int orderbook_example(int argc, char* argv[]) {
   std::cout << "Logging in...\n";
 
   // session.authenticate();
-  std::thread t(&iem::Session::authenticate, std::ref(session_p));
-  t.join();  // Race condition without join?
+  // An exception escaping a thread would abort the program: pass it back
+  std::exception_ptr login_error;
+  std::thread t([&session_p, &login_error] {
+    try {
+      session_p->authenticate();
+    } catch (...) {
+      login_error = std::current_exception();
+    }
+  });
+  t.join();
+  if (login_error) {
+    std::rethrow_exception(login_error);
+  }
 
   // Print session after authentication
   iem::Logger logger;

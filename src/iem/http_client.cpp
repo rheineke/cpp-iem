@@ -25,6 +25,23 @@ std::string percent_encode(const std::string& s) {
   return out;
 }
 
+// Errors before any byte of the request could reach the server.
+bool never_sent(const httplib::Error error) {
+  switch (error) {
+    case httplib::Error::Connection:
+    case httplib::Error::BindIPAddress:
+    case httplib::Error::ConnectionTimeout:
+    case httplib::Error::ProxyConnection:
+    case httplib::Error::SSLConnection:
+    case httplib::Error::SSLLoadingCerts:
+    case httplib::Error::SSLServerVerification:
+    case httplib::Error::SSLServerHostnameVerification:
+      return true;
+    default:
+      return false;
+  }
+}
+
 class HttplibHttpClient final : public HttpClient {
  public:
   explicit HttplibHttpClient(const std::string& base_url) : client_(base_url) {
@@ -47,8 +64,14 @@ class HttplibHttpClient final : public HttpClient {
 
     const auto result = client_.send(req);
     if (!result) {
-      throw std::runtime_error(req.method + " " + request.path + " failed: " +
-                               httplib::to_string(result.error()));
+      // The path may be one the server chose (a redirect) and carry a session
+      // id: keep it out of the message.
+      const auto what = req.method + " " + redact_session(request.path) +
+                        " failed: " + httplib::to_string(result.error());
+      if (never_sent(result.error())) {
+        throw HttpNotSent(what);
+      }
+      throw HttpOutcomeUnknown(what);
     }
     HttpResponse response;
     response.status = result->status;
@@ -64,6 +87,17 @@ class HttplibHttpClient final : public HttpClient {
 };
 
 }  // namespace
+
+std::string redact_session(const std::string& path) {
+  // "/x;jsessionid=ABC?y=1" -> "/x?y=1"
+  const auto start = path.find(";jsessionid=");
+  if (start == std::string::npos) {
+    return path;
+  }
+  const auto end = path.find_first_of("?#", start);
+  return path.substr(0, start) +
+         (end == std::string::npos ? "" : path.substr(end));
+}
 
 std::unique_ptr<HttpClient> make_http_client(const std::string& base_url) {
   return std::make_unique<HttplibHttpClient>(base_url);

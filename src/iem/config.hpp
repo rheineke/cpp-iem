@@ -2,12 +2,19 @@
 #ifndef CPPIEM_IEM_CONFIG_HPP_
 #define CPPIEM_IEM_CONFIG_HPP_
 
+#include <stdexcept>
 #include <string>
 
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "nlohmann/json.hpp"
 
 namespace iem {
+
+// A market, contract or bundle the markets file doesn't list.
+class UnknownContract : public std::invalid_argument {
+ public:
+  using std::invalid_argument::invalid_argument;
+};
 
 constexpr auto kDefaultFilename = "conf/markets.json";
 

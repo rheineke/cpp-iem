@@ -2,7 +2,10 @@
 #include "config.hpp"
 
 #include <fstream>
+#include <map>
+#include <mutex>
 #include <stdexcept>
+#include <string>
 
 namespace iem {
 
@@ -21,7 +24,7 @@ const nlohmann::json& member(const nlohmann::json& object,
                              const std::string& key, const std::string& what) {
   const auto it = object.find(key);
   if (it == object.end()) {
-    throw std::invalid_argument("Unknown " + what + ": " + key);
+    throw UnknownContract("Unknown " + what + ": " + key);
   }
   return *it;
 }
@@ -39,9 +42,16 @@ boost::gregorian::date date_member(const nlohmann::json& object,
 }  // namespace
 
 const nlohmann::json& read_markets_json(char const* filename) {
-  // Thread-safe; a throw leaves it unset, so the next call tries again
-  static const nlohmann::json root = parse_file(filename);
-  return root;
+  // One parsed file per name, so a second file isn't silently ignored. A
+  // throw leaves it unset, so the next call tries again.
+  static std::mutex mutex;
+  static std::map<std::string, nlohmann::json> roots;
+  const std::lock_guard<std::mutex> lock(mutex);
+  const auto it = roots.find(filename);
+  if (it != roots.end()) {
+    return it->second;
+  }
+  return roots.emplace(filename, parse_file(filename)).first->second;
 }
 
 const nlohmann::json& market_value(const nlohmann::json& json_root,

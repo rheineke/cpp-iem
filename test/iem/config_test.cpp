@@ -30,10 +30,11 @@ TEST(ConfigTest, ReadJson) {
   EXPECT_TRUE(read_markets_json().is_object());
 }
 
-TEST(ConfigTest, ReadJsonReadsOnce) {
-  // Later calls return the first document, whatever their filename
+TEST(ConfigTest, ReadJsonReadsEachFileOnce) {
+  // The same file gives the same document; another file is read for itself
   const auto& root = read_markets_json();
-  EXPECT_EQ(&read_markets_json("missing.json"), &root);
+  EXPECT_EQ(&read_markets_json(), &root);
+  EXPECT_THROW(read_markets_json("missing.json"), std::invalid_argument);
 }
 
 TEST(ConfigTest, MarketValue) {

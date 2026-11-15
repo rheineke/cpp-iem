@@ -165,7 +165,15 @@ TEST(HttpClientTest, NoServerThrows) {
     LocalServer local;
     url = local.url();
   }  // Server stopped: nothing listens on the port now
-  EXPECT_THROW(make_http_client(url)->send(post("/", "")), std::runtime_error);
+  // Nothing listened: the request certainly wasn't sent
+  EXPECT_THROW(make_http_client(url)->send(post("/", "")), HttpNotSent);
+}
+
+TEST(HttpClientTest, SessionIdsAreRedacted) {
+  EXPECT_EQ(redact_session("/iem/x.action;jsessionid=ABC123?a=1"),
+            "/iem/x.action?a=1");
+  EXPECT_EQ(redact_session("/iem/x.action;jsessionid=ABC123"), "/iem/x.action");
+  EXPECT_EQ(redact_session("/iem/x.action?a=1"), "/iem/x.action?a=1");
 }
 
 // Session end to end over HTTP, against a server that imitates IEM's login

@@ -12,8 +12,8 @@
 
 namespace iem {
 
-using NumOrders = uint_fast8_t;
-using position_t = uint_fast16_t;
+using NumOrders = int32_t;
+using position_t = int64_t;  // net contracts held: negative when short
 using Balance = double;
 
 // IEM OrderBook. The order book is first in/first out (FIFO), contains top of

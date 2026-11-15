@@ -1,6 +1,9 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/order.hpp"
 
+#include <sstream>
+#include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <typeindex>
 
@@ -34,6 +37,28 @@ TEST(OrderTest, DestroyedThroughBase) {
   // The virtual destructor keeps the defaulted moves
   EXPECT_TRUE(std::is_nothrow_move_constructible_v<Single>);
   EXPECT_TRUE(std::is_nothrow_move_assignable_v<Single>);
+}
+
+TEST(OrderTest, QuantityMustBeOneUpToTheMaximum) {
+  const Contract c("FedPolicyB", "FRsame1216");
+  const PriceTimeLimit ptl(Price(1), boost::posix_time::not_a_date_time);
+  for (const Quantity bad : {0, -1, kMaxOrderQuantity + 1}) {
+    EXPECT_THROW(Single(c, Side::BUY, bad, ptl), std::invalid_argument) << bad;
+  }
+  const Single big(c, Side::BUY, 300, ptl);  // was sent as 44
+  EXPECT_EQ(big.quantity(), 300);
+  std::ostringstream os;
+  os << big;
+  EXPECT_NE(os.str().find("quantity=300"), std::string::npos);
+}
+
+TEST(OrderTest, ValidIdMeansIemGaveTheOrderAnId) {
+  const Contract c("FedPolicyB", "FRsame1216");
+  Single o(c, Side::BUY, 1,
+           PriceTimeLimit(Price(1), boost::posix_time::not_a_date_time));
+  EXPECT_FALSE(valid_id(o));
+  o.set_id(4700000);
+  EXPECT_TRUE(valid_id(o));
 }
 
 }  // namespace iem

@@ -111,6 +111,10 @@ Price _parse_price(const std::string& px_str);
 
 position_t _parse_quantity(const std::string& qty_str);
 
+Quantity _parse_order_quantity(const std::string& qty_str);
+
+const std::string _table_html_string(const std::string& body);
+
 const HttpRequest _single_order_request(const Single& order);
 
 }  // namespace iem
