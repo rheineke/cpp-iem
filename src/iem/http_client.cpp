@@ -14,7 +14,10 @@ namespace {
 std::string percent_encode(const std::string& s) {
   std::string out;
   for (const unsigned char c : s) {
-    if (std::isalnum(c) || c == '-' || c == '.' || c == '_' || c == '~') {
+    // ASCII only, whatever the locale's idea of a letter
+    const bool alnum = (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') ||
+                       (c >= 'a' && c <= 'z');
+    if (alnum || c == '-' || c == '.' || c == '_' || c == '~') {
       out += static_cast<char>(c);
     } else {
       char buf[4];
@@ -44,11 +47,13 @@ bool never_sent(const httplib::Error error) {
 
 class HttplibHttpClient final : public HttpClient {
  public:
-  explicit HttplibHttpClient(const std::string& base_url) : client_(base_url) {
+  HttplibHttpClient(const std::string& base_url,
+                    const std::chrono::seconds read_timeout)
+      : client_(base_url) {
     // Session paths and queries are already percent-encoded
     client_.set_path_encode(false);
     client_.set_connection_timeout(10);
-    client_.set_read_timeout(30);
+    client_.set_read_timeout(read_timeout);
     // Redirects are not followed: login reads the Location header itself
     client_.set_follow_location(false);
   }
@@ -99,8 +104,9 @@ std::string redact_session(const std::string& path) {
          (end == std::string::npos ? "" : path.substr(end));
 }
 
-std::unique_ptr<HttpClient> make_http_client(const std::string& base_url) {
-  return std::make_unique<HttplibHttpClient>(base_url);
+std::unique_ptr<HttpClient> make_http_client(
+    const std::string& base_url, const std::chrono::seconds read_timeout) {
+  return std::make_unique<HttplibHttpClient>(base_url, read_timeout);
 }
 
 std::unique_ptr<HttpClient> make_iem_http_client() {

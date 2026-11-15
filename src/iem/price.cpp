@@ -70,10 +70,6 @@ std::istream& operator>>(std::istream& is, Price& p) {
   if (!(is >> text)) {  // Nothing to read: leave p as it was
     return is;
   }
-  std::string rest;
-  if (is >> rest) {  // more than one word
-    throw std::invalid_argument("Not a price: \"" + text + " " + rest + "\"");
-  }
   if (text.find_first_not_of('-') == std::string::npos) {  // "-" or "----"
     p.set(NanTick);
   } else {

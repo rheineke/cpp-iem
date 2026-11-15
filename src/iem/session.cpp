@@ -28,18 +28,33 @@ Session::Session(const std::string& username, const std::string& password,
 // redirect to the login page (the session expired), which IEM sends as a
 // redirect that would otherwise look like success.
 HttpResponse _checked(const HttpResponse& response, const std::string& path) {
-  const auto what = path.substr(0, path.find('?'));
+  const auto what = redact_session(path.substr(0, path.find('?')));
+  if (response.status >= 500) {
+    // A gateway or server error may come after the request was handled: an
+    // order may have been placed, so read before sending it again.
+    throw HttpOutcomeUnknown(what + " failed: HTTP " +
+                             std::to_string(response.status));
+  }
   if (response.status >= 400) {
-    throw std::runtime_error(what + " failed: HTTP " +
+    throw std::runtime_error(what + " refused: HTTP " +
                              std::to_string(response.status));
   }
   for (const auto& h : response.headers) {
     if (boost::iequals(h.first, "Location") &&
         h.second.find("TraderLogin") != std::string::npos) {
-      throw std::runtime_error(what + " failed: the IEM session expired");
+      throw SessionExpired(what + " failed: the IEM session expired");
     }
   }
   return response;
+}
+
+void _check_size(const Quantity quantity) {
+  // Orders read back from IEM may be any size; only what is sent is capped.
+  if (quantity > kMaxOrderQuantity) {
+    throw std::invalid_argument("Order quantity over " +
+                                std::to_string(kMaxOrderQuantity) + ": " +
+                                std::to_string(quantity));
+  }
 }
 
 HttpRequest buildRequest(const HttpMethod method, const std::string& path,
@@ -143,23 +158,33 @@ const HttpResponse Session::logout() {
 }
 
 Price _parse_price(const std::string& px_str) {
-  if (!px_str.empty()) {
-    std::istringstream iss(px_str);
-    Price p;
-    iss >> p;
-    return p;
+  // One price, perhaps with IEM's priority mark: "0.512", "0.512*", "0.512 *"
+  auto text = boost::trim_copy(px_str);
+  if (!text.empty() && text.back() == '*') {
+    text.pop_back();
+    boost::trim_right(text);
   }
-  return nanPrice();
+  if (text.empty()) {
+    return nanPrice();
+  }
+  std::istringstream iss(text);
+  Price p;
+  iss >> p;
+  if (!(iss >> std::ws).eof()) {
+    throw std::invalid_argument("Not a price: \"" + px_str + "\"");
+  }
+  return p;
 }
 
 position_t _parse_quantity(const std::string& qty_str) {
-  if (qty_str.empty()) {
+  // IEM writes whole numbers, sometimes as "1.000000": any decimals must be 0
+  const auto text = boost::trim_copy(qty_str);
+  if (text.empty()) {
     return 0;
   }
-  // IEM writes whole numbers, sometimes as "1.000000": any decimals must be 0
-  const auto dot = qty_str.find('.');
-  const auto whole = qty_str.substr(0, dot);
-  const auto frac = (dot == std::string::npos) ? "" : qty_str.substr(dot + 1);
+  const auto dot = text.find('.');
+  const auto whole = text.substr(0, dot);
+  const auto frac = (dot == std::string::npos) ? "" : text.substr(dot + 1);
   std::size_t used = 0;
   const auto value = std::stoll(whole, &used);  // throws on no digits
   if (used != whole.size() ||
@@ -237,8 +262,8 @@ const OrderBook _read_orderbook_html(ptree::const_assoc_iterator tr_it,
       boost::trim(data);
       last_trade_px = _parse_price(data);
     } else if (klass == "change-cell quantity") {  // Position
-      auto data = it->second.get<std::string>("<xmlattr>.value");
-      position = _parse_quantity(data);
+      position =
+          _parse_quantity(it->second.get<std::string>("<xmlattr>.value"));
     } else if (klass == "yourBidsCell") {  // Number of open bid orders
       num_open_bid_orders = num_open_orders(it);
     } else if (klass == "yourAsksCell") {  // Number of open ask orders
@@ -284,13 +309,19 @@ const std::vector<OrderBook> _read_orderbooks_html(const std::string& body,
   const auto tr_its = tbody.equal_range("tr");
 
   std::vector<OrderBook> obs;
+  std::string skipped;
   for (auto it = tr_its.first; it != tr_its.second; it++) {
     try {
       obs.push_back(_read_orderbook_html(it, market));
     } catch (const UnknownContract& e) {
       // A contract markets.json doesn't list yet: skip it, keep the rest
       std::cerr << "Skipping an order book row: " << e.what() << '\n';
+      skipped += std::string(skipped.empty() ? "" : "; ") + e.what();
     }
+  }
+  if (obs.empty() && !skipped.empty()) {
+    // Not one row read: the page or the parser changed, not markets.json
+    throw std::runtime_error("No order book row could be read: " + skipped);
   }
   return obs;
 }
@@ -517,6 +548,7 @@ const HttpRequest _single_order_request(const Single& order) {
 }
 
 const HttpResponse Session::place_order(const Single& order) {
+  _check_size(order.quantity());
   // Construct request
   HttpRequest order_request = _single_order_request(order);
   // Set cookie
@@ -547,6 +579,7 @@ const HttpRequest _bundle_order_request(const Bundle& order) {
 }
 
 const HttpResponse Session::place_order(const Bundle& order) {
+  _check_size(order.quantity());
   // Construct request
   HttpRequest order_request = _bundle_order_request(order);
   // Set cookie
@@ -682,11 +715,15 @@ int snprintf_session(char* const str, const std::size_t size,
                   s.username().c_str(), s.cookie().empty() ? "false" : "true");
 }
 
-// TODO(rheineke): Write function
-// UniqueSession make_unique_session(const std::string& username,
-//                                  const std::string& password) {
-//  return std::unique_ptr(new Session(username, password),
-//                         decltype(&Session::logout));
-//}
+LogoutOnExit::~LogoutOnExit() {
+  if (session_->cookie().empty()) {  // never logged in, or already out
+    return;
+  }
+  try {
+    session_->logout();
+  } catch (const std::exception& e) {
+    std::cerr << "Logout failed: " << e.what() << '\n';
+  }
+}
 
 }  // namespace iem

@@ -18,7 +18,7 @@ using AssetToMarketId = uint_fast16_t;
 using BundleId = uint_fast16_t;
 
 using Month = boost::date_time::months_of_year;
-using Year = uint_fast8_t;
+using Year = int;  // two digits (16) or four (2016)
 // Bundle expiry
 using MonthYear = std::pair<Month, Year>;
 

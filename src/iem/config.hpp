@@ -19,8 +19,8 @@ class UnknownContract : public std::invalid_argument {
 constexpr auto kDefaultFilename = "conf/markets.json";
 
 // Returns the JSON document at (relative) path filename, which must be strict
-// JSON (no comments). The first call reads the file; later calls return the
-// same document and ignore filename.
+// JSON (no comments). Each file is read once; later calls with the same
+// filename return the same document.
 const nlohmann::json& read_markets_json(
     char const* filename = kDefaultFilename);
 

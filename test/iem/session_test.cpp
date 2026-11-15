@@ -1,6 +1,7 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/session.hpp"
 
+#include <functional>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -48,8 +49,14 @@ TEST(SessionTest, LogLineTruncatesToBuffer) {
 }
 
 TEST(SessionTest, PriceParser) {
-  auto px = _parse_price("");
-  EXPECT_EQ(px, nanPrice());
+  EXPECT_EQ(_parse_price(""), nanPrice());
+  EXPECT_EQ(_parse_price(" - "), nanPrice());
+  for (const auto* text : {"0.512", " 0.512 ", "0.512*", "0.512 *"}) {
+    EXPECT_EQ(_parse_price(text), Price(512)) << text;
+  }
+  for (const auto* bad : {"0.5 0.6", "0.5 x", "x"}) {
+    EXPECT_THROW(_parse_price(bad), std::invalid_argument) << bad;
+  }
 }
 
 TEST(SessionTest, PositionParser) {
@@ -59,6 +66,8 @@ TEST(SessionTest, PositionParser) {
   EXPECT_THROW(_parse_quantity("12abc"), std::invalid_argument);
   EXPECT_EQ(_parse_quantity("37.000000"), 37);  // how IEM writes it
   EXPECT_THROW(_parse_quantity("1.5"), std::invalid_argument);
+  EXPECT_EQ(_parse_quantity(" 3 "), 3);
+  EXPECT_EQ(_parse_quantity("  "), 0);
   EXPECT_EQ(_parse_order_quantity("50000"), 50000);
   EXPECT_THROW(_parse_order_quantity("-1"), std::out_of_range);  // was 255
   EXPECT_THROW(_parse_order_quantity("0"), std::out_of_range);
@@ -354,9 +363,7 @@ TEST(SessionTest, PlaceMarketOrder) {
   auto s = logged_in_session(&server);
   server.responses = {ok("")};
   const Contract c("FedPolicyB", "FRsame1216");
-  // No price and no expiration: immediate or cancel, sent as a market order
-  const PriceTimeLimit ioc(nanPrice(), boost::posix_time::not_a_date_time);
-  const Single o(c, Side::SELL, 2, ioc);
+  const Single o(c, Side::SELL, 2, PriceTimeLimit::market());
 
   s.place_order(o);
 
@@ -470,8 +477,7 @@ TEST(SessionTest, MarketBuyIsSentAsBuy) {
   auto s = logged_in_session(&server);
   server.responses = {ok("")};
   const Contract c("FedPolicyB", "FRsame1216");
-  const PriceTimeLimit ioc(nanPrice(), boost::posix_time::not_a_date_time);
-  s.place_order(Single(c, Side::BUY, 37, ioc));
+  s.place_order(Single(c, Side::BUY, 37, PriceTimeLimit::market()));
   const auto& body = server.requests[0].body;
   EXPECT_NE(body.find("orderType=buy"), std::string::npos);
   EXPECT_NE(body.find("marketOrderQuantity=37"), std::string::npos);
@@ -522,19 +528,87 @@ TEST(SessionTest, LimitPricesOutsideTheMarketAreRefused) {
   EXPECT_TRUE(server.requests.empty());
 }
 
-TEST(SessionTest, FailedOrExpiredResponsesThrow) {
+TEST(SessionTest, FailedResponsesSayWhetherAnOrderMayHaveBeenPlaced) {
   const Contract c("FedPolicyB", "FRsame1216");
-  const PriceTimeLimit ptl(Price(512), boost::posix_time::not_a_date_time);
-  for (const auto& response :
-       {HttpResponse{500, {}, "error"},
-        HttpResponse{
-            302, {{"Location", "/iem/trader/TraderLogin.action"}}, ""}}) {
+  const Single o(
+      c, Side::BUY, 1,
+      PriceTimeLimit(Price(512), boost::posix_time::not_a_date_time));
+  const auto place = [&o](const HttpResponse& response) {
     FakeServer server;
     auto s = logged_in_session(&server);
     server.responses = {response};
-    EXPECT_THROW(s.place_order(Single(c, Side::BUY, 1, ptl)),
-                 std::runtime_error);
+    s.place_order(o);
+  };
+  // A server or gateway error may come after the order was placed
+  EXPECT_THROW(place({500, {}, "error"}), HttpOutcomeUnknown);
+  EXPECT_THROW(place({502, {}, "bad gateway"}), HttpOutcomeUnknown);
+  EXPECT_THROW(
+      place({302, {{"Location", "/iem/trader/TraderLogin.action"}}, ""}),
+      SessionExpired);
+  // Refused: nothing was done, and the session is still good
+  std::string thrown = "nothing";
+  try {
+    place({403, {}, "forbidden"});
+  } catch (const HttpOutcomeUnknown&) {
+    thrown = "HttpOutcomeUnknown";
+  } catch (const SessionExpired&) {
+    thrown = "SessionExpired";
+  } catch (const std::runtime_error&) {
+    thrown = "runtime_error";
   }
+  EXPECT_EQ(thrown, "runtime_error");
+}
+
+TEST(SessionTest, EveryRequestNoticesAnExpiredSession) {
+  const HttpResponse expired{
+      302, {{"Location", "/iem/trader/TraderLogin.action"}}, ""};
+  const Market m("FedPolicyB");
+  const Contract c("FedPolicyB", "FRup1216");
+  Single o(c, Side::BUY, 1,
+           PriceTimeLimit(Price(1), boost::posix_time::not_a_date_time));
+  o.set_id(4700001);
+  const std::vector<std::pair<std::string, std::function<void(Session&)>>>
+      calls{
+          {"orderbook", [&](Session& s) { s.orderbook(m); }},
+          {"holdings", [&](Session& s) { s.holdings(c); }},
+          {"outstanding_orders",
+           [&](Session& s) { s.outstanding_orders(c, Side::BUY); }},
+          {"cancel_order", [&](Session& s) { s.cancel_order(o); }},
+          {"messages", [&](Session& s) { s.messages(m); }},
+          {"remove_messages", [&](Session& s) { s.remove_messages(m); }},
+          {"portfolio", [&](Session& s) { s.portfolio(m); }},
+  };
+  for (const auto& [name, call] : calls) {
+    FakeServer server;
+    auto s = logged_in_session(&server);
+    server.responses = {expired};
+    EXPECT_THROW(call(s), SessionExpired) << name;
+  }
+}
+
+TEST(SessionTest, MissingPriceIsNotSentAsAMarketOrder) {
+  FakeServer server;
+  auto s = logged_in_session(&server);
+  // An empty book side gives no price: that must not become a market order
+  const PriceTimeLimit no_price(nanPrice(), boost::posix_time::not_a_date_time);
+  EXPECT_THROW(s.place_order(Single(Contract("FedPolicyB", "FRsame1216"),
+                                    Side::BUY, 1, no_price)),
+               std::invalid_argument);
+  EXPECT_TRUE(server.requests.empty());
+}
+
+TEST(SessionTest, OversizedOrdersAreNotSent) {
+  FakeServer server;
+  auto s = logged_in_session(&server);
+  const Contract c("FedPolicyB", "FRsame1216");
+  const PriceTimeLimit ptl(Price(512), boost::posix_time::not_a_date_time);
+  EXPECT_THROW(s.place_order(Single(c, Side::BUY, kMaxOrderQuantity + 1, ptl)),
+               std::invalid_argument);
+  const ContractBundle cb("FedPolicyB", MonthYear(boost::gregorian::Dec, 16));
+  EXPECT_THROW(s.place_order(Bundle(cb, Side::BUY, kMaxOrderQuantity + 1,
+                                    Counterparty::EXCHANGE)),
+               std::invalid_argument);
+  EXPECT_TRUE(server.requests.empty());
 }
 
 TEST(SessionTest, AuthenticateFailsWhenEvenAForcedLoginIsRefused) {
@@ -627,6 +701,63 @@ TEST(SessionTest, OrderBookRowWithMissingCells) {
   EXPECT_EQ(obs[0].position(), 0);
   EXPECT_EQ(obs[0].num_orders(Side::BUY), 0u);
   EXPECT_EQ(obs[0].num_orders(Side::SELL), 0u);
+}
+
+TEST(SessionTest, LogoutOnExitLogsOutAfterAnError) {
+  FakeServer server;
+  auto s = logged_in_session(&server);
+  server.responses = {ok("")};
+  EXPECT_THROW(
+      {
+        const LogoutOnExit logout(&s);
+        throw std::runtime_error("a request failed");
+      },
+      std::runtime_error);
+  ASSERT_EQ(server.requests.size(), 1u);
+  EXPECT_NE(server.requests[0].path.find("logout="), std::string::npos);
+  EXPECT_TRUE(s.cookie().empty());
+}
+
+TEST(SessionTest, LogoutOnExitSkipsSessionsNotLoggedIn) {
+  FakeServer server;
+  Session s("foo", "bar", make_fake_client(&server));
+  {
+    const LogoutOnExit logout(&s);
+  }
+  EXPECT_TRUE(server.requests.empty());
+}
+
+TEST(SessionTest, LogoutOnExitNeverThrows) {
+  FakeServer server;
+  auto s = logged_in_session(&server);
+  // No response queued: the fake client throws, and the guard swallows it
+  EXPECT_NO_THROW({ const LogoutOnExit logout(&s); });
+  EXPECT_EQ(server.requests.size(), 1u);
+}
+
+TEST(SessionTest, OrderBookSkipsContractsMarketsJsonDoesNotList) {
+  FakeServer server;
+  auto s = logged_in_session(&server);
+  server.responses = {
+      ok("<html><body><table class=\"table\"><tbody>"
+         "<tr><td class=\"contract\">FRnew0117</td></tr>"
+         "<tr><td class=\"contract\">FRup1216</td></tr>"
+         "</tbody></table></body></html>")};
+
+  const auto obs = s.orderbook(Market("FedPolicyB"));
+
+  ASSERT_EQ(obs.size(), 1u);
+  EXPECT_EQ(obs[0].contract().asset_id(),
+            Contract("FedPolicyB", "FRup1216").asset_id());
+}
+
+TEST(SessionTest, OrderBookWithNoKnownContractThrows) {
+  // Not one row read: more likely the page changed than markets.json
+  FakeServer server;
+  auto s = logged_in_session(&server);
+  server.responses = {
+      ok(one_row_page(R"(<td class="contract">FRnew0117</td>)"))};
+  EXPECT_THROW(s.orderbook(Market("FedPolicyB")), std::runtime_error);
 }
 
 TEST(SessionTest, OutstandingOrderWithoutIdCell) {

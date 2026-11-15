@@ -13,7 +13,14 @@ class PriceTimeLimit final {
  public:
   PriceTimeLimit(const Price& price,
                  const boost::posix_time::ptime& expiration);
+  // No price and no expiry: not an order by itself (a bundle's, say). A
+  // Single with it can't be sent: a missing price never means "at market".
   PriceTimeLimit();
+
+  // An immediate-or-cancel market order. Only this makes a market order: a
+  // price that is missing (an empty book side, a contract never traded)
+  // must not become one.
+  static PriceTimeLimit market();
 
   inline const Price price() const { return price_; }
 

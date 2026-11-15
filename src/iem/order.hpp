@@ -17,7 +17,8 @@ using OrderId = uint_fast32_t;
 // Signed and wide: IEM orders run to tens of thousands of contracts, and a
 // computed size below one must be caught, not wrap to a large order.
 using Quantity = int32_t;
-// The most contracts one order may hold: an order above it is a mistake.
+// The most contracts one order may send: above it is a mistake. Orders read
+// back from IEM aren't capped.
 constexpr Quantity kMaxOrderQuantity = 100000;
 
 // Each filled order has either another market participant or the exchange as a

@@ -2,6 +2,7 @@
 #ifndef CPPIEM_IEM_HTTP_CLIENT_HPP_
 #define CPPIEM_IEM_HTTP_CLIENT_HPP_
 
+#include <chrono>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -55,7 +56,9 @@ class HttpClient {
 // Client for base_url, such as "https://iem.uiowa.edu" or a local test
 // server's "http://127.0.0.1:8080". Throws HttpNotSent or HttpOutcomeUnknown
 // when a request gets no response.
-std::unique_ptr<HttpClient> make_http_client(const std::string& base_url);
+std::unique_ptr<HttpClient> make_http_client(
+    const std::string& base_url,
+    std::chrono::seconds read_timeout = std::chrono::seconds(30));
 
 // Client for https://iem.uiowa.edu
 std::unique_ptr<HttpClient> make_iem_http_client();

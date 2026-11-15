@@ -39,12 +39,14 @@ TEST(OrderTest, DestroyedThroughBase) {
   EXPECT_TRUE(std::is_nothrow_move_assignable_v<Single>);
 }
 
-TEST(OrderTest, QuantityMustBeOneUpToTheMaximum) {
+TEST(OrderTest, QuantityMustBeOneOrMore) {
   const Contract c("FedPolicyB", "FRsame1216");
   const PriceTimeLimit ptl(Price(1), boost::posix_time::not_a_date_time);
-  for (const Quantity bad : {0, -1, kMaxOrderQuantity + 1}) {
+  for (const Quantity bad : {0, -1}) {
     EXPECT_THROW(Single(c, Side::BUY, bad, ptl), std::invalid_argument) << bad;
   }
+  // An order read back from IEM may be any size; only sending is capped
+  EXPECT_NO_THROW(Single(c, Side::BUY, kMaxOrderQuantity + 1, ptl));
   const Single big(c, Side::BUY, 300, ptl);  // was sent as 44
   EXPECT_EQ(big.quantity(), 300);
   std::ostringstream os;

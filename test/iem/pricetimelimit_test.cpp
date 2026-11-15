@@ -25,7 +25,11 @@ TEST(PriceTimeLimitTest, ValidConstructorArguments) {
 }
 
 TEST(PriceTimeLimitTest, IOC) {
-  EXPECT_TRUE(PriceTimeLimit().ioc());
+  EXPECT_TRUE(PriceTimeLimit::market().ioc());
+  // A missing price is not a market order: only market() makes one
+  EXPECT_FALSE(PriceTimeLimit().ioc());
+  EXPECT_FALSE(
+      PriceTimeLimit(nanPrice(), boost::date_time::not_a_date_time).ioc());
   const Price px(999);
   EXPECT_FALSE(PriceTimeLimit(px, _test_ptime()).ioc());
   EXPECT_FALSE(PriceTimeLimit(px, boost::date_time::not_a_date_time).ioc());

@@ -101,6 +101,18 @@ TEST(ContractTest, MarketNameIsNotCopied) {
   EXPECT_EQ(m.name(), "FedPolicyB");
 }
 
+TEST(ContractTest, BundleYearMayHaveFourDigits) {
+  using boost::gregorian::Dec;
+  const ContractBundle two("FedPolicyB", MonthYear(Dec, 16));
+  const ContractBundle four("FedPolicyB", MonthYear(Dec, 2016));
+  EXPECT_EQ(four.bundle_id(), two.bundle_id());
+  for (const Year bad : {-1, 100, 1999, 2100}) {
+    EXPECT_THROW(ContractBundle("FedPolicyB", MonthYear(Dec, bad)),
+                 std::invalid_argument)
+        << bad;
+  }
+}
+
 TEST(ContractTest, MonthYearOutput) {
   std::ostringstream os;
   os << MonthYear(boost::date_time::Nov, 16);

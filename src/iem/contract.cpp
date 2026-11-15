@@ -2,6 +2,7 @@
 #include "iem/contract.hpp"
 
 #include <regex>
+#include <stdexcept>
 #include <string>
 
 namespace iem {
@@ -28,7 +29,15 @@ std::string _expiration_string(const MonthYear& expiration) {
   // Yuck
   const auto mon_str = std::to_string(expiration.first);
   const auto mon_pad = std::string(2 - mon_str.length(), '0');
-  const auto yr_str = std::to_string(expiration.second);
+  auto year = expiration.second;
+  if (year >= 2000 && year <= 2099) {
+    year -= 2000;
+  }
+  if (year < 0 || year > 99) {
+    throw std::invalid_argument("Bundle year must be 16 or 2016, not " +
+                                std::to_string(expiration.second));
+  }
+  const auto yr_str = std::to_string(year);
   const auto yr_pad = std::string(2 - yr_str.length(), '0');
   return mon_pad + mon_str + yr_pad + yr_str;
 }

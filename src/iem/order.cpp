@@ -29,10 +29,9 @@ Order::Order(const Side& side, const Quantity quantity,
       quantity_(quantity),
       price_time_limit_(price_time_limit),
       counterparty_(counterparty) {
-  if (quantity_ < 1 || quantity_ > kMaxOrderQuantity) {
-    throw std::invalid_argument("Order quantity must be 1 to " +
-                                std::to_string(kMaxOrderQuantity) +
-                                " but was " + std::to_string(quantity_));
+  if (quantity_ < 1) {  // the upper cap is checked when an order is sent
+    throw std::invalid_argument("Order quantity must be 1 or more but was " +
+                                std::to_string(quantity_));
   }
 }
 

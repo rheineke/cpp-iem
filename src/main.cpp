@@ -18,6 +18,7 @@ int messages_example(int argc, char* argv[]) {
 
   iem::Session session(login.username, login.password);
   std::cout << "Logging in...\n";
+  const iem::LogoutOnExit logout(&session);  // even if a request below throws
   session.authenticate();
   // Print session after authentication
   iem::Logger logger;
@@ -80,7 +81,7 @@ int messages_example(int argc, char* argv[]) {
   // Request portfolio
   std::cout << "Requesting portfolio messages\n";
   const auto portfolio_trader_messages = session.portfolio(mkt);
-  for (const auto& msg : msgs) {
+  for (const auto& msg : portfolio_trader_messages) {
     std::cout << msg << '\n';
   }
 
@@ -90,9 +91,7 @@ int messages_example(int argc, char* argv[]) {
   // std::thread hb(&heartbeat, session);
   // hb.detach();
 
-  // Logout
-  std::cout << "Logging out...\n";
-  session.logout();
+  std::cout << "Logging out...\n";  // by logout, on return
 
   const auto return_value = EXIT_SUCCESS;
   // std::cout << "Starting trade" << '\n';
@@ -102,16 +101,17 @@ int messages_example(int argc, char* argv[]) {
 int orderbook_example(int argc, char* argv[]) {
   const auto login = iem::credentials_from_env();
 
-  auto session_p = new iem::Session(login.username, login.password);
+  iem::Session session(login.username, login.password);
 
   std::cout << "Logging in...\n";
+  const iem::LogoutOnExit logout(&session);  // even if a request below throws
 
   // session.authenticate();
   // An exception escaping a thread would abort the program: pass it back
   std::exception_ptr login_error;
-  std::thread t([&session_p, &login_error] {
+  std::thread t([&session, &login_error] {
     try {
-      session_p->authenticate();
+      session.authenticate();
     } catch (...) {
       login_error = std::current_exception();
     }
@@ -123,8 +123,7 @@ int orderbook_example(int argc, char* argv[]) {
 
   // Print session after authentication
   iem::Logger logger;
-  iem::snprintf_session(logger.getBuffer(), iem::Logger::kBufferSize,
-                        *session_p);
+  iem::snprintf_session(logger.getBuffer(), iem::Logger::kBufferSize, session);
   logger.log();
 
   // Find all active markets and retrieve their markets concurrently
@@ -137,17 +136,12 @@ int orderbook_example(int argc, char* argv[]) {
   //      iem::Market("House18"),
   //      iem::Market("Senate18"),
   //  };
-  const auto obs = session_p->orderbook(mkt);
+  const auto obs = session.orderbook(mkt);
   for (const auto& ob : obs) {
     std::cout << ob << '\n';
   }
 
-  // Logout after logging in
-  std::cout << "Logging out...\n";
-  const auto snd_logout_response = session_p->logout();
-  std::cout << snd_logout_response.status << '\n';
-  std::cout << snd_logout_response.body << '\n';
-
+  std::cout << "Logging out...\n";  // by logout, on return
   return EXIT_SUCCESS;
 }
 
