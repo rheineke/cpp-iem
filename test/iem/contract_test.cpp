@@ -90,6 +90,20 @@ TEST(ContractTest, UnknownContractThrows) {
   EXPECT_THROW(Contract("FedPolicyB", "FRmissing0616"), std::invalid_argument);
 }
 
+TEST(ContractTest, OnlyAnUnlistedBundleIsAnUnknownContract) {
+  // A new bundle: safe to skip
+  EXPECT_THROW(Contract("FedPolicyB", "FRup0199"), UnknownContract);
+  // A listed bundle without this contract: the file or the page is wrong
+  try {
+    [[maybe_unused]] const Contract c("FedPolicyB", "FRDown1216");
+    ADD_FAILURE() << "no exception";
+  } catch (const UnknownContract&) {
+    ADD_FAILURE() << "a misspelt contract of a listed bundle was skippable";
+  } catch (const std::invalid_argument& e) {
+    EXPECT_NE(std::string(e.what()).find("asset name"), std::string::npos);
+  }
+}
+
 TEST(ContractTest, MarketIsExplicit) {
   EXPECT_FALSE((std::is_convertible_v<std::string, Market>));
   EXPECT_TRUE((std::is_constructible_v<Market, std::string>));

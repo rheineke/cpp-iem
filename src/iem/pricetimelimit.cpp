@@ -89,9 +89,11 @@ const std::string to_string(const boost::posix_time::ptime& expiration_ptime) {
     return "No expiration";
   }
   std::ostringstream ss;
-  // Locale object owns the facet instance so no memory leak here
+  // Locale object owns the facet instance so no memory leak here. The classic
+  // locale, not the program's: boost writes %p through the locale's time_put,
+  // and de_DE writes nothing there.
   auto* p_tod_facet(new boost::posix_time::time_facet("%Y-%m-%d %I:%M %p"));
-  ss.imbue(std::locale(ss.getloc(), p_tod_facet));
+  ss.imbue(std::locale(std::locale::classic(), p_tod_facet));
   ss << expiration_ptime;
   return ss.str();
 }

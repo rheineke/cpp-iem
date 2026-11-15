@@ -38,9 +38,11 @@ class HttpNotSent : public std::runtime_error {
   using std::runtime_error::runtime_error;
 };
 
-// A request that may have reached the server, with no answer (a timeout or a
-// connection dropped mid-request): an order may have been placed, so read the
-// outstanding orders before sending it again.
+// A request that may have reached the server, with no answer (a timeout, a
+// connection dropped mid-request, a 5xx): an order may have been placed, so
+// check before sending it again. A limit order may be resting: read
+// outstanding_orders(). Market and bundle orders never rest: they fill at
+// once or not at all, so read messages() or holdings() for a fill instead.
 class HttpOutcomeUnknown : public std::runtime_error {
  public:
   using std::runtime_error::runtime_error;
