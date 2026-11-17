@@ -78,6 +78,8 @@ TEST(SessionTest, TableEndsAtItsOwnEndTag) {
       "<html><table><tbody></tbody></table><script>var table = 1;</script>"
       "</html>";
   EXPECT_EQ(_table_html_string(body), "<table><tbody></tbody></table>");
+  EXPECT_EQ(_table_html_string("<table>a</table><p/><table>b</table>"),
+            "<table>a</table>");
   EXPECT_THROW(_table_html_string("<html>logged out</html>"),
                std::runtime_error);
 }
@@ -533,12 +535,28 @@ TEST(SessionTest, FailedResponsesSayWhetherAnOrderMayHaveBeenPlaced) {
   const Single o(
       c, Side::BUY, 1,
       PriceTimeLimit(Price(512), boost::posix_time::not_a_date_time));
-  const auto place = [&o](const HttpResponse& response) {
+  const Bundle b(
+      ContractBundle("FedPolicyB", MonthYear(boost::gregorian::Dec, 16)),
+      Side::BUY, 1, Counterparty::EXCHANGE);
+  const auto send = [](const auto& order, const HttpResponse& response) {
     FakeServer server;
     auto s = logged_in_session(&server);
     server.responses = {response};
-    s.place_order(o);
+    s.place_order(order);
   };
+  const auto place = [&](const HttpResponse& response) { send(o, response); };
+  const HttpResponse login_page{
+      302, {{"Location", "/iem/trader/TraderLogin.action"}}, ""};
+  // Bundle orders are checked too
+  EXPECT_THROW(send(b, {502, {}, "bad gateway"}), HttpOutcomeUnknown);
+  EXPECT_THROW(send(b, login_page), SessionExpired);
+  // Header names are case-insensitive
+  EXPECT_THROW(
+      place({302, {{"location", "/iem/trader/TraderLogin.action"}}, ""}),
+      SessionExpired);
+  // A redirect elsewhere is not an expired session: the order may stand
+  EXPECT_NO_THROW(
+      place({302, {{"Location", "/iem/trader/TraderActivity.action"}}, ""}));
   // A server or gateway error may come after the order was placed
   EXPECT_THROW(place({500, {}, "error"}), HttpOutcomeUnknown);
   EXPECT_THROW(place({502, {}, "bad gateway"}), HttpOutcomeUnknown);
@@ -740,7 +758,7 @@ TEST(SessionTest, OrderBookSkipsContractsMarketsJsonDoesNotList) {
   auto s = logged_in_session(&server);
   server.responses = {
       ok("<html><body><table class=\"table\"><tbody>"
-         "<tr><td class=\"contract\">FRnew0117</td></tr>"
+         "<tr><td class=\"contract\">FRnew0199</td></tr>"
          "<tr><td class=\"contract\">FRup1216</td></tr>"
          "</tbody></table></body></html>")};
 
@@ -751,12 +769,30 @@ TEST(SessionTest, OrderBookSkipsContractsMarketsJsonDoesNotList) {
             Contract("FedPolicyB", "FRup1216").asset_id());
 }
 
+TEST(SessionTest, OrderBookRowThatCannotBeReadThrows) {
+  // Only an unlisted bundle is skipped: a bad cell or a misspelt contract of
+  // a listed bundle fails the read, rather than drop a leg of a bundle
+  for (
+      const auto* row :
+      {R"(<td class="contract">FRup1216</td><td class="change-cell bestBidPrice"><p>abc</p></td>)",
+       R"(<td class="contract">FRDown1216</td>)"}) {
+    FakeServer server;
+    auto s = logged_in_session(&server);
+    server.responses = {
+        ok("<html><body><table class=\"table\"><tbody>"
+           "<tr><td class=\"contract\">FRsame1216</td></tr><tr>" +
+           std::string(row) + "</tr></tbody></table></body></html>")};
+    EXPECT_THROW(s.orderbook(Market("FedPolicyB")), std::invalid_argument)
+        << row;
+  }
+}
+
 TEST(SessionTest, OrderBookWithNoKnownContractThrows) {
   // Not one row read: more likely the page changed than markets.json
   FakeServer server;
   auto s = logged_in_session(&server);
   server.responses = {
-      ok(one_row_page(R"(<td class="contract">FRnew0117</td>)"))};
+      ok(one_row_page(R"(<td class="contract">FRnew0199</td>)"))};
   EXPECT_THROW(s.orderbook(Market("FedPolicyB")), std::runtime_error);
 }
 

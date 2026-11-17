@@ -10,7 +10,10 @@
 
 namespace iem {
 
-// A market, contract or bundle the markets file doesn't list.
+// A bundle the markets file doesn't list yet, as when IEM lists new
+// contracts: readers may skip its rows. A missing market, or a contract
+// missing from a listed bundle, is a mistake in the file or the page and
+// throws plain std::invalid_argument.
 class UnknownContract : public std::invalid_argument {
  public:
   using std::invalid_argument::invalid_argument;

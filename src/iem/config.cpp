@@ -19,12 +19,18 @@ nlohmann::json parse_file(char const* filename) {
   return nlohmann::json::parse(file);
 }
 
-// Returns object[key], or throws std::invalid_argument naming the missing key
+// Returns object[key], or throws std::invalid_argument naming the missing key:
+// UnknownContract when the key is a bundle the file doesn't list yet.
 const nlohmann::json& member(const nlohmann::json& object,
-                             const std::string& key, const std::string& what) {
+                             const std::string& key, const std::string& what,
+                             const bool unknown_bundle = false) {
   const auto it = object.find(key);
   if (it == object.end()) {
-    throw UnknownContract("Unknown " + what + ": " + key);
+    const auto message = "Unknown " + what + ": " + key;
+    if (unknown_bundle) {
+      throw UnknownContract(message);
+    }
+    throw std::invalid_argument(message);
   }
   return *it;
 }
@@ -66,7 +72,7 @@ const nlohmann::json& bundle_value(const nlohmann::json& json_root,
   if (bundle_val.contains("bundle_id")) {  // Market has one bundle
     return bundle_val;
   }
-  return member(bundle_val, expiry_date_str, "bundle expiration");
+  return member(bundle_val, expiry_date_str, "bundle expiration", true);
 }
 
 std::string asset_expiry(const std::string& asset_name) {

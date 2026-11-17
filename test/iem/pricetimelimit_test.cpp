@@ -1,6 +1,8 @@
 // Copyright 2016 Reece Heineke<reece.heineke@gmail.com>
 #include "iem/pricetimelimit.hpp"
 
+#include <ctime>
+#include <locale>
 #include <stdexcept>
 
 #include "gtest/gtest.h"
@@ -17,7 +19,7 @@ boost::posix_time::ptime _test_ptime() {
 TEST(PriceTimeLimitTest, ValidConstructorArguments) {
   using boost::date_time::not_a_date_time;
   const auto nan_px = nanPrice();
-  EXPECT_NO_THROW(PriceTimeLimit(nan_px, not_a_date_time));  // IOC
+  EXPECT_NO_THROW(PriceTimeLimit(nan_px, not_a_date_time));  // no price yet
   const Price px(999);
   EXPECT_NO_THROW(PriceTimeLimit(px, not_a_date_time));  // GTC limit
   EXPECT_NO_THROW(PriceTimeLimit(px, _test_ptime()));    // Non-GTC limit
@@ -43,6 +45,24 @@ TEST(PriceTimeLimitTest, SessionStringFormat) {
   EXPECT_EQ(boost::gregorian::to_iso_extended_string(d), "2016-01-10");
   EXPECT_EQ(to_string(ptime), "2016-01-10 08:01 PM");
   EXPECT_EQ(to_string(boost::posix_time::not_a_date_time), "No expiration");
+}
+
+// Writes nothing, as de_DE's time_put does for %p
+class NoAmPm : public std::time_put<char> {
+ protected:
+  iter_type do_put(iter_type out, std::ios_base& /*str*/, char_type /*fill*/,
+                   const std::tm* /*t*/, char /*format*/,
+                   char /*modifier*/) const override {
+    return out;
+  }
+};
+
+TEST(PriceTimeLimitTest, SessionStringIgnoresTheProgramLocale) {
+  const auto old =
+      std::locale::global(std::locale(std::locale::classic(), new NoAmPm));
+  const auto text = to_string(_test_ptime());
+  std::locale::global(old);
+  EXPECT_EQ(text, "2016-01-10 08:01 PM");
 }
 
 TEST(PriceTimeLimitTest, ExpiryDate) {
